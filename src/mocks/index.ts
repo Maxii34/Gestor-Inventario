@@ -1,4 +1,3 @@
-export * from './productos.mock';
 export * from './categorias.mock';
 export * from './movimientos-stock.mock';
 export * from './clientes.mock';
