@@ -1,0 +1,17 @@
+// Formato de error que devuelve el backend: { ok: false, mensaje: '...' }.
+export interface ApiErrorBody {
+  ok: false;
+  mensaje: string;
+}
+
+// Paginación del backend: meta.total, meta.page, meta.totalPaginas.
+export interface PageMeta {
+  total: number;
+  page: number;
+  totalPaginas: number;
+}
+
+export interface PaginatedResponse<T> {
+  datos: T[];
+  meta: PageMeta;
+}
