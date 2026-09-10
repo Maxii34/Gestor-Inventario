@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  LuArrowUpDown,
+  LuPackage,
+  LuPlus,
+  LuShoppingCart,
+  LuTriangleAlert,
+  LuUsers,
+} from 'react-icons/lu';
+import {
   Badge,
   Button,
   Card,
@@ -56,10 +64,10 @@ const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
 ];
 
 const ACCIONES_RAPIDAS = [
-  'Nuevo producto',
-  'Nueva venta',
-  'Nuevo cliente',
-  'Registrar movimiento',
+  { etiqueta: 'Nuevo producto', icono: LuPlus },
+  { etiqueta: 'Nueva venta', icono: LuShoppingCart },
+  { etiqueta: 'Nuevo cliente', icono: LuUsers },
+  { etiqueta: 'Registrar movimiento', icono: LuArrowUpDown },
 ];
 
 function DashboardSkeleton() {
@@ -129,7 +137,10 @@ export default function DashboardPage() {
       {datos && (
         <div className="flex flex-col gap-4 md:gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Card title="Productos">
+            <Card
+              title="Productos"
+              actions={<LuPackage aria-hidden="true" size={20} className="text-zinc-400" />}
+            >
               <p className="text-2xl font-bold text-zinc-900">
                 {datos.resumen.totalProductos}
               </p>
@@ -137,15 +148,24 @@ export default function DashboardPage() {
                 {datos.resumen.productosActivos} activos
               </p>
             </Card>
-            <Card title="Stock bajo">
+            <Card
+              title="Stock bajo"
+              actions={<LuTriangleAlert aria-hidden="true" size={20} className="text-zinc-400" />}
+            >
               <p className="text-2xl font-bold text-zinc-900">{datos.resumen.stockBajo}</p>
               <p className="mt-1 text-xs text-zinc-500">requieren reposición</p>
             </Card>
-            <Card title="Ventas">
+            <Card
+              title="Ventas"
+              actions={<LuShoppingCart aria-hidden="true" size={20} className="text-zinc-400" />}
+            >
               <p className="text-2xl font-bold text-zinc-900">{datos.resumen.totalVentas}</p>
               <p className="mt-1 text-xs text-zinc-500">operaciones registradas</p>
             </Card>
-            <Card title="Clientes">
+            <Card
+              title="Clientes"
+              actions={<LuUsers aria-hidden="true" size={20} className="text-zinc-400" />}
+            >
               <p className="text-2xl font-bold text-zinc-900">
                 {datos.resumen.totalClientes}
               </p>
@@ -175,11 +195,15 @@ export default function DashboardPage() {
 
           <Card title="Acciones rápidas" subtitle="Accesos visuales sin funcionalidad">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {ACCIONES_RAPIDAS.map((accion) => (
-                <Button key={accion} type="button" variant="outline" fullWidth>
-                  {accion}
-                </Button>
-              ))}
+              {ACCIONES_RAPIDAS.map((accion) => {
+                const Icono = accion.icono;
+                return (
+                  <Button key={accion.etiqueta} type="button" variant="outline" fullWidth>
+                    <Icono aria-hidden="true" size={16} />
+                    {accion.etiqueta}
+                  </Button>
+                );
+              })}
             </div>
           </Card>
         </div>

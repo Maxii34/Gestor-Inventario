@@ -1,5 +1,7 @@
 'use client';
 
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+
 type PageItem = number | 'ellipsis';
 
 interface PaginationProps {
@@ -36,8 +38,9 @@ export function Pagination({ page, totalPages, onPageChange, disabled = false, c
         type="button"
         disabled={disabled || page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className={`${baseButton} border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
+        className={`${baseButton} inline-flex items-center gap-1 border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
       >
+        <LuChevronLeft aria-hidden="true" size={16} />
         Anterior
       </button>
       {items.map((item, index) =>
@@ -66,9 +69,10 @@ export function Pagination({ page, totalPages, onPageChange, disabled = false, c
         type="button"
         disabled={disabled || page >= totalPages}
         onClick={() => onPageChange(page + 1)}
-        className={`${baseButton} border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
+        className={`${baseButton} inline-flex items-center gap-1 border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
       >
         Siguiente
+        <LuChevronRight aria-hidden="true" size={16} />
       </button>
     </nav>
   );

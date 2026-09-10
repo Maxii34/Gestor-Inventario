@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -170,6 +171,7 @@ export default function CategoriasPage() {
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
           >
+            <LuPencil aria-hidden="true" size={14} />
             Editar
           </Button>
           <Button
@@ -182,6 +184,7 @@ export default function CategoriasPage() {
               setDeleteTarget(row);
             }}
           >
+            <LuTrash2 aria-hidden="true" size={14} />
             Eliminar
           </Button>
         </span>
@@ -197,6 +200,7 @@ export default function CategoriasPage() {
         actions={
           isAdmin ? (
             <Button type="button" className="w-full sm:w-auto" onClick={nuevaCategoria}>
+              <LuPlus aria-hidden="true" size={16} />
               Nueva categoría
             </Button>
           ) : undefined
@@ -286,6 +290,7 @@ export default function CategoriasPage() {
                 Cancelar
               </Button>
               <Button type="button" onClick={() => void guardarCategoria()} disabled={isSubmitting}>
+                <LuSave aria-hidden="true" size={16} />
                 {isSubmitting
                   ? 'Guardando…'
                   : editingId === null

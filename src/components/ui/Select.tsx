@@ -1,4 +1,5 @@
 import type { SelectHTMLAttributes } from 'react';
+import { LuChevronDown } from 'react-icons/lu';
 
 export interface SelectOption {
   value: string;
@@ -46,16 +47,11 @@ export function Select({
             </option>
           ))}
         </select>
-        <svg
+        <LuChevronDown
           aria-hidden="true"
-          viewBox="0 0 16 16"
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        >
-          <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+          size={16}
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
+        />
       </span>
       {error && <span className="text-xs text-red-600">{error}</span>}
       {!error && hint && <span className="text-xs text-zinc-500">{hint}</span>}

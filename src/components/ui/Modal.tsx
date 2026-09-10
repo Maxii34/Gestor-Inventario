@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
+import { LuX } from 'react-icons/lu';
 
 type ModalSize = 'sm' | 'md' | 'lg';
 
@@ -58,9 +59,9 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar ventana"
-            className="rounded-lg px-2 py-1 text-lg leading-none text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
           >
-            ×
+            <LuX aria-hidden="true" size={18} />
           </button>
         </div>
         <div className="p-4">{children}</div>

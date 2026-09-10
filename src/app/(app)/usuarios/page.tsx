@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  LuFilter,
+  LuPencil,
+  LuPlus,
+  LuPower,
+  LuPowerOff,
+  LuSave,
+} from 'react-icons/lu';
+import {
   Badge,
   Button,
   Card,
@@ -84,6 +92,7 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
           aria-label={`Editar ${row.nombre}`}
           onClick={row.onEdit}
         >
+          <LuPencil aria-hidden="true" size={14} />
           Editar
         </Button>
         <Button
@@ -93,7 +102,17 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
           aria-label={`${row.activo ? 'Desactivar' : 'Activar'} ${row.nombre}`}
           onClick={row.onToggleActive}
         >
-          {row.activo ? 'Desactivar' : 'Activar'}
+          {row.activo ? (
+            <>
+              <LuPowerOff aria-hidden="true" size={14} />
+              Desactivar
+            </>
+          ) : (
+            <>
+              <LuPower aria-hidden="true" size={14} />
+              Activar
+            </>
+          )}
         </Button>
       </span>
     ),
@@ -265,6 +284,7 @@ export default function UsuariosPage() {
         description="Administra los usuarios y roles de acceso al sistema."
         actions={
           <Button type="button" className="w-full sm:w-auto" onClick={nuevoUsuario}>
+            <LuPlus aria-hidden="true" size={16} />
             Nuevo usuario
           </Button>
         }
@@ -283,7 +303,11 @@ export default function UsuariosPage() {
           </Card>
         </div>
 
-        <Card title="Filtros" subtitle="Controles visuales sin funcionalidad">
+        <Card
+          title="Filtros"
+          subtitle="Controles visuales sin funcionalidad"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SearchInput
               id="buscar-usuario"
@@ -383,6 +407,7 @@ export default function UsuariosPage() {
               Cancelar
             </Button>
             <Button type="button" onClick={() => void guardarUsuario()} disabled={isSubmitting}>
+              <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
                 : editingId === null

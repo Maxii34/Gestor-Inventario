@@ -1,3 +1,4 @@
+import { LuArrowLeft, LuCreditCard } from 'react-icons/lu';
 import { Button, Card, PageHeader } from '@/components';
 import { MOCK_PAGO } from '@/mocks';
 
@@ -30,9 +31,11 @@ export default function PagosPage() {
           </dl>
           <div className="mt-6 flex flex-col gap-2">
             <Button type="button" size="lg" fullWidth>
+              <LuCreditCard aria-hidden="true" size={18} />
               Continuar al pago
             </Button>
             <Button type="button" variant="outline" fullWidth>
+              <LuArrowLeft aria-hidden="true" size={16} />
               Volver a ventas
             </Button>
           </div>

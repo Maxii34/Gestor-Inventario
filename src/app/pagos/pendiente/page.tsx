@@ -1,3 +1,4 @@
+import { LuArrowLeft, LuClock, LuEye } from 'react-icons/lu';
 import { Badge, Button, Card } from '@/components';
 import { MOCK_PAGO_PENDIENTE } from '@/mocks';
 
@@ -10,16 +11,7 @@ export default function PagoPendientePage() {
             aria-hidden="true"
             className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100"
           >
-            <svg
-              viewBox="0 0 20 20"
-              className="h-6 w-6 text-yellow-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="10" cy="10" r="7" />
-              <path d="M10 6.5V10l2.5 2" strokeLinecap="round" />
-            </svg>
+            <LuClock aria-hidden="true" size={24} className="text-yellow-700" />
           </span>
           <h1 className="mt-3 text-xl font-bold text-zinc-900">Pago pendiente</h1>
           <p className="mt-1 text-sm text-zinc-500">{MOCK_PAGO_PENDIENTE.mensaje}</p>
@@ -44,9 +36,11 @@ export default function PagoPendientePage() {
         </dl>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
           <Button type="button" variant="outline" fullWidth>
+            <LuArrowLeft aria-hidden="true" size={16} />
             Volver a ventas
           </Button>
           <Button type="button" fullWidth>
+            <LuEye aria-hidden="true" size={16} />
             Ver venta
           </Button>
         </div>

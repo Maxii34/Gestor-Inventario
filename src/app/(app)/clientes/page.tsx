@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -96,6 +97,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
           aria-label={`Editar ${row.nombre} ${row.apellido}`}
           onClick={row.onEdit}
         >
+          <LuPencil aria-hidden="true" size={14} />
           Editar
         </Button>
         <Button
@@ -105,6 +107,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
           aria-label={`Eliminar ${row.nombre} ${row.apellido}`}
           onClick={row.onDelete}
         >
+          <LuTrash2 aria-hidden="true" size={14} />
           Eliminar
         </Button>
       </span>
@@ -264,6 +267,7 @@ export default function ClientesPage() {
         description="Administra la información de los clientes registrados."
         actions={
           <Button type="button" className="w-full sm:w-auto" onClick={nuevoCliente}>
+            <LuPlus aria-hidden="true" size={16} />
             Nuevo cliente
           </Button>
         }
@@ -277,7 +281,11 @@ export default function ClientesPage() {
           </Card>
         </div>
 
-        <Card title="Filtros" subtitle="Controles visuales sin funcionalidad">
+        <Card
+          title="Filtros"
+          subtitle="Controles visuales sin funcionalidad"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SearchInput
               id="buscar-cliente"
@@ -388,6 +396,7 @@ export default function ClientesPage() {
               Cancelar
             </Button>
             <Button type="button" onClick={() => void guardarCliente()} disabled={isSubmitting}>
+              <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
                 : editingId === null

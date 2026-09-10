@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -329,6 +330,7 @@ export default function ProductosPage() {
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
           >
+            <LuPencil aria-hidden="true" size={14} />
             Editar
           </Button>
           <Button
@@ -341,6 +343,7 @@ export default function ProductosPage() {
               setDeleteTarget(row);
             }}
           >
+            <LuTrash2 aria-hidden="true" size={14} />
             Eliminar
           </Button>
         </span>
@@ -356,6 +359,7 @@ export default function ProductosPage() {
         actions={
           isAdmin ? (
             <Button type="button" className="w-full sm:w-auto" onClick={nuevoProducto}>
+              <LuPlus aria-hidden="true" size={16} />
               Nuevo producto
             </Button>
           ) : undefined
@@ -363,7 +367,11 @@ export default function ProductosPage() {
       />
 
       <div className="flex flex-col gap-4 md:gap-6">
-        <Card title="Filtros" subtitle="Controles visuales sin funcionalidad">
+        <Card
+          title="Filtros"
+          subtitle="Controles visuales sin funcionalidad"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SearchInput
               id="buscar-producto"
@@ -515,6 +523,7 @@ export default function ProductosPage() {
                 Cancelar
               </Button>
               <Button type="button" onClick={() => void guardarProducto()} disabled={isSubmitting}>
+                <LuSave aria-hidden="true" size={16} />
                 {isSubmitting
                   ? 'Guardando…'
                   : editingId === null

@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  LuEye,
+  LuFilter,
+  LuPlus,
+  LuSave,
+  LuX,
+} from 'react-icons/lu';
+import {
   Badge,
   Button,
   Card,
@@ -140,6 +147,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
           aria-label={`Ver detalle de la venta #${row.id}`}
           onClick={row.onVerDetalle}
         >
+          <LuEye aria-hidden="true" size={14} />
           Ver detalle
         </Button>
         {row.estado === 'PENDIENTE' && (
@@ -150,6 +158,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
             aria-label={`Cancelar la venta #${row.id}`}
             onClick={row.onAnular}
           >
+            <LuX aria-hidden="true" size={14} />
             Cancelar
           </Button>
         )}
@@ -200,6 +209,7 @@ const DETALLE_COLUMNAS: TableColumn<ItemNuevaVenta & { onQuitar: () => void }>[]
         aria-label={`Quitar ${row.nombre}`}
         onClick={row.onQuitar}
       >
+        <LuX aria-hidden="true" size={14} />
         Quitar
       </Button>
     ),
@@ -478,6 +488,7 @@ export default function VentasPage() {
               document.getElementById('nueva-venta')?.scrollIntoView({ behavior: 'smooth' })
             }
           >
+            <LuPlus aria-hidden="true" size={16} />
             Nueva venta
           </Button>
         }
@@ -491,7 +502,11 @@ export default function VentasPage() {
           </Card>
         </div>
 
-        <Card title="Filtros" subtitle="Controles visuales sin funcionalidad">
+        <Card
+          title="Filtros"
+          subtitle="Controles visuales sin funcionalidad"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SearchInput
               id="buscar-venta"
@@ -612,6 +627,7 @@ export default function VentasPage() {
                       />
                     </FormField>
                     <Button type="button" variant="outline" onClick={agregarItem}>
+                      <LuPlus aria-hidden="true" size={16} />
                       Agregar
                     </Button>
                   </div>
@@ -677,6 +693,7 @@ export default function VentasPage() {
                     onClick={() => void registrarVenta()}
                     disabled={isRegistrando}
                   >
+                    <LuSave aria-hidden="true" size={16} />
                     {isRegistrando ? 'Registrando…' : 'Registrar venta'}
                   </Button>
                 </div>

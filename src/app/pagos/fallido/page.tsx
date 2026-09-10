@@ -1,3 +1,4 @@
+import { LuArrowLeft, LuCircleX } from 'react-icons/lu';
 import { Badge, Button, Card } from '@/components';
 import { MOCK_PAGO_FALLIDO } from '@/mocks';
 
@@ -10,15 +11,7 @@ export default function PagoFallidoPage() {
             aria-hidden="true"
             className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100"
           >
-            <svg
-              viewBox="0 0 20 20"
-              className="h-6 w-6 text-red-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 6l8 8M14 6l-8 8" strokeLinecap="round" />
-            </svg>
+            <LuCircleX aria-hidden="true" size={24} className="text-red-700" />
           </span>
           <h1 className="mt-3 text-xl font-bold text-zinc-900">
             No se pudo procesar el pago
@@ -45,6 +38,7 @@ export default function PagoFallidoPage() {
         </dl>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
           <Button type="button" variant="outline" fullWidth>
+            <LuArrowLeft aria-hidden="true" size={16} />
             Volver a ventas
           </Button>
           <Button type="button" fullWidth>

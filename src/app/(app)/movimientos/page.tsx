@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { LuFilter, LuPlus, LuSave } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -228,6 +229,7 @@ export default function MovimientosPage() {
               document.getElementById('movimiento-formulario')?.scrollIntoView({ behavior: 'smooth' })
             }
           >
+            <LuPlus aria-hidden="true" size={16} />
             Registrar movimiento
           </Button>
         }
@@ -241,7 +243,11 @@ export default function MovimientosPage() {
           </Card>
         </div>
 
-        <Card title="Filtros" subtitle="Controles visuales sin funcionalidad">
+        <Card
+          title="Filtros"
+          subtitle="Controles visuales sin funcionalidad"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SearchInput
               id="buscar-movimiento"
@@ -362,6 +368,7 @@ export default function MovimientosPage() {
               Cancelar
             </Button>
             <Button type="button" onClick={() => void guardarMovimiento()} disabled={isSubmitting}>
+              <LuSave aria-hidden="true" size={16} />
               {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
             </Button>
           </div>

@@ -1,3 +1,4 @@
+import { LuArrowLeft, LuCircleCheck, LuEye } from 'react-icons/lu';
 import { Badge, Button, Card } from '@/components';
 import { MOCK_PAGO_EXITOSO } from '@/mocks';
 
@@ -10,15 +11,7 @@ export default function PagoExitosoPage() {
             aria-hidden="true"
             className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100"
           >
-            <svg
-              viewBox="0 0 20 20"
-              className="h-6 w-6 text-green-700"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <LuCircleCheck aria-hidden="true" size={24} className="text-green-700" />
           </span>
           <h1 className="mt-3 text-xl font-bold text-zinc-900">
             Pago realizado correctamente
@@ -49,9 +42,11 @@ export default function PagoExitosoPage() {
         </dl>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row">
           <Button type="button" variant="outline" fullWidth>
+            <LuArrowLeft aria-hidden="true" size={16} />
             Volver a ventas
           </Button>
           <Button type="button" fullWidth>
+            <LuEye aria-hidden="true" size={16} />
             Ver venta
           </Button>
         </div>
