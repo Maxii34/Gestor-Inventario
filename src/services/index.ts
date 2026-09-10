@@ -3,3 +3,4 @@
 export * from './auth.service';
 export * from './dashboard.service';
 export * from './productos.service';
+export * from './categorias.service';

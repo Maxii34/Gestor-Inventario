@@ -1,12 +1,9 @@
 import { apiRequest } from '@/lib/api/client';
+import { listarCategorias } from '@/services/categorias.service';
 import type { ApiListResponse, ApiSuccess, PageMeta } from '@/types/api';
+import type { BackendCategoria } from '@/services/categorias.service';
 
-export interface BackendCategoria {
-  id: number;
-  nombre: string;
-  descripcion?: string | null;
-  activo: boolean;
-}
+export type { BackendCategoria };
 
 export interface BackendProducto {
   id: number;
@@ -76,9 +73,4 @@ export async function eliminarProducto(id: number): Promise<void> {
   await apiRequest<unknown>(`/productos/${id}`, { method: 'DELETE', auth: true });
 }
 
-export async function listarCategorias(): Promise<BackendCategoria[]> {
-  const response = await apiRequest<ApiSuccess<BackendCategoria[]>>('/categorias', {
-    auth: true,
-  });
-  return response.data;
-}
+export { listarCategorias };
