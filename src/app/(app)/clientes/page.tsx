@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
@@ -131,6 +131,14 @@ export default function ClientesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [todosClientes, setTodosClientes] = useState<BackendCliente[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+
+  const hayFiltros = busqueda.trim() !== '' || filtroEstado !== 'todos';
+
   const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
@@ -150,20 +158,44 @@ export default function ClientesPage() {
     }
   }, []);
 
-  useEffect(() => {
-    async function cargarInicial(): Promise<void> {
-      await cargarPagina(1);
+  const cargarTodoParaFiltrar = useCallback(async (): Promise<void> => {
+    setIsFiltering(true);
+    setFilterError(null);
+    try {
+      const primera = await listarClientes(1, 1);
+      if (primera.meta.total === 0) {
+        setTodosClientes([]);
+        return;
+      }
+      const completa = await listarClientes(1, primera.meta.total);
+      setTodosClientes(completa.clientes);
+    } catch (err) {
+      setTodosClientes([]);
+      setFilterError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsFiltering(false);
     }
-    void cargarInicial();
-  }, [cargarPagina]);
+  }, []);
 
   useEffect(() => {
-    if (page === 1) return;
+    if (hayFiltros) return;
     async function cargarInicial(): Promise<void> {
       await cargarPagina(page);
     }
     void cargarInicial();
-  }, [page, cargarPagina]);
+  }, [page, hayFiltros, cargarPagina]);
+
+  useEffect(() => {
+    if (!hayFiltros) return;
+    async function cargarTodo(): Promise<void> {
+      await cargarTodoParaFiltrar();
+    }
+    void cargarTodo();
+  }, [hayFiltros, cargarTodoParaFiltrar]);
 
   function setCampo(campo: keyof FormularioCliente, valor: string): void {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
@@ -216,7 +248,11 @@ export default function ClientesPage() {
         await actualizarCliente(editingId, input);
       }
       cancelarEdicion();
-      await cargarPagina(page);
+      if (hayFiltros) {
+        await cargarTodoParaFiltrar();
+      } else {
+        await cargarPagina(page);
+      }
     } catch (err) {
       setFormError(
         err instanceof ApiError
@@ -235,7 +271,9 @@ export default function ClientesPage() {
     try {
       await eliminarCliente(deleteTarget.id);
       setDeleteTarget(null);
-      if (clientes.length === 1 && page > 1) {
+      if (hayFiltros) {
+        await cargarTodoParaFiltrar();
+      } else if (clientes.length === 1 && page > 1) {
         setPage(page - 1);
       } else {
         await cargarPagina(page);
@@ -251,7 +289,31 @@ export default function ClientesPage() {
     }
   }
 
-  const filas = clientes.map((cliente) => ({
+  const clientesFiltrados = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+    return todosClientes.filter((cliente) => {
+      if (
+        texto &&
+        !`${cliente.nombre} ${cliente.apellido} ${cliente.dni ?? ''} ${cliente.email ?? ''}`
+          .toLowerCase()
+          .includes(texto)
+      )
+        return false;
+      if (filtroEstado === 'activos' && !cliente.activo) return false;
+      if (filtroEstado === 'inactivos' && cliente.activo) return false;
+      return true;
+    });
+  }, [todosClientes, busqueda, filtroEstado]);
+
+  const totalPaginasVisibles = hayFiltros
+    ? Math.max(1, Math.ceil(clientesFiltrados.length / PAGE_SIZE))
+    : meta.totalPaginas;
+  const paginaVisible = hayFiltros ? Math.min(page, totalPaginasVisibles) : meta.page;
+  const filasBase = hayFiltros
+    ? clientesFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
+    : clientes;
+
+  const filas = filasBase.map((cliente) => ({
     ...cliente,
     onEdit: () => comenzarEdicion(cliente),
     onDelete: () => {
@@ -283,7 +345,7 @@ export default function ClientesPage() {
 
         <Card
           title="Filtros"
-          subtitle="Controles visuales sin funcionalidad"
+          subtitle="Filtros aplicados sobre los datos cargados"
           actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -291,22 +353,49 @@ export default function ClientesPage() {
               id="buscar-cliente"
               label="Buscar"
               placeholder="Buscar por nombre, apellido, DNI o email..."
-              value=""
-              onChange={() => undefined}
+              value={busqueda}
+              onChange={(valor) => {
+                setBusqueda(valor);
+                setPage(1);
+              }}
             />
-            <Select label="Estado" defaultValue="todos" options={ESTADO_OPCIONES} />
+            <Select
+              label="Estado"
+              value={filtroEstado}
+              onChange={(event) => {
+                setFiltroEstado(event.target.value);
+                setPage(1);
+              }}
+              options={ESTADO_OPCIONES}
+            />
           </div>
         </Card>
 
-        <Card title="Listado de clientes" subtitle={`${meta.total} clientes registrados`}>
-          {isLoading ? (
+        <Card
+          title="Listado de clientes"
+          subtitle={
+            hayFiltros
+              ? `${clientesFiltrados.length} clientes encontrados`
+              : `${meta.total} clientes registrados`
+          }
+        >
+          {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2, 3].map((item) => (
                 <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
               ))}
               <span className="sr-only">Cargando clientes…</span>
             </div>
-          ) : listError ? (
+          ) : hayFiltros && filterError ? (
+            <div>
+              <p className="text-sm text-zinc-500">{filterError}</p>
+              <div className="mt-4">
+                <Button type="button" onClick={() => void cargarTodoParaFiltrar()}>
+                  Reintentar
+                </Button>
+              </div>
+            </div>
+          ) : !hayFiltros && listError ? (
             <div>
               <p className="text-sm text-zinc-500">{listError}</p>
               <div className="mt-4">
@@ -321,15 +410,19 @@ export default function ClientesPage() {
                 columns={CLIENTE_COLUMNAS}
                 data={filas}
                 getRowKey={(row) => row.id}
-                emptyMessage="Sin clientes para mostrar."
+                emptyMessage={
+                  hayFiltros
+                    ? 'Sin resultados para los filtros aplicados.'
+                    : 'Sin clientes para mostrar.'
+                }
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
                 <p className="text-xs text-zinc-500">
-                  Página {meta.page} de {meta.totalPaginas}
+                  Página {paginaVisible} de {totalPaginasVisibles}
                 </p>
                 <Pagination
-                  page={meta.page}
-                  totalPages={meta.totalPaginas}
+                  page={paginaVisible}
+                  totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
                 />
               </div>

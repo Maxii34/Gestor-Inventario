@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
@@ -30,14 +30,6 @@ import {
 import type { PageMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
-
-const CATEGORIA_OPCIONES = [
-  { value: 'todas', label: 'Todas' },
-  { value: 'electronica', label: 'Electrónica' },
-  { value: 'hogar', label: 'Hogar' },
-  { value: 'oficina', label: 'Oficina' },
-  { value: 'accesorios', label: 'Accesorios' },
-];
 
 const ESTADO_OPCIONES = [
   { value: 'todos', label: 'Todos' },
@@ -84,6 +76,12 @@ const FORMULARIO_VACIO: FormularioProducto = {
   categoriaId: '',
 };
 
+const ESTADO_POR_FILTRO: Record<string, EstadoStockEtiqueta> = {
+  disponible: 'Disponible',
+  'stock-bajo': 'Stock bajo',
+  'sin-stock': 'Sin stock',
+};
+
 function validarFormulario(form: FormularioProducto): string | null {
   if (!form.nombre.trim()) return 'El nombre es obligatorio.';
   if (!form.categoriaId) return 'La categoría es obligatoria.';
@@ -126,6 +124,16 @@ export default function ProductosPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('todas');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [todosProductos, setTodosProductos] = useState<BackendProducto[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+
+  const hayFiltros =
+    busqueda.trim() !== '' || filtroCategoria !== 'todas' || filtroEstado !== 'todos';
+
   const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
@@ -159,28 +167,51 @@ export default function ProductosPage() {
     }
   }, []);
 
-  useEffect(() => {
-    async function cargarInicial(): Promise<void> {
-      await cargarPagina(1);
+  const cargarTodoParaFiltrar = useCallback(async (): Promise<void> => {
+    setIsFiltering(true);
+    setFilterError(null);
+    try {
+      const primera = await listarProductos(1, 1);
+      if (primera.meta.total === 0) {
+        setTodosProductos([]);
+        return;
+      }
+      const completa = await listarProductos(1, primera.meta.total);
+      setTodosProductos(completa.productos);
+    } catch (err) {
+      setTodosProductos([]);
+      setFilterError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsFiltering(false);
     }
-    void cargarInicial();
-  }, [cargarPagina]);
+  }, []);
 
   useEffect(() => {
-    if (!isAdmin) return;
-    async function cargarInicial(): Promise<void> {
-      await cargarCategorias();
-    }
-    void cargarInicial();
-  }, [isAdmin, cargarCategorias]);
-
-  useEffect(() => {
-    if (page === 1) return;
+    if (hayFiltros) return;
     async function cargarInicial(): Promise<void> {
       await cargarPagina(page);
     }
     void cargarInicial();
-  }, [page, cargarPagina]);
+  }, [page, hayFiltros, cargarPagina]);
+
+  useEffect(() => {
+    if (!hayFiltros) return;
+    async function cargarTodo(): Promise<void> {
+      await cargarTodoParaFiltrar();
+    }
+    void cargarTodo();
+  }, [hayFiltros, cargarTodoParaFiltrar]);
+
+  useEffect(() => {
+    async function cargarInicial(): Promise<void> {
+      await cargarCategorias();
+    }
+    void cargarInicial();
+  }, [cargarCategorias]);
 
   function setCampo(campo: keyof FormularioProducto, valor: string): void {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
@@ -238,7 +269,11 @@ export default function ProductosPage() {
         await actualizarProducto(editingId, input);
       }
       cancelarEdicion();
-      await cargarPagina(page);
+      if (hayFiltros) {
+        await cargarTodoParaFiltrar();
+      } else {
+        await cargarPagina(page);
+      }
     } catch (err) {
       setFormError(
         err instanceof ApiError
@@ -257,7 +292,9 @@ export default function ProductosPage() {
     try {
       await eliminarProducto(deleteTarget.id);
       setDeleteTarget(null);
-      if (productos.length === 1 && page > 1) {
+      if (hayFiltros) {
+        await cargarTodoParaFiltrar();
+      } else if (productos.length === 1 && page > 1) {
         setPage(page - 1);
       } else {
         await cargarPagina(page);
@@ -272,6 +309,34 @@ export default function ProductosPage() {
       setIsDeleting(false);
     }
   }
+
+  const opcionesCategoria = [
+    { value: 'todas', label: 'Todas' },
+    ...categorias.map((categoria) => ({
+      value: String(categoria.id),
+      label: categoria.nombre,
+    })),
+  ];
+
+  const productosFiltrados = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+    return todosProductos.filter((producto) => {
+      if (texto && !producto.nombre.toLowerCase().includes(texto)) return false;
+      if (filtroCategoria !== 'todas' && producto.categoriaId !== Number(filtroCategoria))
+        return false;
+      if (filtroEstado !== 'todos' && estadoStock(producto).etiqueta !== ESTADO_POR_FILTRO[filtroEstado])
+        return false;
+      return true;
+    });
+  }, [todosProductos, busqueda, filtroCategoria, filtroEstado]);
+
+  const totalPaginasVisibles = hayFiltros
+    ? Math.max(1, Math.ceil(productosFiltrados.length / PAGE_SIZE))
+    : meta.totalPaginas;
+  const paginaVisible = hayFiltros ? Math.min(page, totalPaginasVisibles) : meta.page;
+  const filasTabla = hayFiltros
+    ? productosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
+    : productos;
 
   const columnas: TableColumn<BackendProducto>[] = [
     {
@@ -369,7 +434,7 @@ export default function ProductosPage() {
       <div className="flex flex-col gap-4 md:gap-6">
         <Card
           title="Filtros"
-          subtitle="Controles visuales sin funcionalidad"
+          subtitle="Filtros aplicados sobre los datos cargados"
           actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -377,30 +442,58 @@ export default function ProductosPage() {
               id="buscar-producto"
               label="Buscar"
               placeholder="Buscar producto..."
-              value=""
-              onChange={() => undefined}
+              value={busqueda}
+              onChange={(valor) => {
+                setBusqueda(valor);
+                setPage(1);
+              }}
             />
             <Select
               label="Categoría"
-              defaultValue="todas"
-              options={CATEGORIA_OPCIONES}
+              value={filtroCategoria}
+              onChange={(event) => {
+                setFiltroCategoria(event.target.value);
+                setPage(1);
+              }}
+              options={opcionesCategoria}
             />
-            <Select label="Estado" defaultValue="todos" options={ESTADO_OPCIONES} />
+            <Select
+              label="Estado"
+              value={filtroEstado}
+              onChange={(event) => {
+                setFiltroEstado(event.target.value);
+                setPage(1);
+              }}
+              options={ESTADO_OPCIONES}
+            />
           </div>
         </Card>
 
         <Card
           title="Listado de productos"
-          subtitle={`${meta.total} productos registrados`}
+          subtitle={
+            hayFiltros
+              ? `${productosFiltrados.length} productos encontrados`
+              : `${meta.total} productos registrados`
+          }
         >
-          {isLoading ? (
+          {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2, 3].map((item) => (
                 <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
               ))}
               <span className="sr-only">Cargando productos…</span>
             </div>
-          ) : listError ? (
+          ) : hayFiltros && filterError ? (
+            <div>
+              <p className="text-sm text-zinc-500">{filterError}</p>
+              <div className="mt-4">
+                <Button type="button" onClick={() => void cargarTodoParaFiltrar()}>
+                  Reintentar
+                </Button>
+              </div>
+            </div>
+          ) : !hayFiltros && listError ? (
             <div>
               <p className="text-sm text-zinc-500">{listError}</p>
               <div className="mt-4">
@@ -413,17 +506,21 @@ export default function ProductosPage() {
             <>
               <Table
                 columns={columnas}
-                data={productos}
+                data={filasTabla}
                 getRowKey={(row) => row.id}
-                emptyMessage="Sin productos para mostrar."
+                emptyMessage={
+                  hayFiltros
+                    ? 'Sin resultados para los filtros aplicados.'
+                    : 'Sin productos para mostrar.'
+                }
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
                 <p className="text-xs text-zinc-500">
-                  Página {meta.page} de {meta.totalPaginas}
+                  Página {paginaVisible} de {totalPaginasVisibles}
                 </p>
                 <Pagination
-                  page={meta.page}
-                  totalPages={meta.totalPaginas}
+                  page={paginaVisible}
+                  totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
                 />
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuFilter, LuPlus, LuSave } from 'react-icons/lu';
 import {
   Badge,
@@ -49,6 +49,7 @@ const TIPO_VISUAL: Record<TipoMovimientoBackend, { etiqueta: string; tono: 'succ
 };
 
 function formatoFechaHora(iso: string): string {
+
   const fecha = new Date(iso);
   if (Number.isNaN(fecha.getTime())) return iso;
   return new Intl.DateTimeFormat('es-AR', {
@@ -64,6 +65,17 @@ function formatoCantidad(movimiento: BackendMovimiento): string {
   if (movimiento.tipo === 'ENTRADA') return `+${movimiento.cantidad}`;
   if (movimiento.tipo === 'SALIDA') return `-${movimiento.cantidad}`;
   return `${movimiento.cantidad}`;
+}
+
+function inicioDePeriodo(valor: string): number | null {
+  if (valor === 'hoy') {
+    const inicio = new Date();
+    inicio.setHours(0, 0, 0, 0);
+    return inicio.getTime();
+  }
+  if (valor === 'ultimos-7') return Date.now() - 7 * 24 * 60 * 60 * 1000;
+  if (valor === 'ultimos-30') return Date.now() - 30 * 24 * 60 * 60 * 1000;
+  return null;
 }
 
 const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
@@ -115,6 +127,17 @@ export default function MovimientosPage() {
   >([]);
   const [productosError, setProductosError] = useState<string | null>(null);
 
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('todos');
+  const [filtroPeriodo, setFiltroPeriodo] = useState('todos');
+  const [desdePeriodo, setDesdePeriodo] = useState<number | null>(null);
+  const [todosMovimientos, setTodosMovimientos] = useState<BackendMovimiento[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+
+  const hayFiltros =
+    busqueda.trim() !== '' || filtroTipo !== 'todos' || filtroPeriodo !== 'todos';
+
   const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
@@ -154,21 +177,45 @@ export default function MovimientosPage() {
     }
   }, []);
 
+  const cargarTodoParaFiltrar = useCallback(async (): Promise<void> => {
+    setIsFiltering(true);
+    setFilterError(null);
+    try {
+      const primera = await listarMovimientos(1, 1);
+      if (primera.meta.total === 0) {
+        setTodosMovimientos([]);
+        return;
+      }
+      const completa = await listarMovimientos(1, primera.meta.total);
+      setTodosMovimientos(completa.movimientos);
+    } catch (err) {
+      setTodosMovimientos([]);
+      setFilterError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsFiltering(false);
+    }
+  }, []);
+
   useEffect(() => {
+    if (hayFiltros) return;
     async function cargarInicial(): Promise<void> {
-      await cargarPagina(1);
+      await cargarPagina(page);
       await cargarProductos();
     }
     void cargarInicial();
-  }, [cargarPagina, cargarProductos]);
+  }, [page, hayFiltros, cargarPagina, cargarProductos]);
 
   useEffect(() => {
-    if (page === 1) return;
-    async function cargarInicial(): Promise<void> {
-      await cargarPagina(page);
+    if (!hayFiltros) return;
+    async function cargarTodo(): Promise<void> {
+      await cargarTodoParaFiltrar();
     }
-    void cargarInicial();
-  }, [page, cargarPagina]);
+    void cargarTodo();
+  }, [hayFiltros, cargarTodoParaFiltrar]);
 
   function limpiarFormulario(): void {
     setProductoId('');
@@ -200,7 +247,9 @@ export default function MovimientosPage() {
         ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
       });
       limpiarFormulario();
-      if (page === 1) {
+      if (hayFiltros) {
+        await cargarTodoParaFiltrar();
+      } else if (page === 1) {
         await cargarPagina(1);
       } else {
         setPage(1);
@@ -215,6 +264,34 @@ export default function MovimientosPage() {
       setIsSubmitting(false);
     }
   }
+
+  const movimientosFiltrados = useMemo(() => {
+    const texto = busqueda.trim().toLowerCase();
+    return todosMovimientos.filter((movimiento) => {
+      if (
+        texto &&
+        !`${movimiento.producto?.nombre ?? ''} ${movimiento.motivo ?? ''}`
+          .toLowerCase()
+          .includes(texto)
+      )
+        return false;
+      if (filtroTipo !== 'todos' && movimiento.tipo !== filtroTipo.toUpperCase())
+        return false;
+      if (desdePeriodo !== null) {
+        const fecha = new Date(movimiento.fecha).getTime();
+        if (Number.isNaN(fecha) || fecha < desdePeriodo) return false;
+      }
+      return true;
+    });
+  }, [todosMovimientos, busqueda, filtroTipo, desdePeriodo]);
+
+  const totalPaginasVisibles = hayFiltros
+    ? Math.max(1, Math.ceil(movimientosFiltrados.length / PAGE_SIZE))
+    : meta.totalPaginas;
+  const paginaVisible = hayFiltros ? Math.min(page, totalPaginasVisibles) : meta.page;
+  const filasTabla = hayFiltros
+    ? movimientosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
+    : movimientos;
 
   return (
     <>
@@ -245,7 +322,7 @@ export default function MovimientosPage() {
 
         <Card
           title="Filtros"
-          subtitle="Controles visuales sin funcionalidad"
+          subtitle="Filtros aplicados sobre los datos cargados"
           actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -253,27 +330,59 @@ export default function MovimientosPage() {
               id="buscar-movimiento"
               label="Buscar"
               placeholder="Buscar producto o motivo..."
-              value=""
-              onChange={() => undefined}
+              value={busqueda}
+              onChange={(valor) => {
+                setBusqueda(valor);
+                setPage(1);
+              }}
             />
             <Select
               label="Tipo de movimiento"
-              defaultValue="todos"
+              value={filtroTipo}
+              onChange={(event) => {
+                setFiltroTipo(event.target.value);
+                setPage(1);
+              }}
               options={TIPO_OPCIONES}
             />
-            <Select label="Período" defaultValue="todos" options={PERIODO_OPCIONES} />
+            <Select
+              label="Período"
+              value={filtroPeriodo}
+              onChange={(event) => {
+                setFiltroPeriodo(event.target.value);
+                setDesdePeriodo(inicioDePeriodo(event.target.value));
+                setPage(1);
+              }}
+              options={PERIODO_OPCIONES}
+            />
           </div>
         </Card>
 
-        <Card title="Historial de movimientos" subtitle={`${meta.total} movimientos registrados`}>
-          {isLoading ? (
+        <Card
+          title="Historial de movimientos"
+          subtitle={
+            hayFiltros
+              ? `${movimientosFiltrados.length} movimientos encontrados`
+              : `${meta.total} movimientos registrados`
+          }
+        >
+          {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2, 3].map((item) => (
                 <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
               ))}
               <span className="sr-only">Cargando movimientos…</span>
             </div>
-          ) : listError ? (
+          ) : hayFiltros && filterError ? (
+            <div>
+              <p className="text-sm text-zinc-500">{filterError}</p>
+              <div className="mt-4">
+                <Button type="button" onClick={() => void cargarTodoParaFiltrar()}>
+                  Reintentar
+                </Button>
+              </div>
+            </div>
+          ) : !hayFiltros && listError ? (
             <div>
               <p className="text-sm text-zinc-500">{listError}</p>
               <div className="mt-4">
@@ -286,17 +395,21 @@ export default function MovimientosPage() {
             <>
               <Table
                 columns={MOVIMIENTO_COLUMNAS}
-                data={movimientos}
+                data={filasTabla}
                 getRowKey={(row) => row.id}
-                emptyMessage="Sin movimientos para mostrar."
+                emptyMessage={
+                  hayFiltros
+                    ? 'Sin resultados para los filtros aplicados.'
+                    : 'Sin movimientos para mostrar.'
+                }
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
                 <p className="text-xs text-zinc-500">
-                  Página {meta.page} de {meta.totalPaginas}
+                  Página {paginaVisible} de {totalPaginasVisibles}
                 </p>
                 <Pagination
-                  page={meta.page}
-                  totalPages={meta.totalPaginas}
+                  page={paginaVisible}
+                  totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
                 />
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LuArrowUpDown,
   LuPackage,
@@ -64,10 +65,10 @@ const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
 ];
 
 const ACCIONES_RAPIDAS = [
-  { etiqueta: 'Nuevo producto', icono: LuPlus },
-  { etiqueta: 'Nueva venta', icono: LuShoppingCart },
-  { etiqueta: 'Nuevo cliente', icono: LuUsers },
-  { etiqueta: 'Registrar movimiento', icono: LuArrowUpDown },
+  { etiqueta: 'Nuevo producto', icono: LuPlus, href: '/productos' },
+  { etiqueta: 'Nueva venta', icono: LuShoppingCart, href: '/ventas' },
+  { etiqueta: 'Nuevo cliente', icono: LuUsers, href: '/clientes' },
+  { etiqueta: 'Registrar movimiento', icono: LuArrowUpDown, href: '/movimientos' },
 ];
 
 function DashboardSkeleton() {
@@ -89,6 +90,7 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,12 +195,18 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <Card title="Acciones rápidas" subtitle="Accesos visuales sin funcionalidad">
+          <Card title="Acciones rápidas" subtitle="Accesos directos a los módulos">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {ACCIONES_RAPIDAS.map((accion) => {
                 const Icono = accion.icono;
                 return (
-                  <Button key={accion.etiqueta} type="button" variant="outline" fullWidth>
+                  <Button
+                    key={accion.etiqueta}
+                    type="button"
+                    variant="outline"
+                    fullWidth
+                    onClick={() => router.push(accion.href)}
+                  >
                     <Icono aria-hidden="true" size={16} />
                     {accion.etiqueta}
                   </Button>
