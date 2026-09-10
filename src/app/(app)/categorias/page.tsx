@@ -1,9 +1,9 @@
-import { AppLayout, PageHeader, Button, Card, Badge } from '@/components';
+import { PageHeader, Button, Card, Badge } from '@/components';
 import { MOCK_CATEGORIAS } from '@/mocks';
 
 export default function CategoriasPage() {
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="Categorías"
         description="Listado visual. Sin CRUD ni conexión al backend."
@@ -20,6 +20,6 @@ export default function CategoriasPage() {
           </Card>
         ))}
       </div>
-    </AppLayout>
+    </>
   );
 }

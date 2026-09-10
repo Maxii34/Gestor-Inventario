@@ -1,8 +1,8 @@
-import { AppLayout, PageHeader, Card } from '@/components';
+import { PageHeader, Card } from '@/components';
 
 export default function DashboardPage() {
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="Dashboard"
         description="Resumen visual del inventario. Sin conexión al backend."
@@ -13,6 +13,6 @@ export default function DashboardPage() {
         <Card title="Ventas del mes">—</Card>
         <Card title="Clientes">—</Card>
       </div>
-    </AppLayout>
+    </>
   );
 }

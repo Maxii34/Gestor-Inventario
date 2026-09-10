@@ -1,9 +1,9 @@
-import { AppLayout, PageHeader, Button, Badge } from '@/components';
+import { PageHeader, Button, Badge } from '@/components';
 import { MOCK_PRODUCTOS } from '@/mocks';
 
 export default function ProductosPage() {
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="Productos"
         description="Listado visual. Sin CRUD ni conexión al backend."
@@ -37,6 +37,6 @@ export default function ProductosPage() {
           </tbody>
         </table>
       </div>
-    </AppLayout>
+    </>
   );
 }

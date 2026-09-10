@@ -1,9 +1,9 @@
-import { AppLayout, PageHeader, Button, Badge } from '@/components';
+import { PageHeader, Button, Badge } from '@/components';
 import { MOCK_MOVIMIENTOS } from '@/mocks';
 
 export default function MovimientosPage() {
   return (
-    <AppLayout>
+    <>
       <PageHeader
         title="Movimientos de stock"
         description="Historial visual de entradas, salidas y ajustes."
@@ -39,6 +39,6 @@ export default function MovimientosPage() {
           </tbody>
         </table>
       </div>
-    </AppLayout>
+    </>
   );
 }
