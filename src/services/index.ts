@@ -5,3 +5,6 @@ export * from './dashboard.service';
 export * from './productos.service';
 export * from './categorias.service';
 export * from './movimientos.service';
+export * from './clientes.service';
+export * from './usuarios.service';
+export * from './ventas.service';
