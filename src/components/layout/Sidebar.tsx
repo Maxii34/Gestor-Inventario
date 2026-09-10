@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -19,6 +20,7 @@ function isActive(pathname: string, href: string) {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <div className="flex h-full flex-col bg-zinc-900 text-zinc-300">
@@ -56,6 +58,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-white/10 p-3">
         <button
           type="button"
+          onClick={() => {
+            onNavigate?.();
+            void logout();
+          }}
           className="flex w-full items-center rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-white/5 hover:text-white"
         >
           Cerrar sesión

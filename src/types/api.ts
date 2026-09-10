@@ -1,3 +1,10 @@
+// Envoltorio de éxito que devuelve el backend: { ok: true, mensaje, data }.
+export interface ApiSuccess<T> {
+  ok: true;
+  mensaje: string;
+  data: T;
+}
+
 // Formato de error que devuelve el backend: { ok: false, mensaje: '...' }.
 export interface ApiErrorBody {
   ok: false;

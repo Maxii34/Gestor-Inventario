@@ -1,4 +1,5 @@
 import type { ApiErrorBody } from '@/types/api';
+import { tokenStorage } from '@/lib/auth/storage';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -7,6 +8,7 @@ export interface RequestOptions {
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
+  auth?: boolean;
 }
 
 export class ApiError extends Error {
@@ -19,6 +21,29 @@ export class ApiError extends Error {
     this.status = status;
     this.body = body;
   }
+}
+
+type RefreshHandler = () => Promise<string | null>;
+
+let refreshHandler: RefreshHandler | null = null;
+let refreshInflight: Promise<string | null> | null = null;
+
+export function setRefreshHandler(handler: RefreshHandler | null): void {
+  refreshHandler = handler;
+}
+
+function runRefresh(): Promise<string | null> {
+  if (!refreshInflight) {
+    const task = async (): Promise<string | null> => {
+      try {
+        return refreshHandler ? await refreshHandler() : null;
+      } finally {
+        refreshInflight = null;
+      }
+    };
+    refreshInflight = task();
+  }
+  return refreshInflight;
 }
 
 function getBaseUrl(): string {
@@ -51,8 +76,24 @@ function extractMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
+  if (!headers) return {};
+  if (headers instanceof Headers) return Object.fromEntries(headers.entries());
+  if (Array.isArray(headers)) return Object.fromEntries(headers);
+  return { ...headers };
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers, signal } = options;
+  return requestWithRetry<T>(path, options, false);
+}
+
+async function requestWithRetry<T>(
+  path: string,
+  options: RequestOptions,
+  retried: boolean,
+): Promise<T> {
+  const { method = 'GET', body, headers, signal, auth = false } = options;
+  const accessToken = auth ? tokenStorage.getAccessToken() : null;
   let response: Response;
   try {
     response = await fetch(`${getBaseUrl()}${path}`, {
@@ -60,7 +101,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers: {
         Accept: 'application/json',
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...headers,
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...normalizeHeaders(headers),
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       signal,
@@ -73,6 +115,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
   const responseBody = await readBody(response);
   if (!response.ok) {
+    if (response.status === 401 && auth && !retried && refreshHandler) {
+      const newAccessToken = await runRefresh();
+      if (newAccessToken) {
+        return requestWithRetry<T>(path, options, true);
+      }
+    }
     throw new ApiError(
       response.status,
       extractMessage(responseBody, `Error HTTP ${response.status}.`),
