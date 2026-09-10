@@ -6,10 +6,16 @@ interface CardProps {
   actions?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  padding?: 'md' | 'lg';
   className?: string;
 }
 
-export function Card({ title, subtitle, actions, footer, children, className = '' }: CardProps) {
+const BODY_PADDING = {
+  md: 'p-4',
+  lg: 'p-6',
+};
+
+export function Card({ title, subtitle, actions, footer, children, padding = 'md', className = '' }: CardProps) {
   return (
     <div className={`rounded-xl border border-zinc-200 bg-white shadow-sm ${className}`}>
       {(title || actions) && (
@@ -21,7 +27,7 @@ export function Card({ title, subtitle, actions, footer, children, className = '
           {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className={BODY_PADDING[padding]}>{children}</div>
       {footer && <div className="border-t border-zinc-100 px-4 py-3">{footer}</div>}
     </div>
   );
