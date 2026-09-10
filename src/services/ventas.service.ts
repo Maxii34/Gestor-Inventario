@@ -43,7 +43,7 @@ export interface VentaInput {
 
 export interface VentaCreada {
   ventaId: number;
-  initPoint: string;
+  initPoint?: string;
 }
 
 export interface VentasPaginadas {
