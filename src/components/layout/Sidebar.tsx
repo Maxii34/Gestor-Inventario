@@ -82,8 +82,12 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 
       {/* Móvil / tablet: drawer sobre el contenido */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navegación principal"
+          className="fixed inset-0 z-40 lg:hidden"
+        >  <div
             aria-hidden="true"
             className="absolute inset-0 bg-zinc-950/50"
             onClick={onCloseMobile}
