@@ -449,10 +449,6 @@ export default function VentasPage() {
       } else {
         setPage(1);
       }
-      if (creada.initPoint) {
-        window.location.href = creada.initPoint;
-        return;
-      }
       setVentaCreada(creada);
     } catch (err) {
       setVentaError(
@@ -577,11 +573,24 @@ export default function VentasPage() {
                 </p>
                 <p className="mt-1 text-sm text-green-800">
                   Venta #{ventaCreada.ventaId} creada en el sistema.
+                  {ventaCreada.initPoint
+                    ? ' Usá el siguiente enlace para continuar con el pago en Mercado Pago.'
+                    : ''}
                 </p>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row">
                   <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
                     Registrar otra venta
                   </Button>
+                  {ventaCreada.initPoint && (
+                    <a
+                      href={ventaCreada.initPoint}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+                    >
+                      Continuar al pago
+                    </a>
+                  )}
                 </div>
               </div>
             ) : (
