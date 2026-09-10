@@ -1,3 +1,6 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
 import {
   Badge,
   Button,
@@ -6,23 +9,24 @@ import {
   Table,
   type TableColumn,
 } from '@/components';
-import {
-  MOCK_DASHBOARD_RESUMEN,
-  MOCK_STOCK_BAJO,
-  MOCK_VENTAS_RECIENTES,
-  type EstadoStock,
-  type EstadoVenta,
-  type ProductoStockBajo,
-  type VentaReciente,
-} from '@/mocks';
+import { ApiError } from '@/lib/api/client';
+import { getDatosDashboard } from '@/services/dashboard.service';
+import type {
+  DatosDashboard,
+  EstadoStockBajo,
+  EstadoVentaReciente,
+  ProductoStockBajo,
+  VentaReciente,
+} from '@/types/dashboard';
 
-const VENTA_TONO: Record<EstadoVenta, 'success' | 'warning' | 'danger'> = {
+const VENTA_TONO: Record<EstadoVentaReciente, 'success' | 'warning' | 'danger'> = {
   Pagada: 'success',
   Pendiente: 'warning',
   Cancelada: 'danger',
+  Rechazada: 'danger',
 };
 
-const STOCK_TONO: Record<EstadoStock, 'danger' | 'warning'> = {
+const STOCK_TONO: Record<EstadoStockBajo, 'danger' | 'warning'> = {
   Crítico: 'danger',
   Bajo: 'warning',
 };
@@ -31,12 +35,7 @@ const VENTAS_COLUMNAS: TableColumn<VentaReciente>[] = [
   { key: 'venta', header: 'Venta' },
   { key: 'cliente', header: 'Cliente' },
   { key: 'fecha', header: 'Fecha' },
-  {
-    key: 'total',
-    header: 'Total',
-    align: 'right',
-    render: (row) => `$${row.total.toLocaleString('es-AR')}`,
-  },
+  { key: 'total', header: 'Total', align: 'right' },
   {
     key: 'estado',
     header: 'Estado',
@@ -63,54 +62,128 @@ const ACCIONES_RAPIDAS = [
   'Registrar movimiento',
 ];
 
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 md:gap-6" aria-hidden="true">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="h-28 animate-pulse rounded-xl bg-zinc-200" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-2">
+        {[0, 1].map((item) => (
+          <div key={item} className="h-64 animate-pulse rounded-xl bg-zinc-200" />
+        ))}
+      </div>
+      <span className="sr-only">Cargando datos del dashboard…</span>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
+  const [datos, setDatos] = useState<DatosDashboard | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const cargar = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const resultado = await getDatosDashboard();
+      setDatos(resultado);
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos cargar los datos del dashboard. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    async function cargarInicial(): Promise<void> {
+      await cargar();
+    }
+    void cargarInicial();
+  }, [cargar]);
+
   return (
     <>
       <PageHeader title="Dashboard" description="Resumen general del negocio" />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {MOCK_DASHBOARD_RESUMEN.map((item) => (
-            <Card key={item.id} title={item.titulo}>
-              <p className="text-2xl font-bold text-zinc-900">{item.valor}</p>
-              <p className="mt-1 text-xs text-zinc-500">{item.contexto}</p>
-              <div className="mt-3">
-                <Badge tone={item.tono}>{item.indicador}</Badge>
-              </div>
-            </Card>
-          ))}
-        </div>
+      {isLoading && !datos && <DashboardSkeleton />}
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-2">
-          <Card title="Ventas recientes" subtitle="Últimas operaciones registradas">
-            <Table
-              columns={VENTAS_COLUMNAS}
-              data={MOCK_VENTAS_RECIENTES}
-              getRowKey={(row) => row.id}
-              emptyMessage="Sin ventas recientes."
-            />
-          </Card>
-
-          <Card title="Productos con stock bajo" subtitle="Requieren reposición">
-            <Table
-              columns={STOCK_COLUMNAS}
-              data={MOCK_STOCK_BAJO}
-              getRowKey={(row) => row.id}
-              emptyMessage="Sin productos con stock bajo."
-            />
-          </Card>
-        </div>
-
-        <Card title="Acciones rápidas" subtitle="Accesos visuales sin funcionalidad">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {ACCIONES_RAPIDAS.map((accion) => (
-              <Button key={accion} type="button" variant="outline" fullWidth>
-                {accion}
-              </Button>
-            ))}
+      {!isLoading && error && !datos && (
+        <Card title="No pudimos cargar los datos del dashboard">
+          <p className="text-sm text-zinc-500">{error}</p>
+          <div className="mt-4">
+            <Button type="button" onClick={cargar}>
+              Reintentar
+            </Button>
           </div>
         </Card>
-      </div>
+      )}
+
+      {datos && (
+        <div className="flex flex-col gap-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Card title="Productos">
+              <p className="text-2xl font-bold text-zinc-900">
+                {datos.resumen.totalProductos}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {datos.resumen.productosActivos} activos
+              </p>
+            </Card>
+            <Card title="Stock bajo">
+              <p className="text-2xl font-bold text-zinc-900">{datos.resumen.stockBajo}</p>
+              <p className="mt-1 text-xs text-zinc-500">requieren reposición</p>
+            </Card>
+            <Card title="Ventas">
+              <p className="text-2xl font-bold text-zinc-900">{datos.resumen.totalVentas}</p>
+              <p className="mt-1 text-xs text-zinc-500">operaciones registradas</p>
+            </Card>
+            <Card title="Clientes">
+              <p className="text-2xl font-bold text-zinc-900">
+                {datos.resumen.totalClientes}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-2">
+            <Card title="Ventas recientes" subtitle="Últimas operaciones registradas">
+              <Table
+                columns={VENTAS_COLUMNAS}
+                data={datos.ventasRecientes}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin ventas recientes."
+              />
+            </Card>
+
+            <Card title="Productos con stock bajo" subtitle="Requieren reposición">
+              <Table
+                columns={STOCK_COLUMNAS}
+                data={datos.stockBajo}
+                getRowKey={(row) => row.id}
+                emptyMessage="Sin productos con stock bajo."
+              />
+            </Card>
+          </div>
+
+          <Card title="Acciones rápidas" subtitle="Accesos visuales sin funcionalidad">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {ACCIONES_RAPIDAS.map((accion) => (
+                <Button key={accion} type="button" variant="outline" fullWidth>
+                  {accion}
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

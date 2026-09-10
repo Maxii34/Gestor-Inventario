@@ -11,6 +11,14 @@ export interface ApiErrorBody {
   mensaje: string;
 }
 
+// Listados del backend: { ok: true, mensaje, data: [], meta } con meta top-level.
+export interface ApiListResponse<T> {
+  ok: true;
+  mensaje: string;
+  data: T[];
+  meta: PageMeta;
+}
+
 // Paginación del backend: meta.total, meta.page, meta.totalPaginas.
 export interface PageMeta {
   total: number;
