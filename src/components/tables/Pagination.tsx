@@ -1,3 +1,5 @@
+'use client';
+
 type PageItem = number | 'ellipsis';
 
 interface PaginationProps {
