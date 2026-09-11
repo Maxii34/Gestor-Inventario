@@ -56,11 +56,6 @@ function validarFormulario(form: FormularioCliente): string | null {
   return null;
 }
 
-function textoOpcional(valor?: string | null): string {
-  const texto = valor?.trim() ?? '';
-  return texto.length > 0 ? texto : '—';
-}
-
 interface FilaCliente extends BackendCliente {
   onEdit: () => void;
   onDelete: () => void;
@@ -70,16 +65,63 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
   {
     key: 'nombre',
     header: 'Cliente',
-    render: (row) => `${row.nombre} ${row.apellido}`.trim(),
+    render: (row) => {
+      const completo = `${row.nombre} ${row.apellido}`.trim();
+      return (
+        <span
+          className="block max-w-[200px] truncate font-semibold text-zinc-900"
+          title={completo}
+        >
+          {completo}
+        </span>
+      );
+    },
   },
-  { key: 'dni', header: 'DNI', render: (row) => textoOpcional(row.dni) },
-  { key: 'telefono', header: 'Teléfono', render: (row) => textoOpcional(row.telefono) },
-  { key: 'email', header: 'Email', render: (row) => textoOpcional(row.email) },
+  {
+    key: 'dni',
+    header: 'DNI',
+    render: (row) =>
+      row.dni?.trim() ? (
+        <span className="whitespace-nowrap text-zinc-600 tabular-nums">{row.dni.trim()}</span>
+      ) : (
+        <span className="text-zinc-400">—</span>
+      ),
+  },
+  {
+    key: 'telefono',
+    header: 'Teléfono',
+    render: (row) =>
+      row.telefono?.trim() ? (
+        <span className="whitespace-nowrap text-zinc-600 tabular-nums">
+          {row.telefono.trim()}
+        </span>
+      ) : (
+        <span className="text-zinc-400">—</span>
+      ),
+  },
+  {
+    key: 'email',
+    header: 'Email',
+    render: (row) =>
+      row.email?.trim() ? (
+        <span
+          className="block max-w-[220px] truncate text-zinc-600"
+          title={row.email.trim()}
+        >
+          {row.email.trim()}
+        </span>
+      ) : (
+        <span className="text-zinc-400">—</span>
+      ),
+  },
   {
     key: 'activo',
     header: 'Estado',
     render: (row) => (
-      <Badge tone={row.activo ? 'success' : 'neutral'}>
+      <Badge
+        tone={row.activo ? 'success' : 'neutral'}
+        className={`border ${row.activo ? 'border-green-200' : 'border-zinc-200'}`}
+      >
         {row.activo ? 'Activo' : 'Inactivo'}
       </Badge>
     ),
@@ -89,13 +131,14 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
     header: 'Acciones',
     align: 'right',
     render: (row) => (
-      <span className="inline-flex gap-1">
+      <span className="inline-flex gap-1 whitespace-nowrap">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           aria-label={`Editar ${row.nombre} ${row.apellido}`}
           onClick={row.onEdit}
+          className="hover:border-zinc-200 hover:bg-zinc-100"
         >
           <LuPencil aria-hidden="true" size={14} />
           Editar
@@ -106,6 +149,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
           size="sm"
           aria-label={`Eliminar ${row.nombre} ${row.apellido}`}
           onClick={row.onDelete}
+          className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
         >
           <LuTrash2 aria-hidden="true" size={14} />
           Eliminar
@@ -337,8 +381,8 @@ export default function ClientesPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card title="Total clientes">
-            <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
+          <Card title="Total clientes" subtitle="Clientes en el sistema">
+            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
             <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
           </Card>
         </div>
@@ -381,25 +425,30 @@ export default function ClientesPage() {
         >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
+              <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
               {[0, 1, 2, 3].map((item) => (
-                <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
+                <div key={item} className="h-14 animate-pulse rounded-lg bg-zinc-50" />
               ))}
               <span className="sr-only">Cargando clientes…</span>
             </div>
           ) : hayFiltros && filterError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{filterError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarTodoParaFiltrar()}>
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{filterError}</p>
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void cargarTodoParaFiltrar()}
+                >
                   Reintentar
                 </Button>
               </div>
             </div>
           ) : !hayFiltros && listError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{listError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarPagina(page)}>
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{listError}</p>
+              <div className="mt-3">
+                <Button type="button" variant="outline" onClick={() => void cargarPagina(page)}>
                   Reintentar
                 </Button>
               </div>
@@ -416,8 +465,8 @@ export default function ClientesPage() {
                     : 'Sin clientes para mostrar.'
                 }
               />
-              <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
-                <p className="text-xs text-zinc-500">
+              <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row">
+                <p className="text-xs text-zinc-500 tabular-nums">
                   Página {paginaVisible} de {totalPaginasVisibles}
                 </p>
                 <Pagination
@@ -434,8 +483,8 @@ export default function ClientesPage() {
           title={editingId === null ? 'Nuevo cliente' : 'Editar cliente'}
           subtitle="Formulario conectado al backend"
         >
-          <div id="cliente-formulario" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Nombre" htmlFor="cliente-nombre">
+          <div id="cliente-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField label="Nombre" htmlFor="cliente-nombre" required>
               <Input
                 id="cliente-nombre"
                 placeholder="Ej: Juan"
@@ -443,7 +492,7 @@ export default function ClientesPage() {
                 onChange={(event) => setCampo('nombre', event.target.value)}
               />
             </FormField>
-            <FormField label="Apellido" htmlFor="cliente-apellido">
+            <FormField label="Apellido" htmlFor="cliente-apellido" required>
               <Input
                 id="cliente-apellido"
                 placeholder="Ej: Pérez"
@@ -480,11 +529,14 @@ export default function ClientesPage() {
             </div>
           </div>
           {formError && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
+            <p
+              role="alert"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+            >
               {formError}
             </p>
           )}
-          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={cancelarEdicion}>
               Cancelar
             </Button>
@@ -533,11 +585,14 @@ export default function ClientesPage() {
         }
       >
         {deleteError ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+          >
             {deleteError}
           </p>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm leading-relaxed text-zinc-600">
             Esta acción desactiva al cliente. Podrás ver el mensaje de confirmación del
             backend al finalizar.
           </p>

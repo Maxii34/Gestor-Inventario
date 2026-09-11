@@ -78,33 +78,97 @@ function inicioDePeriodo(valor: string): number | null {
   return null;
 }
 
+const TIPO_BADGE_BORDE: Record<TipoMovimientoBackend, string> = {
+  ENTRADA: 'border-green-200',
+  SALIDA: 'border-red-200',
+  AJUSTE: 'border-blue-200',
+};
+
 const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
-  { key: 'fecha', header: 'Fecha', render: (row) => formatoFechaHora(row.fecha) },
+  {
+    key: 'fecha',
+    header: 'Fecha',
+    render: (row) => (
+      <span className="whitespace-nowrap text-[13px] text-zinc-600 tabular-nums">
+        {formatoFechaHora(row.fecha)}
+      </span>
+    ),
+  },
   {
     key: 'producto',
     header: 'Producto',
-    render: (row) => row.producto?.nombre ?? '—',
+    render: (row) => {
+      const nombre = row.producto?.nombre ?? '—';
+      return (
+        <span
+          className="block max-w-[200px] truncate font-medium text-zinc-900"
+          title={nombre}
+        >
+          {nombre}
+        </span>
+      );
+    },
   },
   {
     key: 'tipo',
     header: 'Tipo',
     render: (row) => {
       const visual = TIPO_VISUAL[row.tipo];
-      return <Badge tone={visual.tono}>{visual.etiqueta}</Badge>;
+      return (
+        <Badge tone={visual.tono} className={`border ${TIPO_BADGE_BORDE[row.tipo]}`}>
+          {visual.etiqueta}
+        </Badge>
+      );
     },
   },
   {
     key: 'cantidad',
     header: 'Cantidad',
     align: 'right',
-    render: (row) => <span className="font-medium">{formatoCantidad(row)}</span>,
+    render: (row) => (
+      <span
+        className={`font-semibold whitespace-nowrap tabular-nums ${
+          row.tipo === 'ENTRADA'
+            ? 'text-green-700'
+            : row.tipo === 'SALIDA'
+              ? 'text-red-700'
+              : 'text-zinc-900'
+        }`}
+      >
+        {formatoCantidad(row)}
+      </span>
+    ),
   },
-  { key: 'stockAnterior', header: 'Stock anterior', align: 'center' },
-  { key: 'stockNuevo', header: 'Stock nuevo', align: 'center' },
+  {
+    key: 'stockAnterior',
+    header: 'Stock anterior',
+    align: 'center',
+    render: (row) => (
+      <span className="text-zinc-600 tabular-nums">{row.stockAnterior}</span>
+    ),
+  },
+  {
+    key: 'stockNuevo',
+    header: 'Stock nuevo',
+    align: 'center',
+    render: (row) => (
+      <span className="font-semibold text-zinc-900 tabular-nums">{row.stockNuevo}</span>
+    ),
+  },
   {
     key: 'motivo',
     header: 'Motivo',
-    render: (row) => row.motivo?.trim() || '—',
+    render: (row) =>
+      row.motivo?.trim() ? (
+        <span
+          className="block max-w-[240px] truncate text-zinc-600"
+          title={row.motivo.trim()}
+        >
+          {row.motivo.trim()}
+        </span>
+      ) : (
+        <span className="text-zinc-400">—</span>
+      ),
   },
 ];
 
@@ -314,8 +378,8 @@ export default function MovimientosPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card title="Movimientos totales">
-            <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
+          <Card title="Movimientos totales" subtitle="Movimientos en el sistema">
+            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
             <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
           </Card>
         </div>
@@ -368,25 +432,30 @@ export default function MovimientosPage() {
         >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
+              <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
               {[0, 1, 2, 3].map((item) => (
-                <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
+                <div key={item} className="h-14 animate-pulse rounded-lg bg-zinc-50" />
               ))}
               <span className="sr-only">Cargando movimientos…</span>
             </div>
           ) : hayFiltros && filterError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{filterError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarTodoParaFiltrar()}>
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{filterError}</p>
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void cargarTodoParaFiltrar()}
+                >
                   Reintentar
                 </Button>
               </div>
             </div>
           ) : !hayFiltros && listError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{listError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarPagina(page)}>
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{listError}</p>
+              <div className="mt-3">
+                <Button type="button" variant="outline" onClick={() => void cargarPagina(page)}>
                   Reintentar
                 </Button>
               </div>
@@ -403,8 +472,8 @@ export default function MovimientosPage() {
                     : 'Sin movimientos para mostrar.'
                 }
               />
-              <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
-                <p className="text-xs text-zinc-500">
+              <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row">
+                <p className="text-xs text-zinc-500 tabular-nums">
                   Página {paginaVisible} de {totalPaginasVisibles}
                 </p>
                 <Pagination
@@ -418,8 +487,8 @@ export default function MovimientosPage() {
         </Card>
 
         <Card title="Registrar movimiento" subtitle="Formulario conectado al backend">
-          <div id="movimiento-formulario" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Producto" htmlFor="movimiento-producto">
+          <div id="movimiento-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField label="Producto" htmlFor="movimiento-producto" required>
               <Select
                 id="movimiento-producto"
                 value={productoId}
@@ -443,6 +512,7 @@ export default function MovimientosPage() {
             <FormField
               label="Cantidad"
               htmlFor="movimiento-cantidad"
+              required
               hint={
                 tipo === 'AJUSTE'
                   ? 'En un ajuste, la cantidad será el stock resultante.'
@@ -469,14 +539,19 @@ export default function MovimientosPage() {
             </FormField>
           </div>
           {productosError && (
-            <p className="mt-2 text-xs text-red-600">{productosError}</p>
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+              {productosError}
+            </p>
           )}
           {formError && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
+            <p
+              role="alert"
+              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+            >
               {formError}
             </p>
           )}
-          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={limpiarFormulario}>
               Cancelar
             </Button>

@@ -43,29 +43,34 @@ export function Table<T>({
   className = '',
 }: TableProps<T>) {
   return (
-    <div className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white ${className}`}>
-      <table className="w-full min-w-[640px] text-left text-sm">
+    <div
+      className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${className}`}
+    >
+      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         {caption && <caption className="px-4 py-2 text-left text-xs text-zinc-500">{caption}</caption>}
         <thead>
-          <tr className="bg-zinc-50 text-zinc-500">
+          <tr className="border-b border-zinc-200 bg-zinc-50">
             {columns.map((column) => (
               <th
                 key={column.key}
                 scope="col"
-                className={`px-4 py-2.5 font-medium ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
+                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold tracking-wider text-zinc-500 uppercase ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-zinc-200/70 bg-white">
           {data.map((row, index) => (
-            <tr key={getRowKey(row, index)} className="border-t border-zinc-100 hover:bg-zinc-50">
+            <tr
+              key={getRowKey(row, index)}
+              className="transition-colors last:border-b-0 hover:bg-zinc-50/80"
+            >
               {columns.map((column) => (
                 <td
                   key={column.key}
-                  className={`px-4 py-2.5 text-zinc-700 ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
+                  className={`px-4 py-3 align-middle text-zinc-700 ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
                 >
                   {column.render ? column.render(row) : defaultCellValue(row, column.key)}
                 </td>
@@ -73,8 +78,8 @@ export function Table<T>({
             </tr>
           ))}
           {data.length === 0 && (
-            <tr className="border-t border-zinc-100">
-              <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-zinc-500">
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-zinc-500">
                 {emptyMessage}
               </td>
             </tr>

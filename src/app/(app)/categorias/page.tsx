@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
+import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -140,17 +140,38 @@ export default function CategoriasPage() {
   }
 
   const columnas: TableColumn<BackendCategoria>[] = [
-    { key: 'nombre', header: 'Categoría' },
+    {
+      key: 'nombre',
+      header: 'Categoría',
+      render: (row) => (
+        <span className="block max-w-[220px] truncate font-semibold text-zinc-900" title={row.nombre}>
+          {row.nombre}
+        </span>
+      ),
+    },
     {
       key: 'descripcion',
       header: 'Descripción',
-      render: (row) => row.descripcion?.trim() || '—',
+      render: (row) =>
+        row.descripcion?.trim() ? (
+          <span
+            className="block max-w-[320px] truncate text-zinc-600"
+            title={row.descripcion.trim()}
+          >
+            {row.descripcion.trim()}
+          </span>
+        ) : (
+          <span className="text-zinc-400">—</span>
+        ),
     },
     {
       key: 'activo',
       header: 'Estado',
       render: (row) => (
-        <Badge tone={row.activo ? 'success' : 'neutral'}>
+        <Badge
+          tone={row.activo ? 'success' : 'neutral'}
+          className={`border ${row.activo ? 'border-green-200' : 'border-zinc-200'}`}
+        >
           {row.activo ? 'Activa' : 'Inactiva'}
         </Badge>
       ),
@@ -163,13 +184,14 @@ export default function CategoriasPage() {
       header: 'Acciones',
       align: 'right',
       render: (row) => (
-        <span className="inline-flex gap-1">
+        <span className="inline-flex gap-1 whitespace-nowrap">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
+            className="hover:border-zinc-200 hover:bg-zinc-100"
           >
             <LuPencil aria-hidden="true" size={14} />
             Editar
@@ -183,6 +205,7 @@ export default function CategoriasPage() {
               setDeleteError(null);
               setDeleteTarget(row);
             }}
+            className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
           >
             <LuTrash2 aria-hidden="true" size={14} />
             Eliminar
@@ -209,40 +232,47 @@ export default function CategoriasPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card title="Total de categorías">
-            <p className="text-2xl font-bold text-zinc-900">{total}</p>
+          <Card title="Total de categorías" subtitle="Categorías registradas">
+            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total}</p>
           </Card>
-          <Card title="Categorías activas">
-            <p className="text-2xl font-bold text-zinc-900">{activas}</p>
+          <Card title="Categorías activas" subtitle="Disponibles para productos">
+            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{activas}</p>
           </Card>
-          <Card title="Categorías inactivas">
-            <p className="text-2xl font-bold text-zinc-900">{total - activas}</p>
+          <Card title="Categorías inactivas" subtitle="No disponibles actualmente">
+            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total - activas}</p>
           </Card>
         </div>
 
-        <div className="w-full max-w-md">
-          <SearchInput
-            id="buscar-categoria"
-            label="Buscar"
-            placeholder="Buscar categoría..."
-            value=""
-            onChange={() => undefined}
-          />
-        </div>
+        <Card
+          title="Filtros"
+          subtitle="Busca por nombre de categoría"
+          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+        >
+          <div className="w-full max-w-md">
+            <SearchInput
+              id="buscar-categoria"
+              label="Buscar"
+              placeholder="Buscar categoría..."
+              value=""
+              onChange={() => undefined}
+            />
+          </div>
+        </Card>
 
         <Card title="Listado de categorías" subtitle={`${total} categorías registradas`}>
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
+              <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
               {[0, 1, 2].map((item) => (
-                <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
+                <div key={item} className="h-14 animate-pulse rounded-lg bg-zinc-50" />
               ))}
               <span className="sr-only">Cargando categorías…</span>
             </div>
           ) : listError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{listError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarListado()}>
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{listError}</p>
+              <div className="mt-3">
+                <Button type="button" variant="outline" onClick={() => void cargarListado()}>
                   Reintentar
                 </Button>
               </div>
@@ -262,8 +292,8 @@ export default function CategoriasPage() {
             title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
             subtitle="Formulario conectado al backend"
           >
-            <div id="categoria-formulario" className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField label="Nombre" htmlFor="categoria-nombre">
+            <div id="categoria-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
+              <FormField label="Nombre" htmlFor="categoria-nombre" required>
                 <Input
                   id="categoria-nombre"
                   placeholder="Ej: Electrónica"
@@ -281,11 +311,14 @@ export default function CategoriasPage() {
               </FormField>
             </div>
             {formError && (
-              <p role="alert" className="mt-2 text-sm text-red-600">
+              <p
+                role="alert"
+                className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+              >
                 {formError}
               </p>
             )}
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
               <Button type="button" variant="outline" onClick={cancelarEdicion}>
                 Cancelar
               </Button>
@@ -335,11 +368,14 @@ export default function CategoriasPage() {
         }
       >
         {deleteError ? (
-          <p role="alert" className="text-sm text-red-600">
+          <p
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+          >
             {deleteError}
           </p>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm leading-relaxed text-zinc-600">
             Si la categoría tiene productos asociados, el backend rechazará la eliminación.
           </p>
         )}
