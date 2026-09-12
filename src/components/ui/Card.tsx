@@ -17,7 +17,7 @@ const BODY_PADDING = {
 
 export function Card({ title, subtitle, actions, footer, children, padding = 'md', className = '' }: CardProps) {
   return (
-    <div className={`rounded-xl border border-zinc-200 bg-white shadow-sm ${className}`}>
+    <div className={`rounded-xl border border-zinc-200 bg-white shadow-md ${className}`}>
       {(title || actions) && (
         <div className="flex items-start justify-between gap-4 p-4 pb-0">
           <div>
