@@ -10,6 +10,7 @@ import {
   Input,
   PageHeader,
   Pagination,
+  Reveal,
   SearchInput,
   Select,
   Table,
@@ -378,17 +379,20 @@ export default function MovimientosPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card title="Movimientos totales" subtitle="Movimientos en el sistema">
-            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
-            <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
-          </Card>
+          <Reveal delay={0}>
+            <Card title="Movimientos totales" subtitle="Movimientos en el sistema">
+              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
+              <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
+            </Card>
+          </Reveal>
         </div>
 
-        <Card
-          title="Filtros"
-          subtitle="Filtros aplicados sobre los datos cargados"
-          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-        >
+        <Reveal delay={0.05}>
+          <Card
+            title="Filtros"
+            subtitle="Filtros aplicados sobre los datos cargados"
+            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+          >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SearchInput
               id="buscar-movimiento"
@@ -417,19 +421,21 @@ export default function MovimientosPage() {
                 setDesdePeriodo(inicioDePeriodo(event.target.value));
                 setPage(1);
               }}
-              options={PERIODO_OPCIONES}
-            />
+            options={PERIODO_OPCIONES}
+          />
           </div>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card
-          title="Historial de movimientos"
-          subtitle={
-            hayFiltros
-              ? `${movimientosFiltrados.length} movimientos encontrados`
-              : `${meta.total} movimientos registrados`
-          }
-        >
+        <Reveal delay={0.1}>
+          <Card
+            title="Historial de movimientos"
+            subtitle={
+              hayFiltros
+                ? `${movimientosFiltrados.length} movimientos encontrados`
+                : `${meta.total} movimientos registrados`
+            }
+          >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
@@ -484,9 +490,11 @@ export default function MovimientosPage() {
               </div>
             </>
           )}
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card title="Registrar movimiento" subtitle="Formulario conectado al backend">
+        <Reveal delay={0.15}>
+          <Card title="Registrar movimiento" subtitle="Formulario conectado al backend">
           <div id="movimiento-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
             <FormField label="Producto" htmlFor="movimiento-producto" required>
               <Select
@@ -560,7 +568,8 @@ export default function MovimientosPage() {
               {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
             </Button>
           </div>
-        </Card>
+          </Card>
+        </Reveal>
       </div>
     </>
   );

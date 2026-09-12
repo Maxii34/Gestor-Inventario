@@ -17,6 +17,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Reveal,
   SearchInput,
   Select,
   Table,
@@ -292,22 +293,29 @@ export default function UsuariosPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card title="Total usuarios">
-            <p className="text-2xl font-bold text-zinc-900">{total}</p>
-          </Card>
-          <Card title="Administradores">
-            <p className="text-2xl font-bold text-zinc-900">{administradores}</p>
-          </Card>
-          <Card title="Vendedores">
-            <p className="text-2xl font-bold text-zinc-900">{total - administradores}</p>
-          </Card>
+          <Reveal delay={0}>
+            <Card title="Total usuarios">
+              <p className="text-2xl font-bold text-zinc-900">{total}</p>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <Card title="Administradores">
+              <p className="text-2xl font-bold text-zinc-900">{administradores}</p>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <Card title="Vendedores">
+              <p className="text-2xl font-bold text-zinc-900">{total - administradores}</p>
+            </Card>
+          </Reveal>
         </div>
 
-        <Card
-          title="Filtros"
-          subtitle="Controles visuales sin funcionalidad"
-          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-        >
+        <Reveal delay={0.15}>
+          <Card
+            title="Filtros"
+            subtitle="Controles visuales sin funcionalidad"
+            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+          >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SearchInput
               id="buscar-usuario"
@@ -320,8 +328,10 @@ export default function UsuariosPage() {
             <Select label="Estado" defaultValue="todos" options={ESTADO_OPCIONES} />
           </div>
         </Card>
+        </Reveal>
 
-        <Card title="Listado de usuarios" subtitle={`${total} usuarios registrados`}>
+        <Reveal delay={0.2}>
+          <Card title="Listado de usuarios" subtitle={`${total} usuarios registrados`}>
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2].map((item) => (
@@ -347,9 +357,11 @@ export default function UsuariosPage() {
             />
           )}
         </Card>
+        </Reveal>
 
-        <Card
-          title={editingId === null ? 'Nuevo usuario' : 'Editar usuario'}
+        <Reveal delay={0.2}>
+          <Card
+            title={editingId === null ? 'Nuevo usuario' : 'Editar usuario'}
           subtitle="Formulario conectado al backend"
           footer={
             <p className="text-xs text-zinc-500">
@@ -416,6 +428,7 @@ export default function UsuariosPage() {
             </Button>
           </div>
         </Card>
+        </Reveal>
       </div>
 
       <Modal

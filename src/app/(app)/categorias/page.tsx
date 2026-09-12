@@ -10,6 +10,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Reveal,
   SearchInput,
   Table,
   type TableColumn,
@@ -232,20 +233,27 @@ export default function CategoriasPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card title="Total de categorías" subtitle="Categorías registradas">
-            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total}</p>
-          </Card>
-          <Card title="Categorías activas" subtitle="Disponibles para productos">
-            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{activas}</p>
-          </Card>
-          <Card title="Categorías inactivas" subtitle="No disponibles actualmente">
-            <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total - activas}</p>
-          </Card>
+          <Reveal delay={0}>
+            <Card title="Total de categorías" subtitle="Categorías registradas">
+              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total}</p>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <Card title="Categorías activas" subtitle="Disponibles para productos">
+              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{activas}</p>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <Card title="Categorías inactivas" subtitle="No disponibles actualmente">
+              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total - activas}</p>
+            </Card>
+          </Reveal>
         </div>
 
         {/* Formulario de creación/edición arriba de la barra de búsqueda */}
         {isAdmin && (
-          <div className="rounded-xl border border-zinc-200/80 bg-white shadow-md transition-shadow">
+          <Reveal delay={0.15}>
+            <div className="rounded-xl border border-zinc-200/80 bg-white shadow-md transition-shadow">
             <Card
               title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
               subtitle="Formulario conectado al backend"
@@ -299,14 +307,16 @@ export default function CategoriasPage() {
                 </Button>
               </div>
             </Card>
-          </div>
+            </div>
+          </Reveal>
         )}
 
-        <Card
-          title="Filtros"
-          subtitle="Busca por nombre de categoría"
-          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-        >
+        <Reveal delay={0.2}>
+          <Card
+            title="Filtros"
+            subtitle="Busca por nombre de categoría"
+            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+          >
           <div className="w-full max-w-md">
             <SearchInput
               id="buscar-categoria"
@@ -316,9 +326,11 @@ export default function CategoriasPage() {
               onChange={() => undefined}
             />
           </div>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card title="Listado de categorías" subtitle={`${total} categorías registradas`}>
+        <Reveal delay={0.25}>
+          <Card title="Listado de categorías" subtitle={`${total} categorías registradas`}>
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
@@ -344,7 +356,8 @@ export default function CategoriasPage() {
               emptyMessage="Sin categorías para mostrar."
             />
           )}
-        </Card>
+          </Card>
+        </Reveal>
       </div>
 
       <Modal

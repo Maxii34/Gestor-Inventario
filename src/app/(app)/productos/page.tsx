@@ -11,6 +11,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  Reveal,
   SearchInput,
   Select,
   Table,
@@ -432,6 +433,7 @@ export default function ProductosPage() {
       />
 
       <div className="flex flex-col gap-4 md:gap-6">
+        <Reveal delay={0}>
         <Card
           title="Filtros"
           subtitle="Filtros aplicados sobre los datos cargados"
@@ -468,7 +470,9 @@ export default function ProductosPage() {
             />
           </div>
         </Card>
+        </Reveal>
 
+        <Reveal delay={0.05}>
         <Card
           title="Listado de productos"
           subtitle={
@@ -527,8 +531,10 @@ export default function ProductosPage() {
             </>
           )}
         </Card>
+        </Reveal>
 
         {isAdmin && (
+          <Reveal delay={0.1}>
           <Card
             title={editingId === null ? 'Nuevo producto' : 'Editar producto'}
             subtitle="Formulario conectado al backend"
@@ -629,6 +635,7 @@ export default function ProductosPage() {
               </Button>
             </div>
           </Card>
+          </Reveal>
         )}
       </div>
 

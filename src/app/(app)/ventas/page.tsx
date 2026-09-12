@@ -17,6 +17,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  Reveal,
   SearchInput,
   Select,
   Table,
@@ -503,18 +504,23 @@ export default function VentasPage() {
 
       <div className="flex flex-col gap-4 md:gap-6">
         <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
-          <Card title="Ventas registradas">
-            <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
-            <p className="mt-1 text-xs text-zinc-500">operaciones en el sistema</p>
-          </Card>
-          <RecaudacionTotalCard
-            datos={recaudacion.datos}
-            isLoading={recaudacion.isLoading}
-            error={recaudacion.error}
-          />
+          <Reveal delay={0}>
+            <Card title="Ventas registradas">
+              <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
+              <p className="mt-1 text-xs text-zinc-500">operaciones en el sistema</p>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <RecaudacionTotalCard
+              datos={recaudacion.datos}
+              isLoading={recaudacion.isLoading}
+              error={recaudacion.error}
+            />
+          </Reveal>
         </div>
 
-        <RecaudacionConsultaCard
+        <Reveal delay={0.1}>
+          <RecaudacionConsultaCard
           desde={recaudacion.desde}
           setDesde={recaudacion.setDesde}
           hasta={recaudacion.hasta}
@@ -522,13 +528,15 @@ export default function VentasPage() {
           isLoading={recaudacion.isLoading}
           consultar={recaudacion.consultar}
           aplicarRango={recaudacion.aplicarRango}
-        />
+          />
+        </Reveal>
 
-        <Card
-          title="Filtros"
-          subtitle="Controles visuales sin funcionalidad"
-          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-        >
+        <Reveal delay={0.15}>
+          <Card
+            title="Filtros"
+            subtitle="Controles visuales sin funcionalidad"
+            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+          >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SearchInput
               id="buscar-venta"
@@ -545,9 +553,11 @@ export default function VentasPage() {
             />
             <Select label="Período" defaultValue="todos" options={PERIODO_OPCIONES} />
           </div>
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card title="Listado de ventas" subtitle={`${meta.total} ventas registradas`}>
+        <Reveal delay={0.2}>
+          <Card title="Listado de ventas" subtitle={`${meta.total} ventas registradas`}>
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2, 3].map((item) => (
@@ -584,9 +594,11 @@ export default function VentasPage() {
               </div>
             </>
           )}
-        </Card>
+          </Card>
+        </Reveal>
 
-        <Card title="Nueva venta" subtitle="Operación conectada al sistema">
+        <Reveal delay={0.2}>
+          <Card title="Nueva venta" subtitle="Operación conectada al sistema">
           <div id="nueva-venta" className="flex flex-col gap-6">
             {ventaCreada ? (
               <div className="rounded-lg border border-green-200 bg-green-50 p-4">
@@ -723,7 +735,8 @@ export default function VentasPage() {
               </>
             )}
           </div>
-        </Card>
+          </Card>
+        </Reveal>
       </div>
 
       <Modal

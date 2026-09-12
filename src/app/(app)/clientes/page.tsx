@@ -11,6 +11,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  Reveal,
   SearchInput,
   Select,
   Table,
@@ -380,13 +381,16 @@ export default function ClientesPage() {
       />
 
       <div className="flex flex-col gap-4 md:gap-6">
+        <Reveal delay={0}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card title="Total clientes" subtitle="Clientes en el sistema">
             <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
             <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
           </Card>
         </div>
+        </Reveal>
 
+        <Reveal delay={0.05}>
         <Card
           title="Filtros"
           subtitle="Filtros aplicados sobre los datos cargados"
@@ -414,7 +418,9 @@ export default function ClientesPage() {
             />
           </div>
         </Card>
+        </Reveal>
 
+        <Reveal delay={0.1}>
         <Card
           title="Listado de clientes"
           subtitle={
@@ -478,7 +484,9 @@ export default function ClientesPage() {
             </>
           )}
         </Card>
+        </Reveal>
 
+        <Reveal delay={0.15}>
         <Card
           title={editingId === null ? 'Nuevo cliente' : 'Editar cliente'}
           subtitle="Formulario conectado al backend"
@@ -550,6 +558,7 @@ export default function ClientesPage() {
             </Button>
           </div>
         </Card>
+        </Reveal>
       </div>
 
       <Modal
