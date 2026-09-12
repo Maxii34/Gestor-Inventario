@@ -8,3 +8,4 @@ export * from './movimientos.service';
 export * from './clientes.service';
 export * from './usuarios.service';
 export * from './ventas.service';
+export * from './estadisticas.service';

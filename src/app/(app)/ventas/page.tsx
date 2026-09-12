@@ -17,6 +17,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  RecaudacionCard,
   SearchInput,
   Select,
   Table,
@@ -495,11 +496,14 @@ export default function VentasPage() {
       />
 
       <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card title="Ventas registradas">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <Card title="Ventas registradas" className="h-full">
             <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
             <p className="mt-1 text-xs text-zinc-500">operaciones en el sistema</p>
           </Card>
+          <div className="xl:col-span-2">
+            <RecaudacionCard />
+          </div>
         </div>
 
         <Card

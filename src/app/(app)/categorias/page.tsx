@@ -144,7 +144,7 @@ export default function CategoriasPage() {
       key: 'nombre',
       header: 'Categoría',
       render: (row) => (
-        <span className="block max-w-[220px] truncate font-semibold text-zinc-900" title={row.nombre}>
+        <span className="block max-w-55 truncate font-semibold text-zinc-900" title={row.nombre}>
           {row.nombre}
         </span>
       ),
@@ -243,6 +243,65 @@ export default function CategoriasPage() {
           </Card>
         </div>
 
+        {/* Formulario de creación/edición arriba de la barra de búsqueda */}
+        {isAdmin && (
+          <div className="rounded-xl border border-zinc-200/80 bg-white shadow-md transition-shadow">
+            <Card
+              title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
+              subtitle="Formulario conectado al backend"
+            >
+              <div
+                id="categoria-formulario"
+                className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2"
+              >
+                <FormField label="Nombre" htmlFor="categoria-nombre" required>
+                  <Input
+                    id="categoria-nombre"
+                    placeholder="Ej: Electrónica"
+                    value={nombre}
+                    onChange={(event) => setNombre(event.target.value)}
+                  />
+                </FormField>
+                <FormField label="Descripción" htmlFor="categoria-descripcion">
+                  <Input
+                    id="categoria-descripcion"
+                    placeholder="Descripción breve (opcional)"
+                    value={descripcion}
+                    onChange={(event) => setDescripcion(event.target.value)}
+                  />
+                </FormField>
+              </div>
+
+              {formError && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+                >
+                  {formError}
+                </p>
+              )}
+
+              <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={cancelarEdicion}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void guardarCategoria()}
+                  disabled={isSubmitting}
+                >
+                  <LuSave aria-hidden="true" size={16} />
+                  {isSubmitting
+                    ? 'Guardando…'
+                    : editingId === null
+                      ? 'Crear categoría'
+                      : 'Guardar cambios'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         <Card
           title="Filtros"
           subtitle="Busca por nombre de categoría"
@@ -286,53 +345,6 @@ export default function CategoriasPage() {
             />
           )}
         </Card>
-
-        {isAdmin && (
-          <Card
-            title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
-            subtitle="Formulario conectado al backend"
-          >
-            <div id="categoria-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField label="Nombre" htmlFor="categoria-nombre" required>
-                <Input
-                  id="categoria-nombre"
-                  placeholder="Ej: Electrónica"
-                  value={nombre}
-                  onChange={(event) => setNombre(event.target.value)}
-                />
-              </FormField>
-              <FormField label="Descripción" htmlFor="categoria-descripcion">
-                <Input
-                  id="categoria-descripcion"
-                  placeholder="Descripción breve (opcional)"
-                  value={descripcion}
-                  onChange={(event) => setDescripcion(event.target.value)}
-                />
-              </FormField>
-            </div>
-            {formError && (
-              <p
-                role="alert"
-                className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
-              >
-                {formError}
-              </p>
-            )}
-            <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={cancelarEdicion}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={() => void guardarCategoria()} disabled={isSubmitting}>
-                <LuSave aria-hidden="true" size={16} />
-                {isSubmitting
-                  ? 'Guardando…'
-                  : editingId === null
-                    ? 'Crear categoría'
-                    : 'Guardar cambios'}
-              </Button>
-            </div>
-          </Card>
-        )}
       </div>
 
       <Modal
@@ -376,7 +388,7 @@ export default function CategoriasPage() {
           </p>
         ) : (
           <p className="text-sm leading-relaxed text-zinc-600">
-            Si la categoría tiene productos asociados, el backend rechazará la eliminación.
+            Si la categoría tiene productos asociados, el sistema rechazará la eliminación.
           </p>
         )}
       </Modal>
