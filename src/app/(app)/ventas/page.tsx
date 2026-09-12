@@ -564,7 +564,7 @@ export default function VentasPage() {
           )}
         </Card>
 
-        <Card title="Nueva venta" subtitle="Operación conectada al backend">
+        <Card title="Nueva venta" subtitle="Operación conectada al sistema">
           <div id="nueva-venta" className="flex flex-col gap-6">
             {ventaCreada ? (
               <div className="rounded-lg border border-green-200 bg-green-50 p-4">
@@ -675,10 +675,6 @@ export default function VentasPage() {
                       options={NUEVA_VENTA_MEDIO_PAGO_OPCIONES}
                     />
                   </FormField>
-                  <p className="self-end text-xs text-zinc-500">
-                    Al registrar la venta, el backend genera el enlace de pago de Mercado
-                    Pago.
-                  </p>
                 </div>
 
                 {selectoresError && (
