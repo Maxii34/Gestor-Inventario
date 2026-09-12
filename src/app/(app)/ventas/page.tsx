@@ -17,12 +17,16 @@ import {
   Modal,
   PageHeader,
   Pagination,
-  RecaudacionCard,
   SearchInput,
   Select,
   Table,
   type TableColumn,
 } from '@/components';
+import {
+  RecaudacionConsultaCard,
+  RecaudacionTotalCard,
+  useRecaudacion,
+} from '@/components/estadisticas';
 import { ApiError } from '@/lib/api/client';
 import { listarClientes } from '@/services/clientes.service';
 import { listarProductos } from '@/services/productos.service';
@@ -266,6 +270,8 @@ export default function VentasPage() {
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [ventaCreada, setVentaCreada] = useState<VentaCreada | null>(null);
 
+  const recaudacion = useRecaudacion();
+
   const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
@@ -496,15 +502,27 @@ export default function VentasPage() {
       />
 
       <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <Card title="Ventas registradas" className="h-full">
+        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+          <Card title="Ventas registradas">
             <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
             <p className="mt-1 text-xs text-zinc-500">operaciones en el sistema</p>
           </Card>
-          <div className="xl:col-span-2">
-            <RecaudacionCard />
-          </div>
+          <RecaudacionTotalCard
+            datos={recaudacion.datos}
+            isLoading={recaudacion.isLoading}
+            error={recaudacion.error}
+          />
         </div>
+
+        <RecaudacionConsultaCard
+          desde={recaudacion.desde}
+          setDesde={recaudacion.setDesde}
+          hasta={recaudacion.hasta}
+          setHasta={recaudacion.setHasta}
+          isLoading={recaudacion.isLoading}
+          consultar={recaudacion.consultar}
+          aplicarRango={recaudacion.aplicarRango}
+        />
 
         <Card
           title="Filtros"
@@ -666,7 +684,7 @@ export default function VentasPage() {
                     <span>{formatoMoneda(totalEstimado)}</span>
                   </div>
                   <p className="mt-1 text-xs text-zinc-500">
-                    Estimación visual. El total definitivo lo calcula el backend.
+                    Estimación visual. El total definitivo lo calcula el sistema.
                   </p>
                 </div>
 

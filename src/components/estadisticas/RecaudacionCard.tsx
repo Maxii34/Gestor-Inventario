@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { LuBanknote, LuCalendarDays } from 'react-icons/lu';
-import { Button, Card, FormField, Input } from '@/components';
+import { Button, Card, Input } from '@/components/ui';
+import { FormField } from '@/components/forms';
 import { ApiError } from '@/lib/api/client';
 import { obtenerRecaudacion, type Recaudacion } from '@/services/estadisticas.service';
 
@@ -32,7 +33,7 @@ function formatoMoneda(valor: number): string {
   }).format(valor);
 }
 
-export function RecaudacionCard() {
+export function useRecaudacion() {
   const [rangoInicial] = useState(rangoMesActual);
   const [desde, setDesde] = useState(rangoInicial.desde);
   const [hasta, setHasta] = useState(rangoInicial.hasta);
@@ -68,14 +69,69 @@ export function RecaudacionCard() {
     void consultar(rango.desde, rango.hasta);
   }
 
+  return { desde, setDesde, hasta, setHasta, datos, isLoading, error, consultar, aplicarRango };
+}
+
+type RecaudacionState = ReturnType<typeof useRecaudacion>;
+
+export function RecaudacionTotalCard({
+  datos,
+  isLoading,
+  error,
+}: Pick<RecaudacionState, 'datos' | 'isLoading' | 'error'>) {
   return (
     <Card
-      title="Recaudación"
-      subtitle="Total agregado del período seleccionado"
+      title="Recaudación total"
       actions={<LuBanknote aria-hidden="true" size={16} className="text-zinc-400" />}
-      className="h-full"
     >
-      <div className="flex flex-col gap-4">
+      <div aria-live="polite">
+        {isLoading ? (
+          <div className="flex flex-col gap-2">
+            <div className="h-8 w-40 animate-pulse rounded bg-zinc-200" aria-hidden="true" />
+            <div className="h-3 w-56 animate-pulse rounded bg-zinc-200" aria-hidden="true" />
+            <span className="sr-only">Cargando recaudación…</span>
+          </div>
+        ) : error ? (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        ) : datos ? (
+          <>
+            <p className="text-2xl font-bold text-zinc-900">
+              {formatoMoneda(Number(datos.totalRecaudado) || 0)}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Recaudado entre {datos.desde} y {datos.hasta}
+            </p>
+          </>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
+export function RecaudacionConsultaCard({
+  desde,
+  setDesde,
+  hasta,
+  setHasta,
+  isLoading,
+  consultar,
+  aplicarRango,
+  idPrefix = 'recaudacion',
+}: Pick<
+  RecaudacionState,
+  'desde' | 'setDesde' | 'hasta' | 'setHasta' | 'isLoading' | 'consultar' | 'aplicarRango'
+> & { idPrefix?: string }) {
+  const desdeId = `${idPrefix}-desde`;
+  const hastaId = `${idPrefix}-hasta`;
+  return (
+    <Card
+      title="Consultar recaudación"
+      subtitle="Filtra el total por período"
+      actions={<LuCalendarDays aria-hidden="true" size={16} className="text-zinc-400" />}
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -99,10 +155,10 @@ export function RecaudacionCard() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField label="Desde" htmlFor="recaudacion-desde">
+        <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+          <FormField label="Desde" htmlFor={desdeId}>
             <Input
-              id="recaudacion-desde"
+              id={desdeId}
               type="date"
               value={desde}
               max={hasta || undefined}
@@ -110,9 +166,9 @@ export function RecaudacionCard() {
               onChange={(event) => setDesde(event.target.value)}
             />
           </FormField>
-          <FormField label="Hasta" htmlFor="recaudacion-hasta">
+          <FormField label="Hasta" htmlFor={hastaId}>
             <Input
-              id="recaudacion-hasta"
+              id={hastaId}
               type="date"
               value={hasta}
               min={desde || undefined}
@@ -132,30 +188,26 @@ export function RecaudacionCard() {
             {isLoading ? 'Consultando…' : 'Consultar'}
           </Button>
         </div>
-
-        <div aria-live="polite" className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-          {isLoading ? (
-            <div className="flex flex-col gap-2">
-              <div className="h-8 w-40 animate-pulse rounded bg-zinc-200" aria-hidden="true" />
-              <div className="h-3 w-56 animate-pulse rounded bg-zinc-200" aria-hidden="true" />
-              <span className="sr-only">Cargando recaudación…</span>
-            </div>
-          ) : error ? (
-            <p role="alert" className="text-sm text-red-600">
-              {error}
-            </p>
-          ) : datos ? (
-            <>
-              <p className="text-2xl font-bold text-zinc-900">
-                {formatoMoneda(Number(datos.totalRecaudado) || 0)}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500">
-                Recaudado entre {datos.desde} y {datos.hasta}
-              </p>
-            </>
-          ) : null}
-        </div>
       </div>
     </Card>
+  );
+}
+
+export function RecaudacionCard() {
+  const state = useRecaudacion();
+
+  return (
+    <div className="flex h-full flex-col gap-4">
+      <RecaudacionTotalCard datos={state.datos} isLoading={state.isLoading} error={state.error} />
+      <RecaudacionConsultaCard
+        desde={state.desde}
+        setDesde={state.setDesde}
+        hasta={state.hasta}
+        setHasta={state.setHasta}
+        isLoading={state.isLoading}
+        consultar={state.consultar}
+        aplicarRango={state.aplicarRango}
+      />
+    </div>
   );
 }
