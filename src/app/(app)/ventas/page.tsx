@@ -23,6 +23,7 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { PagoDistanciaModal } from '@/components/ventas';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,
@@ -73,6 +74,7 @@ const NUEVA_VENTA_MEDIO_PAGO_OPCIONES = [
   { value: 'EFECTIVO', label: 'Efectivo' },
   { value: 'TRANSFERENCIA', label: 'Transferencia' },
   { value: 'TARJETA', label: 'Tarjeta' },
+  { value: 'PEDIDO_DISTANCIA', label: 'Pedido a distancia' },
 ];
 
 const ESTADO_VISUAL: Record<EstadoVentaBackend, { etiqueta: string; tono: 'success' | 'warning' | 'danger' }> = {
@@ -86,6 +88,7 @@ const METODO_PAGO_ETIQUETA: Record<MetodoPagoBackend, string> = {
   EFECTIVO: 'Efectivo',
   TRANSFERENCIA: 'Transferencia',
   TARJETA: 'Tarjeta',
+  PEDIDO_DISTANCIA: 'Pedido a distancia',
 };
 
 function toNumber(valor: number | string): number {
@@ -270,6 +273,7 @@ export default function VentasPage() {
   const [ventaError, setVentaError] = useState<string | null>(null);
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [ventaCreada, setVentaCreada] = useState<VentaCreada | null>(null);
+  const [pagoDistancia, setPagoDistancia] = useState<{ ventaId: number; initPoint: string } | null>(null);
 
   const recaudacion = useRecaudacion();
 
@@ -457,7 +461,12 @@ export default function VentasPage() {
       } else {
         setPage(1);
       }
-      setVentaCreada(creada);
+      if (medioPago === 'PEDIDO_DISTANCIA' && creada.initPoint) {
+        setPagoDistancia({ ventaId: creada.ventaId, initPoint: creada.initPoint });
+        limpiarNuevaVenta();
+      } else {
+        setVentaCreada(creada);
+      }
     } catch (err) {
       setVentaError(
         err instanceof ApiError
@@ -833,6 +842,13 @@ export default function VentasPage() {
           </p>
         )}
       </Modal>
+
+      <PagoDistanciaModal
+        open={pagoDistancia !== null}
+        ventaId={pagoDistancia?.ventaId ?? null}
+        initPoint={pagoDistancia?.initPoint ?? null}
+        onClose={() => setPagoDistancia(null)}
+      />
     </>
   );
 }
