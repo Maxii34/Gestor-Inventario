@@ -17,12 +17,12 @@ import {
   Modal,
   PageHeader,
   Pagination,
-  Reveal,
   SearchInput,
   Select,
   Table,
   type TableColumn,
 } from '@/components';
+import { Reveal } from '@/components/motion';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,

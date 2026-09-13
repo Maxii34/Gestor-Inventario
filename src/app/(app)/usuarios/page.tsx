@@ -17,12 +17,12 @@ import {
   Input,
   Modal,
   PageHeader,
-  Reveal,
   SearchInput,
   Select,
   Table,
   type TableColumn,
 } from '@/components';
+import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
 import {
@@ -360,6 +360,7 @@ export default function UsuariosPage() {
         </Reveal>
 
         <Reveal delay={0.2}>
+          <div id="usuario-formulario" className="scroll-mt-20">
           <Card
             title={editingId === null ? 'Nuevo usuario' : 'Editar usuario'}
           subtitle="Formulario conectado al backend"
@@ -428,6 +429,7 @@ export default function UsuariosPage() {
             </Button>
           </div>
         </Card>
+          </div>
         </Reveal>
       </div>
 

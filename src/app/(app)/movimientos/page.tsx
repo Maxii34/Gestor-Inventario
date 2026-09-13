@@ -10,12 +10,12 @@ import {
   Input,
   PageHeader,
   Pagination,
-  Reveal,
   SearchInput,
   Select,
   Table,
   type TableColumn,
 } from '@/components';
+import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
 import {
   listarMovimientos,
@@ -102,7 +102,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
       const nombre = row.producto?.nombre ?? '—';
       return (
         <span
-          className="block max-w-[200px] truncate font-medium text-zinc-900"
+          className="block max-w-50 truncate font-medium text-zinc-900"
           title={nombre}
         >
           {nombre}
@@ -162,7 +162,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
     render: (row) =>
       row.motivo?.trim() ? (
         <span
-          className="block max-w-[240px] truncate text-zinc-600"
+          className="block max-w-60 truncate text-zinc-600"
           title={row.motivo.trim()}
         >
           {row.motivo.trim()}

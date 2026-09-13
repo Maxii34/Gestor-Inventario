@@ -10,11 +10,11 @@ import {
   Input,
   Modal,
   PageHeader,
-  Reveal,
   SearchInput,
   Table,
   type TableColumn,
 } from '@/components';
+import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
 import {

@@ -11,12 +11,12 @@ import {
   Modal,
   PageHeader,
   Pagination,
-  Reveal,
   SearchInput,
   Select,
   Table,
   type TableColumn,
 } from '@/components';
+import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
 import {
   actualizarCliente,
@@ -70,7 +70,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
       const completo = `${row.nombre} ${row.apellido}`.trim();
       return (
         <span
-          className="block max-w-[200px] truncate font-semibold text-zinc-900"
+          className="block max-w-50 truncate font-semibold text-zinc-900"
           title={completo}
         >
           {completo}
@@ -106,7 +106,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
     render: (row) =>
       row.email?.trim() ? (
         <span
-          className="block max-w-[220px] truncate text-zinc-600"
+          className="block max-w-55 truncate text-zinc-600"
           title={row.email.trim()}
         >
           {row.email.trim()}
