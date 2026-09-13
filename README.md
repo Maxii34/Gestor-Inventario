@@ -95,7 +95,7 @@ Este frontend **no funciona solo**: necesita el backend REST.
 
 | Recurso | Link |
 |---------|------|
-| 🌐 **Frontend en producción (este proyecto)** | <!-- TODO: reemplazar cuando se despliegue --> [https://gestor-front-TU-USUARIO.vercel.app](https://gestor-front-TU-USUARIO.vercel.app) |
+| 🌐 **Frontend en producción (este proyecto)** | <!-- TODO: reemplazar cuando se despliegue --> [[[https://gestor-front-TU-USUARIO.vercel.app](https://sistema-inventario-woad.vercel.app/login)](https://sistema-inventario-woad.vercel.app/login)](https://gestor-front-TU-USUARIO.vercel.app) |
 | 🚀 **Backend en producción (deploy)** | [https://gestor-inventario-back.vercel.app](https://gestor-inventario-back.vercel.app) |
 | 💻 **GitHub del backend** | <!-- TODO: reemplazar con la URL real --> `https://github.com/Maxii34/Gestor-Inventario-back` |
 
