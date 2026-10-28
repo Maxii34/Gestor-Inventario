@@ -1,8 +1,9 @@
-import type { AuthUser } from '@/types/auth';
+import type { AuthUser, Comercio } from '@/types/auth';
 
 const ACCESS_TOKEN_KEY = 'gestor.accessToken';
 const REFRESH_TOKEN_KEY = 'gestor.refreshToken';
 const USER_KEY = 'gestor.user';
+const COMERCIO_KEY = 'gestor.comercio';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -51,9 +52,24 @@ export const tokenStorage = {
     write(USER_KEY, JSON.stringify(user));
   },
 
+  getStoredComercio(): Comercio | null {
+    const raw = read(COMERCIO_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as Comercio;
+    } catch {
+      return null;
+    }
+  },
+
+  setStoredComercio(comercio: Comercio): void {
+    write(COMERCIO_KEY, JSON.stringify(comercio));
+  },
+
   clear(): void {
     remove(ACCESS_TOKEN_KEY);
     remove(REFRESH_TOKEN_KEY);
     remove(USER_KEY);
+    remove(COMERCIO_KEY);
   },
 };

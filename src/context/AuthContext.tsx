@@ -35,7 +35,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const storedUser = tokenStorage.getStoredUser();
-    return tokenStorage.getAccessToken() ? storedUser : null;
+    const hasComercio = Number.isInteger(storedUser?.comercioId);
+    return tokenStorage.getAccessToken() && storedUser && hasComercio ? storedUser : null;
   });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -46,7 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedUser = tokenStorage.getStoredUser();
       const accessToken = tokenStorage.getAccessToken();
       if (!active) return;
-      if (!storedUser || !accessToken) {
+      if (!storedUser || !accessToken || !Number.isInteger(storedUser.comercioId)) {
+        tokenStorage.clear();
+        setUser(null);
         setIsLoading(false);
         return;
       }

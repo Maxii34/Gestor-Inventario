@@ -37,6 +37,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   });
   tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
   tokenStorage.setStoredUser(response.data.usuario);
+  tokenStorage.setStoredComercio(response.data.comercio);
   return response.data.usuario;
 }
 

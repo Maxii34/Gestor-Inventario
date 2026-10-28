@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { LuBoxes, LuChartColumn, LuCircleHelp, LuLockKeyhole, LuShieldCheck } from 'react-icons/lu';
-import { Button, Checkbox, Input } from '@/components';
+import { Button, Input } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
 
@@ -29,6 +30,7 @@ const DESTACADOS = [
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading: isSessionLoading } = useAuth();
   const router = useRouter();
+  const [slug, setSlug] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,13 +42,26 @@ export default function LoginPage() {
     }
   }, [isSessionLoading, isAuthenticated, router]);
 
+  useEffect(() => {
+    const slugFromQuery = new URLSearchParams(window.location.search).get('slug');
+    if (slugFromQuery) {
+      setSlug(slugFromQuery);
+      return;
+    }
+    const pendingSlug = window.sessionStorage.getItem('gestor.pendingSlug');
+    if (pendingSlug) {
+      setSlug(pendingSlug);
+      window.sessionStorage.removeItem('gestor.pendingSlug');
+    }
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
     try {
-      await login({ email, password });
+      await login({ slug: slug.trim(), email, password });
       router.replace('/dashboard');
     } catch (err) {
       setError(
@@ -169,6 +184,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
             <Input
+              label="Comercio"
+              type="text"
+              placeholder="mi-kiosco"
+              autoComplete="organization"
+              hint="Identificador (slug) que elegiste al registrar tu comercio."
+              required
+              value={slug}
+              onChange={(event) => setSlug(event.target.value)}
+            />
+            <Input
               label="Email"
               type="email"
               placeholder="usuario@empresa.com"
@@ -191,15 +216,15 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
-            <div className="flex items-center justify-between gap-4">
-              <Checkbox label="Recordarme" />
-              <button
-                type="button"
-                className="text-sm text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline"
+            <p className="text-sm text-zinc-600">
+              ¿Todavía no tenés comercio?{' '}
+              <Link
+                href="/register"
+                className="font-medium text-zinc-900 underline-offset-2 hover:underline"
               >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
+                Registralo
+              </Link>
+            </p>
             <Button type="submit" size="lg" fullWidth disabled={isSubmitting}>
               {isSubmitting ? 'Ingresando…' : 'Iniciar sesión'}
             </Button>
