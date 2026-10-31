@@ -19,6 +19,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import {
   actualizarProducto,
   crearProducto,
@@ -172,13 +173,8 @@ export default function ProductosPage() {
     setIsFiltering(true);
     setFilterError(null);
     try {
-      const primera = await listarProductos(1, 1);
-      if (primera.meta.total === 0) {
-        setTodosProductos([]);
-        return;
-      }
-      const completa = await listarProductos(1, primera.meta.total);
-      setTodosProductos(completa.productos);
+      const productos = await cargarTodasLasPaginas<BackendProducto>('/productos');
+      setTodosProductos(productos);
     } catch (err) {
       setTodosProductos([]);
       setFilterError(

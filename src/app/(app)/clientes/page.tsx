@@ -18,6 +18,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import {
   actualizarCliente,
   crearCliente,
@@ -207,13 +208,8 @@ export default function ClientesPage() {
     setIsFiltering(true);
     setFilterError(null);
     try {
-      const primera = await listarClientes(1, 1);
-      if (primera.meta.total === 0) {
-        setTodosClientes([]);
-        return;
-      }
-      const completa = await listarClientes(1, primera.meta.total);
-      setTodosClientes(completa.clientes);
+      const clientes = await cargarTodasLasPaginas<BackendCliente>('/clientes');
+      setTodosClientes(clientes);
     } catch (err) {
       setTodosClientes([]);
       setFilterError(

@@ -17,6 +17,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import {
   listarMovimientos,
   registrarMovimiento,
@@ -246,13 +247,8 @@ export default function MovimientosPage() {
     setIsFiltering(true);
     setFilterError(null);
     try {
-      const primera = await listarMovimientos(1, 1);
-      if (primera.meta.total === 0) {
-        setTodosMovimientos([]);
-        return;
-      }
-      const completa = await listarMovimientos(1, primera.meta.total);
-      setTodosMovimientos(completa.movimientos);
+      const movimientos = await cargarTodasLasPaginas<BackendMovimiento>('/movimientos');
+      setTodosMovimientos(movimientos);
     } catch (err) {
       setTodosMovimientos([]);
       setFilterError(
