@@ -24,6 +24,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { PagoDistanciaModal } from '@/components/ventas';
+import { useAuth } from '@/context/AuthContext';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,
@@ -113,6 +114,7 @@ function formatoFecha(iso: string): string {
 interface FilaVenta extends BackendVenta {
   onVerDetalle: () => void;
   onAnular: () => void;
+  puedeAnular: boolean;
 }
 
 const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
@@ -159,16 +161,16 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
           <LuEye aria-hidden="true" size={14} />
           Ver detalle
         </Button>
-        {row.estado === 'PENDIENTE' && (
+        {row.estado === 'COMPLETADA' && row.puedeAnular && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            aria-label={`Cancelar la venta #${row.id}`}
+            aria-label={`Anular la venta #${row.id}`}
             onClick={row.onAnular}
           >
             <LuX aria-hidden="true" size={14} />
-            Cancelar
+            Anular
           </Button>
         )}
       </span>
@@ -247,6 +249,9 @@ const DETALLE_VENTA_COLUMNAS: TableColumn<BackendVentaDetalle>[] = [
 ];
 
 export default function VentasPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'ADMIN';
+
   const [ventas, setVentas] = useState<BackendVenta[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -259,6 +264,7 @@ export default function VentasPage() {
   const [detalleError, setDetalleError] = useState<string | null>(null);
 
   const [anularTarget, setAnularTarget] = useState<BackendVenta | null>(null);
+  const [motivoAnulacion, setMotivoAnulacion] = useState('');
   const [isAnulando, setIsAnulando] = useState(false);
   const [anularError, setAnularError] = useState<string | null>(null);
 
@@ -366,12 +372,23 @@ export default function VentasPage() {
 
   async function confirmarAnulacion(): Promise<void> {
     if (!anularTarget || isAnulando) return;
+    const motivoLimpio = motivoAnulacion.trim();
+    if (!motivoLimpio) {
+      setAnularError('El motivo de anulación es obligatorio.');
+      return;
+    }
     setAnularError(null);
     setIsAnulando(true);
     try {
-      await anularVenta(anularTarget.id);
+      const idAnulada = anularTarget.id;
+      await anularVenta(idAnulada, motivoLimpio);
       setAnularTarget(null);
+      setMotivoAnulacion('');
       await cargarPagina(page);
+      await cargarSelectores();
+      if (detalleId === idAnulada) {
+        await verDetalle(idAnulada);
+      }
     } catch (err) {
       setAnularError(
         err instanceof ApiError
@@ -483,8 +500,10 @@ export default function VentasPage() {
     onVerDetalle: () => void verDetalle(venta.id),
     onAnular: () => {
       setAnularError(null);
+      setMotivoAnulacion('');
       setAnularTarget(venta);
     },
+    puedeAnular: isAdmin,
   }));
 
   const totalEstimado = items.reduce(
@@ -832,15 +851,29 @@ export default function VentasPage() {
           </>
         }
       >
-        {anularError ? (
-          <p role="alert" className="text-sm text-red-600">
-            {anularError}
-          </p>
-        ) : (
+        <div className="flex flex-col gap-3">
+          <FormField label="Motivo" htmlFor="anular-venta-motivo" required>
+            <Input
+              id="anular-venta-motivo"
+              value={motivoAnulacion}
+              maxLength={500}
+              placeholder="Indicá el motivo de la anulación"
+              onChange={(event) => {
+                setMotivoAnulacion(event.target.value);
+                setAnularError(null);
+              }}
+            />
+          </FormField>
           <p className="text-sm text-zinc-500">
-            Solo las ventas pendientes pueden anularse desde esta pantalla.
+            La venta quedará anulada y, si estaba completada, el stock de sus productos se
+            repondrá automáticamente.
           </p>
-        )}
+          {anularError && (
+            <p role="alert" className="text-sm text-red-600">
+              {anularError}
+            </p>
+          )}
+        </div>
       </Modal>
 
       <PagoDistanciaModal
