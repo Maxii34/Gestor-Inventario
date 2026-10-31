@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { RouteNotice } from "./RouteNotice";
 
 const SECTION_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -41,6 +42,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         />
         <main className="flex-1">
           <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
+            <Suspense fallback={null}>
+              <RouteNotice />
+            </Suspense>
             {children}
           </div>
         </main>

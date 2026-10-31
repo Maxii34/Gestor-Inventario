@@ -121,9 +121,13 @@ async function requestWithRetry<T>(
         return requestWithRetry<T>(path, options, true);
       }
     }
+    const fallbackMessage =
+      response.status === 403
+        ? 'No tenés permisos para realizar esta acción.'
+        : `Error HTTP ${response.status}.`;
     throw new ApiError(
       response.status,
-      extractMessage(responseBody, `Error HTTP ${response.status}.`),
+      extractMessage(responseBody, fallbackMessage),
       responseBody,
     );
   }

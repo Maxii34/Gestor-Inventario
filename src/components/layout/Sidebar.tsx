@@ -73,7 +73,8 @@ function isActive(pathname: string, href: string) {
 
 function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onClose?: () => void }) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isAdmin = user?.rol === "ADMIN";
 
   return (
     <div className="flex h-full flex-col bg-zinc-900 text-zinc-300">
@@ -98,7 +99,7 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
 
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => item.href !== "/usuarios" || isAdmin).map((item) => {
             const active = isActive(pathname, item.href);
             const Icon = item.icon;
             return (
