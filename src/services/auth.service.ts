@@ -56,7 +56,7 @@ export async function refreshSession(): Promise<AuthTokens | null> {
     tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
     return tokens;
   } catch (error) {
-    if (error instanceof ApiError && error.status !== 0) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
       tokenStorage.clear();
       emitSessionExpired();
     }

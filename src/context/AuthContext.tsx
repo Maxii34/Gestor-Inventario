@@ -14,8 +14,8 @@ import {
   login as loginRequest,
   logout as logoutRequest,
   onSessionExpired,
-  refreshSession as refreshSessionRequest,
 } from '@/services/auth.service';
+import { refreshAccessToken } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/auth/storage';
 import type { AuthRole, AuthStatus, AuthUser, LoginCredentials } from '@/types/auth';
 
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
         return;
       }
-      await refreshSessionRequest();
+      await refreshAccessToken();
       if (active) setIsLoading(false);
     }
     void initSession();
@@ -78,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
-    const tokens = await refreshSessionRequest();
-    return tokens !== null;
+    const accessToken = await refreshAccessToken();
+    return accessToken !== null;
   }, []);
 
   const hasRole = useCallback(

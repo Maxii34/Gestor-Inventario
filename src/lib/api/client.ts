@@ -46,6 +46,10 @@ function runRefresh(): Promise<string | null> {
   return refreshInflight;
 }
 
+export function refreshAccessToken(): Promise<string | null> {
+  return runRefresh();
+}
+
 function getBaseUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!baseUrl) {
@@ -116,7 +120,7 @@ async function requestWithRetry<T>(
   const responseBody = await readBody(response);
   if (!response.ok) {
     if (response.status === 401 && auth && !retried && refreshHandler) {
-      const newAccessToken = await runRefresh();
+      const newAccessToken = await refreshAccessToken();
       if (newAccessToken) {
         return requestWithRetry<T>(path, options, true);
       }
