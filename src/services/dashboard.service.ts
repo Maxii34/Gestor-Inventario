@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api/client';
+import { MODULO_CLIENTES } from '@/lib/config';
 import type { ApiListResponse } from '@/types/api';
 import type {
   DatosDashboard,
@@ -81,7 +82,9 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
       `/ventas?page=1&limit=${VENTAS_RECIENTES_LIMIT}`,
       { auth: true },
     ),
-    apiRequest<ApiListResponse<unknown>>('/clientes?page=1&limit=1', { auth: true }),
+    MODULO_CLIENTES
+      ? apiRequest<ApiListResponse<unknown>>('/clientes?page=1&limit=1', { auth: true })
+      : Promise.resolve(null),
   ]);
 
   const conStockBajo = productos.data.filter(
@@ -114,7 +117,7 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
       productosActivos: productos.data.filter((producto) => producto.activo).length,
       stockBajo: conStockBajo.length,
       totalVentas: ventas.meta.total,
-      totalClientes: clientes.meta.total,
+      totalClientes: clientes?.meta.total ?? 0,
     },
     ventasRecientes,
     stockBajo,

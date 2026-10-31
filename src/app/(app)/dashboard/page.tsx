@@ -20,6 +20,7 @@ import {
   type TableColumn,
 } from '@/components';
 import { ApiError } from '@/lib/api/client';
+import { MODULO_CLIENTES } from '@/lib/config';
 import { getDatosDashboard } from '@/services/dashboard.service';
 import type {
   DatosDashboard,
@@ -299,7 +300,9 @@ export default function DashboardPage() {
                 icono: LuUsers,
                 iconoClase: 'border-zinc-200 bg-zinc-100 text-zinc-700',
               },
-            ].map((tarjeta, indice) => {
+            ]
+              .filter((tarjeta) => tarjeta.titulo !== 'Clientes' || MODULO_CLIENTES)
+              .map((tarjeta, indice) => {
               const Icono = tarjeta.icono;
               return (
                 <motion.div
@@ -385,7 +388,9 @@ export default function DashboardPage() {
               className="border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
             >
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {ACCIONES_RAPIDAS.map((accion, indice) => {
+                {ACCIONES_RAPIDAS.filter(
+                  (accion) => accion.href !== '/clientes' || MODULO_CLIENTES,
+                ).map((accion, indice) => {
                   const Icono = accion.icono;
                   return (
                     <motion.div

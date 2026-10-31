@@ -30,6 +30,7 @@ import {
   useRecaudacion,
 } from '@/components/estadisticas';
 import { ApiError } from '@/lib/api/client';
+import { MODULO_CLIENTES } from '@/lib/config';
 import { listarClientes } from '@/services/clientes.service';
 import { listarProductos } from '@/services/productos.service';
 import {
@@ -301,14 +302,16 @@ export default function VentasPage() {
     setSelectoresError(null);
     try {
       const [clientes, productos] = await Promise.all([
-        listarClientes(1, SELECTOR_PAGE_SIZE),
+        MODULO_CLIENTES ? listarClientes(1, SELECTOR_PAGE_SIZE) : Promise.resolve(null),
         listarProductos(1, SELECTOR_PAGE_SIZE),
       ]);
       setClienteOpciones(
-        clientes.clientes.map((cliente) => ({
-          value: String(cliente.id),
-          label: `${cliente.nombre} ${cliente.apellido}`.trim(),
-        })),
+        clientes
+          ? clientes.clientes.map((cliente) => ({
+              value: String(cliente.id),
+              label: `${cliente.nombre} ${cliente.apellido}`.trim(),
+            }))
+          : [],
       );
       setProductoOpciones(
         productos.productos
@@ -326,7 +329,9 @@ export default function VentasPage() {
       setSelectoresError(
         err instanceof ApiError
           ? err.message
-          : 'No pudimos cargar clientes y productos.',
+          : MODULO_CLIENTES
+            ? 'No pudimos cargar clientes y productos.'
+            : 'No pudimos cargar los productos.',
       );
     }
   }, []);
@@ -461,7 +466,7 @@ export default function VentasPage() {
     setIsRegistrando(true);
     try {
       const creada = await crearVenta({
-        ...(clienteId ? { clienteId: Number(clienteId) } : {}),
+        ...(MODULO_CLIENTES && clienteId ? { clienteId: Number(clienteId) } : {}),
         metodoPago: medioPago,
         detalles: items.map((item) => ({
           productoId: item.productoId,
@@ -634,15 +639,17 @@ export default function VentasPage() {
               </div>
             ) : (
               <>
-                <FormField label="Cliente" htmlFor="nueva-venta-cliente">
-                  <Select
-                    id="nueva-venta-cliente"
-                    value={clienteId}
-                    onChange={(event) => setClienteId(event.target.value)}
-                    placeholder="Consumidor final"
-                    options={clienteOpciones}
-                  />
-                </FormField>
+                {MODULO_CLIENTES && (
+                  <FormField label="Cliente" htmlFor="nueva-venta-cliente">
+                    <Select
+                      id="nueva-venta-cliente"
+                      value={clienteId}
+                      onChange={(event) => setClienteId(event.target.value)}
+                      placeholder="Consumidor final"
+                      options={clienteOpciones}
+                    />
+                  </FormField>
+                )}
 
                 <div>
                   <p className="mb-2 text-sm font-medium text-zinc-700">Productos de la venta</p>

@@ -14,6 +14,7 @@ import {
   LuX,
 } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
+import { MODULO_CLIENTES } from "@/lib/config";
 
 const NAV_ITEMS = [
   {
@@ -99,7 +100,11 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
 
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.filter((item) => item.href !== "/usuarios" || isAdmin).map((item) => {
+          {NAV_ITEMS.filter(
+            (item) =>
+              (item.href !== "/usuarios" || isAdmin) &&
+              (item.href !== "/clientes" || MODULO_CLIENTES),
+          ).map((item) => {
             const active = isActive(pathname, item.href);
             const Icon = item.icon;
             return (
