@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
@@ -8,6 +8,7 @@ import { LuBoxes, LuChartColumn, LuCircleHelp, LuLockKeyhole, LuShieldCheck } fr
 import { Button, Input } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
+import { LoginNotice } from './LoginNotice';
 
 const DESTACADOS = [
   {
@@ -211,6 +212,9 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
+            <Suspense fallback={null}>
+              <LoginNotice />
+            </Suspense>
             {error && (
               <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
                 {error}

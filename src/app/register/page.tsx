@@ -48,7 +48,7 @@ function validarFormulario(datos: {
 }
 
 export default function RegisterPage() {
-  const { isAuthenticated, isLoading: isSessionLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: isSessionLoading } = useAuth();
   const router = useRouter();
 
   const [nombre, setNombre] = useState('');
@@ -91,8 +91,17 @@ export default function RegisterPage() {
         adminEmail: adminEmail.trim(),
         adminPassword,
       });
-      window.sessionStorage.setItem('gestor.pendingSlug', resultado.comercio.slug);
-      router.replace(`/login?slug=${encodeURIComponent(resultado.comercio.slug)}`);
+      try {
+        await login({
+          slug: resultado.comercio.slug,
+          email: adminEmail.trim(),
+          password: adminPassword,
+        });
+        router.replace('/dashboard');
+      } catch {
+        window.sessionStorage.setItem('gestor.pendingSlug', resultado.comercio.slug);
+        router.replace('/login?aviso=registro');
+      }
     } catch (err) {
       setError(
         err instanceof ApiError
