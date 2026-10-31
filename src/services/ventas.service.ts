@@ -1,7 +1,7 @@
 import { apiRequest } from '@/lib/api/client';
 import type { ApiListResponse, ApiSuccess, PageMeta } from '@/types/api';
 
-export type MetodoPagoBackend = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'PEDIDO_DISTANCIA';
+export type MetodoPagoBackend = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA';
 
 export type EstadoVentaBackend = 'PENDIENTE' | 'COMPLETADA' | 'ANULADA' | 'RECHAZADA';
 
@@ -43,7 +43,6 @@ export interface VentaInput {
 
 export interface VentaCreada {
   ventaId: number;
-  initPoint?: string;
 }
 
 export interface VentasPaginadas {

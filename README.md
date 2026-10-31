@@ -1,6 +1,6 @@
 # 📦 Gestor de Inventario — Frontend
 
-Panel administrativo web para la gestión de inventario, ventas, clientes y usuarios. Incluye dashboard con métricas, control de stock, ventas presenciales y a distancia con pago por link / QR, y autenticación con roles.
+Panel administrativo web para la gestión de inventario, ventas, clientes y usuarios. Incluye dashboard con métricas, control de stock, ventas presenciales con medios de pago directos (efectivo, transferencia y tarjeta), y autenticación con roles.
 
 > Frontend en **Next.js (App Router)** que consume el backend REST del proyecto. No expone secretos: solo usa la URL pública del API.
 
@@ -12,7 +12,6 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Motion](https://img.shields.io/badge/Motion-13-FF0080?logo=framer&logoColor=white)](https://motion.dev/)
 [![React Icons](https://img.shields.io/badge/React_Icons-5-E91E63?logo=react&logoColor=white)](https://react-icons.github.io/react-icons/)
-[![QRCode](https://img.shields.io/badge/QRCode.react-4-000000?logo=qr&logoColor=white)](https://www.npmjs.com/package/qrcode.react)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
 [![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?logo=eslint&logoColor=white)](https://eslint.org/)
 [![License](https://img.shields.io/badge/License-Privado-lightgrey)](#-licencia)
@@ -26,7 +25,7 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 - Control de **productos, categorías y stock** (con mínimo y alertas de stock bajo / crítico).
 - Registro de **movimientos de stock** (entradas, salidas, ajustes).
 - Gestión de **clientes** y **ventas**.
-- **Ventas a distancia**: genera un link de pago + código QR, con polling automático del estado y botón para compartir por WhatsApp.
+- **Ventas directas**: registro inmediato con medios de pago efectivo, transferencia o tarjeta.
 - **Usuarios y roles** (ej. admin / vendedor) con rutas protegidas.
 - **Dashboard** con resumen (totales, ventas recientes, stock bajo) y acciones rápidas.
 - UI responsive: sidebar fijo en desktop, drawer en móvil, skeletons de carga, animaciones con Motion y tablas con paginación.
@@ -41,8 +40,7 @@ Rutas principales:
 | `/categorias` | Organización del catálogo |
 | `/movimientos` | Entradas / salidas / ajustes de stock |
 | `/clientes` | Gestión de clientes |
-| `/ventas` | Ventas presenciales + a distancia (QR) |
-| `/pagos/exitoso`, `/pagos/fallido`, `/pagos/pendiente` | Retorno del flujo de pago |
+| `/ventas` | Ventas presenciales y anulación con motivo |
 | `/usuarios` | Administración de usuarios y roles |
 
 ---
@@ -51,7 +49,7 @@ Rutas principales:
 
 - 🔐 **Auth con JWT + refresh**: contexto `AuthContext`, guard `RequireAuth`, control por rol (`hasRole`), cierre de sesión y manejo de sesión expirada.
 - 📊 **Dashboard en vivo**: tarjetas de Productos / Stock bajo / Ventas / Clientes, tablas de ventas recientes y stock bajo.
-- 🛒 **Ventas flexibles**: venta presencial y venta a distancia con `PagoDistanciaModal` (link + `QRCodeSVG` + polling cada 5s + copiar link + compartir por WhatsApp).
+- 🛒 **Ventas directas**: alta con stock, cliente opcional y medios de pago efectivo, transferencia o tarjeta; anulación con motivo y reposición de stock.
 - 📦 **Stock inteligente**: badges Crítico / Bajo, validaciones y movimientos auditables.
 - 🧱 **UI propia reutilizable**: `Button`, `Input`, `Select`, `Modal`, `Card`, `Badge`, `Table`, `Pagination`, `PageHeader`, `EmptyState`, `SearchInput`, `FormField`, `Reveal`.
 - 📱 **Responsive + accesible**: drawer móvil, `aria-*`, skeletons, `prefers-reduced-motion`.
@@ -69,7 +67,6 @@ Rutas principales:
 | Estilos | ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white) + PostCSS |
 | Animaciones | ![Motion](https://img.shields.io/badge/Motion-13-FF0080) (`motion/react`) |
 | Iconos | ![Icons](https://img.shields.io/badge/react--icons-Lu-red) Lucide (`react-icons/lu`) |
-| QR | `qrcode.react` (`QRCodeSVG`) |
 | Calidad | ESLint + `eslint-config-next` |
 | Deploy | ![Vercel](https://img.shields.io/badge/Vercel-deploy-black?logo=vercel) |
 
@@ -77,14 +74,13 @@ Rutas principales:
 
 ```text
 src/
-├── app/            # Rutas App Router ((app), dashboard, productos, ventas, pagos, login)
-├── components/     # ui, layout, tables, forms, motion, auth, ventas, estadisticas
+├── app/            # Rutas App Router ((app), dashboard, productos, ventas, login)
+├── components/     # ui, layout, tables, forms, motion, auth, estadisticas
 ├── context/        # AuthContext
 ├── lib/api/        # cliente fetch + manejo ApiError
 ├── lib/auth/       # storage de tokens / usuario
 ├── services/       # llamadas al backend por dominio
-├── types/          # tipos TS por dominio
-└── mocks/          # mocks (ej. pagos)
+└── types/          # tipos TS por dominio
 ```
 
 ---
@@ -180,7 +176,7 @@ npm run start
 
 ## 👤 Autor
 
-**Maxi Ordoñez** — Desarrollo y diseño del frontend (panel administrativo, dashboard, ventas con QR, auth con roles, UI reutilizable).
+**Maxi Ordoñez** — Desarrollo y diseño del frontend (panel administrativo, dashboard, ventas directas, auth con roles, UI reutilizable).
 
 - 📧 `exemaxi@outlook.com`
 - 💼 Frontend: Next.js + React + TypeScript + Tailwind
@@ -193,7 +189,6 @@ npm run start
 
 - No se commitean `.env.local` ni credenciales (revisar `.gitignore`).
 - Los tokens se manejan en cliente vía `lib/auth/storage` + refresh; nunca se hardcodean.
-- Los links de pago son generados por el backend; el frontend solo los muestra (texto + QR) y consulta el estado.
 
 ---
 

@@ -4,7 +4,6 @@ export * from './movimiento-stock';
 export * from './cliente';
 export * from './venta';
 export * from './usuario';
-export * from './pago';
 export * from './api';
 export * from './auth';
 export * from './dashboard';

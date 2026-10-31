@@ -23,7 +23,6 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
-import { PagoDistanciaModal } from '@/components/ventas';
 import { useAuth } from '@/context/AuthContext';
 import {
   RecaudacionConsultaCard,
@@ -61,7 +60,6 @@ const MEDIO_PAGO_OPCIONES = [
   { value: 'efectivo', label: 'Efectivo' },
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'tarjeta', label: 'Tarjeta' },
-  { value: 'mercado-pago', label: 'Mercado Pago' },
 ];
 
 const PERIODO_OPCIONES = [
@@ -75,7 +73,6 @@ const NUEVA_VENTA_MEDIO_PAGO_OPCIONES = [
   { value: 'EFECTIVO', label: 'Efectivo' },
   { value: 'TRANSFERENCIA', label: 'Transferencia' },
   { value: 'TARJETA', label: 'Tarjeta' },
-  { value: 'PEDIDO_DISTANCIA', label: 'Pedido a distancia' },
 ];
 
 const ESTADO_VISUAL: Record<EstadoVentaBackend, { etiqueta: string; tono: 'success' | 'warning' | 'danger' }> = {
@@ -89,7 +86,6 @@ const METODO_PAGO_ETIQUETA: Record<MetodoPagoBackend, string> = {
   EFECTIVO: 'Efectivo',
   TRANSFERENCIA: 'Transferencia',
   TARJETA: 'Tarjeta',
-  PEDIDO_DISTANCIA: 'Pedido a distancia',
 };
 
 function toNumber(valor: number | string): number {
@@ -279,7 +275,6 @@ export default function VentasPage() {
   const [ventaError, setVentaError] = useState<string | null>(null);
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [ventaCreada, setVentaCreada] = useState<VentaCreada | null>(null);
-  const [pagoDistancia, setPagoDistancia] = useState<{ ventaId: number; initPoint: string } | null>(null);
 
   const recaudacion = useRecaudacion();
 
@@ -478,12 +473,7 @@ export default function VentasPage() {
       } else {
         setPage(1);
       }
-      if (medioPago === 'PEDIDO_DISTANCIA' && creada.initPoint) {
-        setPagoDistancia({ ventaId: creada.ventaId, initPoint: creada.initPoint });
-        limpiarNuevaVenta();
-      } else {
-        setVentaCreada(creada);
-      }
+      setVentaCreada(creada);
     } catch (err) {
       setVentaError(
         err instanceof ApiError
@@ -634,25 +624,12 @@ export default function VentasPage() {
                   Venta registrada correctamente.
                 </p>
                 <p className="mt-1 text-sm text-green-800">
-                  Venta #{ventaCreada.ventaId} creada en el sistema.
-                  {ventaCreada.initPoint
-                    ? ' Usá el siguiente enlace para continuar con el pago en Mercado Pago.'
-                    : ''}
+                  Venta #{ventaCreada.ventaId} creada en el sistema con estado COMPLETADA.
                 </p>
                 <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row">
                   <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
                     Registrar otra venta
                   </Button>
-                  {ventaCreada.initPoint && (
-                    <a
-                      href={ventaCreada.initPoint}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
-                    >
-                      Continuar al pago
-                    </a>
-                  )}
                 </div>
               </div>
             ) : (
@@ -876,12 +853,6 @@ export default function VentasPage() {
         </div>
       </Modal>
 
-      <PagoDistanciaModal
-        open={pagoDistancia !== null}
-        ventaId={pagoDistancia?.ventaId ?? null}
-        initPoint={pagoDistancia?.initPoint ?? null}
-        onClose={() => setPagoDistancia(null)}
-      />
     </>
   );
 }
