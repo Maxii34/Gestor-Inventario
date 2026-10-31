@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   LuEye,
-  LuFilter,
   LuPlus,
   LuSave,
   LuX,
@@ -17,7 +16,6 @@ import {
   Modal,
   PageHeader,
   Pagination,
-  SearchInput,
   Select,
   Table,
   type TableColumn,
@@ -48,27 +46,6 @@ import type { PageMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
 const SELECTOR_PAGE_SIZE = 100;
-
-const ESTADO_OPCIONES = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'pendiente', label: 'Pendiente' },
-  { value: 'pagada', label: 'Pagada' },
-  { value: 'cancelada', label: 'Cancelada' },
-];
-
-const MEDIO_PAGO_OPCIONES = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'efectivo', label: 'Efectivo' },
-  { value: 'transferencia', label: 'Transferencia' },
-  { value: 'tarjeta', label: 'Tarjeta' },
-];
-
-const PERIODO_OPCIONES = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'hoy', label: 'Hoy' },
-  { value: 'ultimos-7', label: 'Últimos 7 días' },
-  { value: 'ultimos-30', label: 'Últimos 30 días' },
-];
 
 const NUEVA_VENTA_MEDIO_PAGO_OPCIONES = [
   { value: 'EFECTIVO', label: 'Efectivo' },
@@ -555,31 +532,6 @@ export default function VentasPage() {
         </Reveal>
 
         <Reveal delay={0.15}>
-          <Card
-            title="Filtros"
-            subtitle="Controles visuales sin funcionalidad"
-            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-          >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <SearchInput
-              id="buscar-venta"
-              label="Buscar"
-              placeholder="Buscar por cliente o número de venta..."
-              value=""
-              onChange={() => undefined}
-            />
-            <Select label="Estado" defaultValue="todos" options={ESTADO_OPCIONES} />
-            <Select
-              label="Medio de pago"
-              defaultValue="todos"
-              options={MEDIO_PAGO_OPCIONES}
-            />
-            <Select label="Período" defaultValue="todos" options={PERIODO_OPCIONES} />
-          </div>
-          </Card>
-        </Reveal>
-
-        <Reveal delay={0.2}>
           <Card title="Listado de ventas" subtitle={`${meta.total} ventas registradas`}>
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
