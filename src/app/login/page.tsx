@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { LuBoxes, LuChartColumn, LuCircleHelp, LuLockKeyhole, LuShieldCheck } from 'react-icons/lu';
-import { Button, Input } from '@/components';
+import { BrandLockup, Button, Input } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
 import { LoginNotice } from './LoginNotice';
@@ -89,22 +89,16 @@ export default function LoginPage() {
           className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-zinc-800/40 blur-3xl"
         />
 
-        <div className="relative flex items-center gap-3">
-          <motion.span
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-sm font-bold text-zinc-950"
-          >
-            GI
-          </motion.span>
+        <div className="relative">
           <motion.div
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <p className="text-base font-bold">Gestor de Inventario</p>
-            <p className="text-xs text-zinc-400">Panel administrativo</p>
+            <BrandLockup
+              variant="dark"
+              subtitle="Gestión inteligente de tu negocio"
+            />
           </motion.div>
         </div>
 
@@ -144,7 +138,7 @@ export default function LoginPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          © {new Date().getFullYear()} Gestor de Inventario. Todos los derechos reservados.
+          © {new Date().getFullYear()} StockNext. Todos los derechos reservados.
         </motion.p>
       </section>
 
@@ -159,17 +153,11 @@ export default function LoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-          <div className="flex items-center gap-3 lg:hidden">
-            <span
-              aria-hidden="true"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white"
-            >
-              GI
-            </span>
-            <div>
-              <p className="text-sm font-bold text-zinc-900">Gestor de Inventario</p>
-              <p className="text-xs text-zinc-500">Panel administrativo</p>
-            </div>
+          <div className="lg:hidden">
+            <BrandLockup
+              size="sm"
+              subtitle="Gestión inteligente de tu negocio"
+            />
           </div>
 
           <span className="inline-flex w-fit items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-600">
@@ -245,7 +233,7 @@ export default function LoginPage() {
           </ul>
 
           <p className="mt-8 text-center text-xs text-zinc-400">
-            © {new Date().getFullYear()} Gestor de Inventario · v0.1.0
+            © {new Date().getFullYear()} StockNext · v0.1.0
           </p>
           </motion.div>
         </div>

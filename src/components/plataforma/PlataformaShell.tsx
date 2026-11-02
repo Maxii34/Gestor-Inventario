@@ -8,9 +8,9 @@ import {
   LuBuilding2,
   LuLayoutDashboard,
   LuLogOut,
-  LuShieldCheck,
 } from 'react-icons/lu';
 import { plataformaTokenStorage } from '@/lib/auth/plataforma-storage';
+import { BrandLockup } from '@/components/ui/BrandLockup';
 
 const NAV_ITEMS = [
   { href: '/plataforma', label: 'Resumen', icon: LuLayoutDashboard },
@@ -56,14 +56,12 @@ export function PlataformaShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-zinc-100 text-zinc-900 lg:flex">
       <aside className="flex w-full shrink-0 flex-col bg-zinc-950 text-zinc-300 lg:sticky lg:top-0 lg:h-screen lg:w-64">
-        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-zinc-950">
-            <LuShieldCheck aria-hidden="true" size={21} />
-          </span>
-          <div>
-            <p className="font-semibold text-white">Gestor de Inventario</p>
-            <p className="text-xs text-zinc-400">Control de plataforma</p>
-          </div>
+        <div className="border-b border-white/10 px-5 py-5">
+          <BrandLockup
+            variant="dark"
+            size="sm"
+            subtitle="Control de plataforma"
+          />
         </div>
 
         <nav aria-label="Navegación de plataforma" className="flex-1 px-3 py-5">

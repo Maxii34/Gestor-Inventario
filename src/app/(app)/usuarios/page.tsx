@@ -1,13 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  LuBriefcaseBusiness,
+  LuCircleCheck,
+  LuCircleX,
   LuFilter,
   LuPencil,
   LuPlus,
   LuPower,
   LuPowerOff,
   LuSave,
+  LuUsers,
 } from 'react-icons/lu';
 import {
   Badge,
@@ -61,14 +65,40 @@ interface FilaUsuario extends BackendUsuario {
 }
 
 const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
-  { key: 'nombre', header: 'Usuario' },
-  { key: 'email', header: 'Email' },
+  {
+    key: 'nombre',
+    header: 'Empleado',
+    render: (row) => (
+      <div className="min-w-40">
+        <p className="font-semibold text-zinc-900">{row.nombre}</p>
+        <p className="mt-0.5 max-w-56 truncate text-xs text-zinc-500">{row.email}</p>
+      </div>
+    ),
+  },
   {
     key: 'rol',
-    header: 'Rol',
+    header: 'Permisos',
     render: (row) => {
       const visual = ROL_VISUAL[row.rol];
       return <Badge tone={visual.tono}>{visual.etiqueta}</Badge>;
+    },
+  },
+  {
+    key: 'fechaCreacion',
+    header: 'Se unió',
+    render: (row) => {
+      const fecha = new Date(row.fechaCreacion);
+      return (
+        <span className="whitespace-nowrap text-xs text-zinc-600 tabular-nums">
+          {Number.isNaN(fecha.getTime())
+            ? '—'
+            : new Intl.DateTimeFormat('es-AR', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              }).format(fecha)}
+        </span>
+      );
     },
   },
   {
@@ -133,12 +163,16 @@ export default function UsuariosPage() {
   const [password, setPassword] = useState('');
   const [rol, setRol] = useState<AuthRole>('VENDEDOR');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [toggleTarget, setToggleTarget] = useState<BackendUsuario | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroRol, setFiltroRol] = useState('todos');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
 
   const cargarListado = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -175,11 +209,12 @@ export default function UsuariosPage() {
     setEmail(usuario.email);
     setPassword('');
     setRol(usuario.rol);
-    document.getElementById('usuario-formulario')?.scrollIntoView({ behavior: 'smooth' });
+    setIsFormOpen(true);
   }
 
   function cancelarEdicion(): void {
     setEditingId(null);
+    setIsFormOpen(false);
     setNombre('');
     setEmail('');
     setPassword('');
@@ -189,7 +224,7 @@ export default function UsuariosPage() {
 
   function nuevoUsuario(): void {
     cancelarEdicion();
-    document.getElementById('usuario-formulario')?.scrollIntoView({ behavior: 'smooth' });
+    setIsFormOpen(true);
   }
 
   async function guardarUsuario(): Promise<void> {
@@ -250,23 +285,25 @@ export default function UsuariosPage() {
     }
   }
 
-  if (!isAdmin) {
-    return (
-      <>
-        <PageHeader
-          title="Usuarios"
-          description="Administra los usuarios y roles de acceso al sistema."
-        />
-        <Card title="Acceso restringido">
-          <p className="text-sm text-zinc-500">
-            Esta sección está disponible únicamente para administradores.
-          </p>
-        </Card>
-      </>
-    );
-  }
-
-  const filas: FilaUsuario[] = usuarios.map((usuario) => ({
+  const total = usuarios.length;
+  const vendedores = usuarios.filter((usuario) => usuario.rol === 'VENDEDOR').length;
+  const activos = usuarios.filter((usuario) => usuario.activo).length;
+  const usuariosFiltrados = useMemo(() => {
+    const texto = busqueda.trim().toLocaleLowerCase('es-AR');
+    return usuarios.filter((usuario) => {
+      if (
+        texto &&
+        !`${usuario.nombre} ${usuario.email}`.toLocaleLowerCase('es-AR').includes(texto)
+      ) {
+        return false;
+      }
+      if (filtroRol !== 'todos' && usuario.rol !== filtroRol) return false;
+      if (filtroEstado === 'activos' && !usuario.activo) return false;
+      if (filtroEstado === 'inactivos' && usuario.activo) return false;
+      return true;
+    });
+  }, [usuarios, busqueda, filtroRol, filtroEstado]);
+  const filas: FilaUsuario[] = usuariosFiltrados.map((usuario) => ({
     ...usuario,
     onEdit: () => comenzarEdicion(usuario),
     onToggleActive: () => {
@@ -274,64 +311,163 @@ export default function UsuariosPage() {
       setToggleTarget(usuario);
     },
   }));
+  const hayFiltros =
+    busqueda.trim() !== '' || filtroRol !== 'todos' || filtroEstado !== 'todos';
 
-  const total = usuarios.length;
-  const administradores = usuarios.filter((usuario) => usuario.rol === 'ADMIN').length;
+  if (!isAdmin) {
+    return (
+      <>
+        <PageHeader
+          title="Equipo"
+          description="Administra los accesos del personal del comercio."
+        />
+        <Card title="Acceso restringido">
+          <p className="text-sm text-zinc-500">
+            La gestión del equipo está disponible únicamente para administradores.
+          </p>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>
       <PageHeader
-        title="Usuarios"
-        description="Administra los usuarios y roles de acceso al sistema."
+        title="Equipo"
+        description="Gestioná quién puede acceder al comercio y qué permisos tiene cada persona."
         actions={
           <Button type="button" className="w-full sm:w-auto" onClick={nuevoUsuario}>
             <LuPlus aria-hidden="true" size={16} />
-            Nuevo usuario
+            Agregar empleado
           </Button>
         }
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="flex flex-col gap-5">
+        <section aria-label="Resumen del equipo" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Reveal delay={0}>
-            <Card title="Total usuarios">
-              <p className="text-2xl font-bold text-zinc-900">{total}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+                  <LuUsers aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Personas en el equipo</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : total.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
           <Reveal delay={0.05}>
-            <Card title="Administradores">
-              <p className="text-2xl font-bold text-zinc-900">{administradores}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <LuCircleCheck aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Con acceso activo</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : activos.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
           <Reveal delay={0.1}>
-            <Card title="Vendedores">
-              <p className="text-2xl font-bold text-zinc-900">{total - administradores}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+                  <LuBriefcaseBusiness aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Empleados</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : vendedores.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
-        </div>
+          <Reveal delay={0.15}>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                  <LuCircleX aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Sin acceso</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : (total - activos).toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+        </section>
 
         <Reveal delay={0.15}>
           <Card
-            title="Filtros"
-            subtitle="Controles visuales sin funcionalidad"
+            title="Buscar y filtrar el equipo"
+            subtitle="Encontrá personas por nombre o correo y acotá por permisos o acceso."
             actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+            className="border-zinc-200/80 shadow-sm"
           >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <SearchInput
-              id="buscar-usuario"
-              label="Buscar"
-              placeholder="Buscar por nombre o email..."
-              value=""
-              onChange={() => undefined}
-            />
-            <Select label="Rol" defaultValue="todos" options={ROL_OPCIONES} />
-            <Select label="Estado" defaultValue="todos" options={ESTADO_OPCIONES} />
-          </div>
-        </Card>
+            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
+              <SearchInput
+                id="buscar-usuario"
+                label="Nombre o correo"
+                placeholder="Ej. María Gómez, maria@comercio.com"
+                value={busqueda}
+                onChange={setBusqueda}
+              />
+              <Select
+                label="Permisos"
+                value={filtroRol}
+                onChange={(event) => setFiltroRol(event.target.value)}
+                options={ROL_OPCIONES}
+              />
+              <Select
+                label="Acceso"
+                value={filtroEstado}
+                onChange={(event) => setFiltroEstado(event.target.value)}
+                options={ESTADO_OPCIONES}
+              />
+            </div>
+            {hayFiltros && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+                <p className="text-xs text-zinc-500">
+                  {usuariosFiltrados.length.toLocaleString('es-AR')}{' '}
+                  {usuariosFiltrados.length === 1 ? 'persona encontrada' : 'personas encontradas'}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setBusqueda('');
+                    setFiltroRol('todos');
+                    setFiltroEstado('todos');
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
+              </div>
+            )}
+          </Card>
         </Reveal>
 
         <Reveal delay={0.2}>
-          <Card title="Listado de usuarios" subtitle={`${total} usuarios registrados`}>
+          <Card
+            title="Personas del equipo"
+            subtitle={
+              hayFiltros
+                ? `${usuariosFiltrados.length.toLocaleString('es-AR')} resultados de ${total}`
+                : `${total.toLocaleString('es-AR')} personas registradas`
+            }
+            className="border-zinc-200/80 shadow-sm"
+          >
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2].map((item) => (
@@ -353,85 +489,121 @@ export default function UsuariosPage() {
               columns={USUARIO_COLUMNAS}
               data={filas}
               getRowKey={(row) => row.id}
-              emptyMessage="Sin usuarios para mostrar."
+              emptyMessage={
+                hayFiltros
+                  ? 'No encontramos personas con esos filtros.'
+                  : 'Todavía no hay personas en el equipo.'
+              }
             />
           )}
-        </Card>
+          </Card>
         </Reveal>
+      </div>
 
-        <Reveal delay={0.2}>
-          <div id="usuario-formulario" className="scroll-mt-20">
-          <Card
-            title={editingId === null ? 'Nuevo usuario' : 'Editar usuario'}
-          subtitle="Formulario conectado al backend"
-          footer={
-            <p className="text-xs text-zinc-500">
-              Los administradores tienen acceso completo al sistema. Los vendedores
-              pueden gestionar las operaciones permitidas para su rol.
-            </p>
-          }
-        >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Nombre" htmlFor="usuario-nombre">
-              <Input
-                id="usuario-nombre"
-                placeholder="Ej: Carlos Rodríguez"
-                value={nombre}
-                onChange={(event) => setNombre(event.target.value)}
-              />
-            </FormField>
-            <FormField label="Email" htmlFor="usuario-email">
-              <Input
-                id="usuario-email"
-                type="email"
-                placeholder="Ej: carlos@gestor.com"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </FormField>
-            {editingId === null && (
-              <FormField label="Contraseña" htmlFor="usuario-password">
-                <Input
-                  id="usuario-password"
-                  type="password"
-                  placeholder="Mínimo 6 caracteres"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </FormField>
-            )}
-            <FormField label="Rol" htmlFor="usuario-rol">
-              <Select
-                id="usuario-rol"
-                value={rol}
-                onChange={(event) => setRol(event.target.value as AuthRole)}
-                options={NUEVO_USUARIO_ROL_OPCIONES}
-              />
-            </FormField>
-          </div>
-          {formError && (
-            <p role="alert" className="mt-2 text-sm text-red-600">
-              {formError}
-            </p>
-          )}
-          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={cancelarEdicion}>
+      <Modal
+        open={isFormOpen}
+        title={editingId === null ? 'Agregar empleado' : 'Editar persona'}
+        description={
+          editingId === null
+            ? 'Creá un acceso individual para una persona de tu equipo.'
+            : 'Actualizá los datos y permisos de acceso de esta persona.'
+        }
+        size="md"
+        onClose={() => {
+          if (!isSubmitting) cancelarEdicion();
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={cancelarEdicion}
+            >
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void guardarUsuario()} disabled={isSubmitting}>
+            <Button type="submit" form="usuario-formulario" disabled={isSubmitting}>
               <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
                 : editingId === null
-                  ? 'Crear usuario'
+                  ? 'Crear acceso'
                   : 'Guardar cambios'}
             </Button>
+          </>
+        }
+      >
+        <form
+          id="usuario-formulario"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void guardarUsuario();
+          }}
+          className="flex flex-col gap-4"
+        >
+          <FormField label="Nombre completo" htmlFor="usuario-nombre" required>
+            <Input
+              id="usuario-nombre"
+              placeholder="Ej: Carlos Rodríguez"
+              autoComplete="name"
+              required
+              value={nombre}
+              onChange={(event) => setNombre(event.target.value)}
+            />
+          </FormField>
+          <FormField label="Correo electrónico" htmlFor="usuario-email" required>
+            <Input
+              id="usuario-email"
+              type="email"
+              placeholder="Ej: carlos@comercio.com"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </FormField>
+          {editingId === null && (
+            <FormField
+              label="Contraseña inicial"
+              htmlFor="usuario-password"
+              required
+              hint="Debe tener al menos 6 caracteres."
+            >
+              <Input
+                id="usuario-password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </FormField>
+          )}
+          <FormField label="Permisos del sistema" htmlFor="usuario-rol" required>
+            <Select
+              id="usuario-rol"
+              value={rol}
+              onChange={(event) => setRol(event.target.value as AuthRole)}
+              options={NUEVO_USUARIO_ROL_OPCIONES}
+            />
+          </FormField>
+          <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2.5 text-xs leading-relaxed text-sky-900">
+            <p>
+              <strong>Vendedor:</strong> acceso a las operaciones cotidianas del comercio.
+            </p>
+            <p className="mt-1">
+              <strong>Administrador:</strong> acceso completo, incluida la gestión del equipo.
+            </p>
           </div>
-        </Card>
-          </div>
-        </Reveal>
-      </div>
+          {formError && (
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {formError}
+            </p>
+          )}
+        </form>
+      </Modal>
 
       <Modal
         open={toggleTarget !== null}

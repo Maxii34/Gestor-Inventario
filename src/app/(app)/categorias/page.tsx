@@ -1,7 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  LuCircleCheck,
+  LuCircleOff,
+  LuFilter,
+  LuFolder,
+  LuPencil,
+  LuPlus,
+  LuSave,
+  LuSearch,
+  LuTrash2,
+  LuX,
+} from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -36,12 +47,14 @@ export default function CategoriasPage() {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<BackendCategoria | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState('');
 
   const cargarListado = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -75,11 +88,12 @@ export default function CategoriasPage() {
     setFormError(null);
     setNombre(categoria.nombre);
     setDescripcion(categoria.descripcion ?? '');
-    document.getElementById('categoria-formulario')?.scrollIntoView({ behavior: 'smooth' });
+    setIsFormOpen(true);
   }
 
   function cancelarEdicion(): void {
     setEditingId(null);
+    setIsFormOpen(false);
     setNombre('');
     setDescripcion('');
     setFormError(null);
@@ -87,7 +101,7 @@ export default function CategoriasPage() {
 
   function nuevaCategoria(): void {
     cancelarEdicion();
-    document.getElementById('categoria-formulario')?.scrollIntoView({ behavior: 'smooth' });
+    setIsFormOpen(true);
   }
 
   async function guardarCategoria(): Promise<void> {
@@ -139,6 +153,16 @@ export default function CategoriasPage() {
       setIsDeleting(false);
     }
   }
+
+  const categoriasFiltradas = useMemo(() => {
+    const texto = busqueda.trim().toLocaleLowerCase('es-AR');
+    if (!texto) return categorias;
+    return categorias.filter((categoria) =>
+      [categoria.nombre, categoria.descripcion ?? ''].some((valor) =>
+        valor.toLocaleLowerCase('es-AR').includes(texto),
+      ),
+    );
+  }, [categorias, busqueda]);
 
   const columnas: TableColumn<BackendCategoria>[] = [
     {
@@ -220,117 +244,127 @@ export default function CategoriasPage() {
     <>
       <PageHeader
         title="Categorías"
-        description="Organiza y administra las categorías de tus productos."
-        actions={
-          isAdmin ? (
-            <Button type="button" className="w-full sm:w-auto" onClick={nuevaCategoria}>
-              <LuPlus aria-hidden="true" size={16} />
-              Nueva categoría
-            </Button>
-          ) : undefined
-        }
+        description="Organizá los productos en grupos claros para encontrarlos y gestionarlos mejor."
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="flex flex-col gap-5">
+        <section
+          aria-label="Resumen de categorías"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+        >
           <Reveal delay={0}>
-            <Card title="Total de categorías" subtitle="Categorías registradas">
-              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+                  <LuFolder aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Total de categorías</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : total.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
           <Reveal delay={0.05}>
-            <Card title="Categorías activas" subtitle="Disponibles para productos">
-              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{activas}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <LuCircleCheck aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Categorías activas</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : activas.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
           <Reveal delay={0.1}>
-            <Card title="Categorías inactivas" subtitle="No disponibles actualmente">
-              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{total - activas}</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
+                  <LuCircleOff aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Categorías inactivas</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : (total - activas).toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
-        </div>
+        </section>
 
-        {/* Formulario de creación/edición arriba de la barra de búsqueda */}
-        {isAdmin && (
-          <Reveal delay={0.15}>
-            <div className="rounded-xl border border-zinc-200/80 bg-white shadow-md transition-shadow">
+        <div className={`grid grid-cols-1 gap-4 ${isAdmin ? 'lg:grid-cols-2' : ''}`}>
+          <Reveal delay={0.2}>
             <Card
-              title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
-              subtitle="Formulario conectado al backend"
+              title="Encontrar una categoría"
+              subtitle="Buscá por nombre o descripción."
+              actions={<LuSearch aria-hidden="true" size={17} className="text-zinc-400" />}
+              className="h-full border-zinc-200/80 shadow-sm"
             >
-              <div
-                id="categoria-formulario"
-                className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2"
-              >
-                <FormField label="Nombre" htmlFor="categoria-nombre" required>
-                  <Input
-                    id="categoria-nombre"
-                    placeholder="Ej: Electrónica"
-                    value={nombre}
-                    onChange={(event) => setNombre(event.target.value)}
-                  />
-                </FormField>
-                <FormField label="Descripción" htmlFor="categoria-descripcion">
-                  <Input
-                    id="categoria-descripcion"
-                    placeholder="Descripción breve (opcional)"
-                    value={descripcion}
-                    onChange={(event) => setDescripcion(event.target.value)}
-                  />
-                </FormField>
-              </div>
-
-              {formError && (
-                <p
-                  role="alert"
-                  className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
-                >
-                  {formError}
-                </p>
+              <SearchInput
+                id="buscar-categoria"
+                label="Nombre o descripción"
+                placeholder="Ej. Bebidas, productos de limpieza…"
+                value={busqueda}
+                onChange={setBusqueda}
+              />
+              {busqueda.trim() && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+                  <p className="text-xs text-zinc-500">
+                    {categoriasFiltradas.length.toLocaleString('es-AR')}{' '}
+                    {categoriasFiltradas.length === 1 ? 'resultado' : 'resultados'}
+                  </p>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setBusqueda('')}>
+                    <LuX aria-hidden="true" size={14} />
+                    Limpiar búsqueda
+                  </Button>
+                </div>
               )}
+            </Card>
+          </Reveal>
 
-              <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" onClick={cancelarEdicion}>
-                  Cancelar
-                </Button>
+          {isAdmin && (
+            <Reveal delay={0.25}>
+              <Card
+                title="¿Necesitás otro grupo?"
+                subtitle="Creá una categoría para organizar nuevos productos."
+                className="h-full border-zinc-200/80 bg-zinc-50/60 shadow-sm"
+              >
                 <Button
                   type="button"
-                  onClick={() => void guardarCategoria()}
-                  disabled={isSubmitting}
+                  className="w-full sm:w-auto"
+                  onClick={nuevaCategoria}
                 >
-                  <LuSave aria-hidden="true" size={16} />
-                  {isSubmitting
-                    ? 'Guardando…'
-                    : editingId === null
-                      ? 'Crear categoría'
-                      : 'Guardar cambios'}
+                  <LuPlus aria-hidden="true" size={16} />
+                  Nueva categoría
                 </Button>
-              </div>
-            </Card>
-            </div>
-          </Reveal>
-        )}
-
-        <Reveal delay={0.2}>
-          <Card
-            title="Filtros"
-            subtitle="Busca por nombre de categoría"
-            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
-          >
-          <div className="w-full max-w-md">
-            <SearchInput
-              id="buscar-categoria"
-              label="Buscar"
-              placeholder="Buscar categoría..."
-              value=""
-              onChange={() => undefined}
-            />
-          </div>
-          </Card>
-        </Reveal>
+              </Card>
+            </Reveal>
+          )}
+        </div>
 
         <Reveal delay={0.25}>
-          <Card title="Listado de categorías" subtitle={`${total} categorías registradas`}>
+          <Card
+            title="Categorías"
+            subtitle={
+              busqueda.trim()
+                ? `${categoriasFiltradas.length.toLocaleString('es-AR')} resultados de ${total}`
+                : `${total.toLocaleString('es-AR')} categorías registradas`
+            }
+            actions={
+              <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
+                <LuFilter aria-hidden="true" size={15} />
+                {busqueda.trim() ? 'Vista filtrada' : 'Todas las categorías'}
+              </span>
+            }
+            className="border-zinc-200/80 shadow-sm"
+          >
           {isLoading ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
@@ -351,14 +385,89 @@ export default function CategoriasPage() {
           ) : (
             <Table
               columns={columnas}
-              data={categorias}
+              data={categoriasFiltradas}
               getRowKey={(row) => row.id}
-              emptyMessage="Sin categorías para mostrar."
+              emptyMessage={
+                busqueda.trim()
+                  ? 'No encontramos categorías con esa búsqueda.'
+                  : 'Todavía no hay categorías registradas.'
+              }
             />
           )}
           </Card>
         </Reveal>
       </div>
+
+      {isAdmin && (
+        <Modal
+          open={isFormOpen}
+          title={editingId === null ? 'Nueva categoría' : 'Editar categoría'}
+          description={
+            editingId === null
+              ? 'Agregá una categoría para organizar los productos del catálogo.'
+              : 'Actualizá el nombre o la descripción de esta categoría.'
+          }
+          onClose={() => {
+            if (!isSubmitting) cancelarEdicion();
+          }}
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={cancelarEdicion}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" form="categoria-formulario" disabled={isSubmitting}>
+                <LuSave aria-hidden="true" size={16} />
+                {isSubmitting
+                  ? 'Guardando…'
+                  : editingId === null
+                    ? 'Crear categoría'
+                    : 'Guardar cambios'}
+              </Button>
+            </>
+          }
+        >
+          <form
+            id="categoria-formulario"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void guardarCategoria();
+            }}
+            className="flex flex-col gap-4"
+          >
+            <FormField label="Nombre" htmlFor="categoria-nombre" required>
+              <Input
+                id="categoria-nombre"
+                placeholder="Ej: Electrónica"
+                autoFocus
+                required
+                value={nombre}
+                onChange={(event) => setNombre(event.target.value)}
+              />
+            </FormField>
+            <FormField label="Descripción" htmlFor="categoria-descripcion">
+              <Input
+                id="categoria-descripcion"
+                placeholder="Descripción breve (opcional)"
+                value={descripcion}
+                onChange={(event) => setDescripcion(event.target.value)}
+              />
+            </FormField>
+            {formError && (
+              <p
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+              >
+                {formError}
+              </p>
+            )}
+          </form>
+        </Modal>
+      )}
 
       <Modal
         open={deleteTarget !== null}

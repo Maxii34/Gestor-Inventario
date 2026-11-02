@@ -170,8 +170,8 @@ const ACCIONES_RAPIDAS = [
     tono: 'bg-sky-50 text-sky-700',
   },
   {
-    etiqueta: 'Movimiento de stock',
-    descripcion: 'Registrar entrada o salida',
+    etiqueta: 'Control de stock',
+    descripcion: 'Registrar entradas, salidas y ajustes',
     icono: LuArrowUpDown,
     href: '/movimientos',
     tono: 'bg-violet-50 text-violet-700',

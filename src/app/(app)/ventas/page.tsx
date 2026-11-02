@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  LuCircleCheck,
   LuEye,
   LuPlus,
+  LuReceipt,
   LuSave,
   LuX,
 } from 'react-icons/lu';
@@ -247,12 +249,14 @@ export default function VentasPage() {
   const [productoId, setProductoId] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [productoOpciones, setProductoOpciones] = useState<ProductoOpcion[]>([]);
+  const [isLoadingSelectors, setIsLoadingSelectors] = useState(true);
   const [selectoresError, setSelectoresError] = useState<string | null>(null);
   const [items, setItems] = useState<ItemNuevaVenta[]>([]);
   const [medioPago, setMedioPago] = useState<MetodoPagoBackend>('EFECTIVO');
   const [ventaError, setVentaError] = useState<string | null>(null);
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [ventaCreada, setVentaCreada] = useState<VentaCreada | null>(null);
+  const [isVentaOpen, setIsVentaOpen] = useState(false);
 
   const recaudacion = useRecaudacion();
 
@@ -276,6 +280,7 @@ export default function VentasPage() {
   }, []);
 
   const cargarSelectores = useCallback(async (): Promise<void> => {
+    setIsLoadingSelectors(true);
     setSelectoresError(null);
     try {
       const [clientes, productos] = await Promise.all([
@@ -310,6 +315,8 @@ export default function VentasPage() {
             ? 'No pudimos cargar clientes y productos.'
             : 'No pudimos cargar los productos.',
       );
+    } finally {
+      setIsLoadingSelectors(false);
     }
   }, []);
 
@@ -423,7 +430,7 @@ export default function VentasPage() {
     setItems(items.filter((item) => item.productoId !== productoIdQuitar));
   }
 
-  function limpiarNuevaVenta(): void {
+  function reiniciarCamposVenta(): void {
     setClienteId('');
     setProductoId('');
     setCantidad('');
@@ -431,6 +438,16 @@ export default function VentasPage() {
     setMedioPago('EFECTIVO');
     setVentaError(null);
     setVentaCreada(null);
+  }
+
+  function limpiarNuevaVenta(): void {
+    reiniciarCamposVenta();
+    setIsVentaOpen(false);
+  }
+
+  function abrirNuevaVenta(): void {
+    reiniciarCamposVenta();
+    setIsVentaOpen(true);
   }
 
   async function registrarVenta(): Promise<void> {
@@ -455,6 +472,8 @@ export default function VentasPage() {
       } else {
         setPage(1);
       }
+      await cargarSelectores();
+      void recaudacion.consultar(recaudacion.desde, recaudacion.hasta);
       setVentaCreada(creada);
     } catch (err) {
       setVentaError(
@@ -482,19 +501,23 @@ export default function VentasPage() {
     (acumulado, item) => acumulado + item.precioUnitario * item.cantidad,
     0,
   );
+  const productoSeleccionado = productoOpciones.find((opcion) => opcion.value === productoId);
+  const cantidadEnCarrito =
+    items.find((item) => item.productoId === Number(productoId))?.cantidad ?? 0;
+  const stockRestante = productoSeleccionado
+    ? Math.max(0, productoSeleccionado.stock - cantidadEnCarrito)
+    : undefined;
 
   return (
     <>
       <PageHeader
         title="Ventas"
-        description="Consulta las ventas registradas y genera nuevas operaciones."
+        description="Registrá operaciones, consultá su recaudación y revisá el historial de ventas."
         actions={
           <Button
             type="button"
             className="w-full sm:w-auto"
-            onClick={() =>
-              document.getElementById('nueva-venta')?.scrollIntoView({ behavior: 'smooth' })
-            }
+            onClick={abrirNuevaVenta}
           >
             <LuPlus aria-hidden="true" size={16} />
             Nueva venta
@@ -502,12 +525,25 @@ export default function VentasPage() {
         }
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-5">
+        <section
+          aria-label="Resumen de ventas"
+          className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2"
+        >
           <Reveal delay={0}>
-            <Card title="Ventas registradas">
-              <p className="text-2xl font-bold text-zinc-900">{meta.total}</p>
-              <p className="mt-1 text-xs text-zinc-500">operaciones en el sistema</p>
+            <Card className="h-full border-zinc-200/80 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-zinc-600">Ventas registradas</p>
+                  <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950 tabular-nums">
+                    {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500">Operaciones en todo el historial</p>
+                </div>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <LuReceipt aria-hidden="true" size={20} />
+                </span>
+              </div>
             </Card>
           </Reveal>
           <Reveal delay={0.05}>
@@ -517,191 +553,268 @@ export default function VentasPage() {
               error={recaudacion.error}
             />
           </Reveal>
-        </div>
+        </section>
 
         <Reveal delay={0.1}>
           <RecaudacionConsultaCard
-          desde={recaudacion.desde}
-          setDesde={recaudacion.setDesde}
-          hasta={recaudacion.hasta}
-          setHasta={recaudacion.setHasta}
-          isLoading={recaudacion.isLoading}
-          consultar={recaudacion.consultar}
-          aplicarRango={recaudacion.aplicarRango}
+            desde={recaudacion.desde}
+            setDesde={recaudacion.setDesde}
+            hasta={recaudacion.hasta}
+            setHasta={recaudacion.setHasta}
+            isLoading={recaudacion.isLoading}
+            consultar={recaudacion.consultar}
+            aplicarRango={recaudacion.aplicarRango}
           />
         </Reveal>
 
         <Reveal delay={0.15}>
-          <Card title="Listado de ventas" subtitle={`${meta.total} ventas registradas`}>
-          {isLoading ? (
-            <div className="flex flex-col gap-2" aria-hidden="true">
-              {[0, 1, 2, 3].map((item) => (
-                <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
-              ))}
-              <span className="sr-only">Cargando ventas…</span>
-            </div>
-          ) : listError ? (
-            <div>
-              <p className="text-sm text-zinc-500">{listError}</p>
-              <div className="mt-4">
-                <Button type="button" onClick={() => void cargarPagina(page)}>
-                  Reintentar
-                </Button>
+          <Card
+            title="Historial de ventas"
+            subtitle={`${meta.total.toLocaleString('es-AR')} ventas registradas`}
+            actions={
+              <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
+                <LuReceipt aria-hidden="true" size={15} />
+                Página {meta.page} de {meta.totalPaginas}
+              </span>
+            }
+            className="border-zinc-200/80 shadow-sm"
+          >
+            {isLoading ? (
+              <div className="flex flex-col gap-2" aria-hidden="true">
+                {[0, 1, 2, 3].map((item) => (
+                  <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
+                ))}
+                <span className="sr-only">Cargando ventas…</span>
               </div>
-            </div>
-          ) : (
-            <>
-              <Table
-                columns={VENTA_COLUMNAS}
-                data={filas}
-                getRowKey={(row) => row.id}
-                emptyMessage="Sin ventas para mostrar."
-              />
-              <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
-                <p className="text-xs text-zinc-500">
-                  Página {meta.page} de {meta.totalPaginas}
-                </p>
-                <Pagination
-                  page={meta.page}
-                  totalPages={meta.totalPaginas}
-                  onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
-                />
-              </div>
-            </>
-          )}
-          </Card>
-        </Reveal>
-
-        <Reveal delay={0.2}>
-          <Card title="Nueva venta" subtitle="Operación conectada al sistema">
-          <div id="nueva-venta" className="flex flex-col gap-6">
-            {ventaCreada ? (
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                <p className="text-sm font-semibold text-green-900">
-                  Venta registrada correctamente.
-                </p>
-                <p className="mt-1 text-sm text-green-800">
-                  Venta #{ventaCreada.ventaId} creada en el sistema con estado COMPLETADA.
-                </p>
-                <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row">
-                  <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
-                    Registrar otra venta
+            ) : listError ? (
+              <div>
+                <p role="alert" className="text-sm text-red-700">{listError}</p>
+                <div className="mt-4">
+                  <Button type="button" onClick={() => void cargarPagina(page)}>
+                    Reintentar
                   </Button>
                 </div>
               </div>
             ) : (
               <>
-                {MODULO_CLIENTES && (
-                  <FormField label="Cliente" htmlFor="nueva-venta-cliente">
-                    <Select
-                      id="nueva-venta-cliente"
-                      value={clienteId}
-                      onChange={(event) => setClienteId(event.target.value)}
-                      placeholder="Consumidor final"
-                      options={clienteOpciones}
-                    />
-                  </FormField>
-                )}
-
-                <div>
-                  <p className="mb-2 text-sm font-medium text-zinc-700">Productos de la venta</p>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_140px_auto] md:items-end">
-                    <FormField label="Producto" htmlFor="nueva-venta-producto">
-                      <Select
-                        id="nueva-venta-producto"
-                        value={productoId}
-                        onChange={(event) => setProductoId(event.target.value)}
-                        placeholder="Seleccionar producto"
-                        options={productoOpciones.map((opcion) => ({
-                          value: opcion.value,
-                          label: opcion.label,
-                        }))}
-                      />
-                    </FormField>
-                    <FormField label="Cantidad" htmlFor="nueva-venta-cantidad">
-                      <Input
-                        id="nueva-venta-cantidad"
-                        type="number"
-                        min={1}
-                        step={1}
-                        placeholder="1"
-                        value={cantidad}
-                        onChange={(event) => setCantidad(event.target.value)}
-                      />
-                    </FormField>
-                    <Button type="button" variant="outline" onClick={agregarItem}>
-                      <LuPlus aria-hidden="true" size={16} />
-                      Agregar
-                    </Button>
-                  </div>
-                </div>
-
                 <Table
-                  columns={DETALLE_COLUMNAS}
-                  data={items.map((item) => ({
-                    ...item,
-                    onQuitar: () => quitarItem(item.productoId),
-                  }))}
-                  getRowKey={(row) => row.productoId}
-                  emptyMessage="Sin productos en la venta."
+                  columns={VENTA_COLUMNAS}
+                  data={filas}
+                  getRowKey={(row) => row.id}
+                  emptyMessage="Todavía no hay ventas. Al registrar una, aparecerá en este historial."
                 />
-
-                <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm">
-                  <div className="flex justify-between text-zinc-600">
-                    <span>Subtotal</span>
-                    <span>{formatoMoneda(totalEstimado)}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-600">
-                    <span>Descuento</span>
-                    <span>{formatoMoneda(0)}</span>
-                  </div>
-                  <div className="mt-1 flex justify-between border-t border-zinc-200 pt-2 text-base font-bold text-zinc-900">
-                    <span>Total estimado</span>
-                    <span>{formatoMoneda(totalEstimado)}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Estimación visual. El total definitivo lo calcula el sistema.
+                <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row">
+                  <p className="text-xs text-zinc-500 tabular-nums">
+                    Página {meta.page} de {meta.totalPaginas} · {meta.total} ventas
                   </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField label="Medio de pago" htmlFor="nueva-venta-pago">
-                    <Select
-                      id="nueva-venta-pago"
-                      value={medioPago}
-                      onChange={(event) => setMedioPago(event.target.value as MetodoPagoBackend)}
-                      options={NUEVA_VENTA_MEDIO_PAGO_OPCIONES}
-                    />
-                  </FormField>
-                </div>
-
-                {selectoresError && (
-                  <p className="text-xs text-red-600">{selectoresError}</p>
-                )}
-                {ventaError && (
-                  <p role="alert" className="text-sm text-red-600">
-                    {ventaError}
-                  </p>
-                )}
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => void registrarVenta()}
-                    disabled={isRegistrando}
-                  >
-                    <LuSave aria-hidden="true" size={16} />
-                    {isRegistrando ? 'Registrando…' : 'Registrar venta'}
-                  </Button>
+                  <Pagination
+                    page={meta.page}
+                    totalPages={meta.totalPaginas}
+                    onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                  />
                 </div>
               </>
             )}
-          </div>
           </Card>
         </Reveal>
+
       </div>
+
+      <Modal
+        open={isVentaOpen}
+        title={ventaCreada ? 'Venta registrada' : 'Registrar una venta'}
+        description={
+          ventaCreada
+            ? undefined
+            : 'Agregá los productos, verificá el total y confirmá el medio de pago.'
+        }
+        size="lg"
+        onClose={() => {
+          if (!isRegistrando) limpiarNuevaVenta();
+        }}
+        footer={
+          !ventaCreada ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isRegistrando}
+                onClick={limpiarNuevaVenta}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="nueva-venta-formulario"
+                disabled={isRegistrando || isLoadingSelectors || !!selectoresError}
+              >
+                <LuSave aria-hidden="true" size={16} />
+                {isRegistrando ? 'Registrando…' : 'Confirmar venta'}
+              </Button>
+            </>
+          ) : undefined
+        }
+      >
+        {ventaCreada ? (
+          <div className="flex flex-col items-center py-4 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+              <LuCircleCheck aria-hidden="true" size={28} />
+            </span>
+            <h3 className="mt-4 text-lg font-semibold text-zinc-950">
+              Venta #{ventaCreada.ventaId} creada correctamente
+            </h3>
+            <p className="mt-1 text-sm text-zinc-600">
+              La operación quedó registrada con estado completada.
+            </p>
+            <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
+              <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
+                Cerrar
+              </Button>
+              <Button type="button" onClick={reiniciarCamposVenta}>
+                <LuPlus aria-hidden="true" size={16} />
+                Registrar otra venta
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form
+            id="nueva-venta-formulario"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void registrarVenta();
+            }}
+            className="flex flex-col gap-5"
+          >
+            {MODULO_CLIENTES && (
+              <FormField label="Cliente" htmlFor="nueva-venta-cliente">
+                <Select
+                  id="nueva-venta-cliente"
+                  value={clienteId}
+                  onChange={(event) => setClienteId(event.target.value)}
+                  disabled={isLoadingSelectors}
+                  placeholder="Consumidor final"
+                  options={clienteOpciones}
+                />
+              </FormField>
+            )}
+
+            <section aria-labelledby="nueva-venta-productos-titulo">
+              <div className="mb-3">
+                <h3 id="nueva-venta-productos-titulo" className="text-sm font-semibold text-zinc-900">
+                  Productos de la venta
+                </h3>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  Revisá el precio y el stock antes de agregarlos.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_120px_auto] md:items-end">
+                <FormField label="Producto" htmlFor="nueva-venta-producto">
+                  <Select
+                    id="nueva-venta-producto"
+                    value={productoId}
+                    onChange={(event) => {
+                      setProductoId(event.target.value);
+                      setVentaError(null);
+                    }}
+                    disabled={isLoadingSelectors || !!selectoresError}
+                    placeholder={
+                      isLoadingSelectors ? 'Cargando productos…' : 'Seleccionar producto'
+                    }
+                    options={productoOpciones.map((opcion) => ({
+                      value: opcion.value,
+                      label: `${opcion.label} · ${formatoMoneda(opcion.precio)} · stock ${opcion.stock}`,
+                      disabled: opcion.stock <= 0,
+                    }))}
+                  />
+                </FormField>
+                <FormField
+                  label="Cantidad"
+                  htmlFor="nueva-venta-cantidad"
+                >
+                  <Input
+                    id="nueva-venta-cantidad"
+                    type="number"
+                    min={1}
+                    max={stockRestante}
+                    step={1}
+                    placeholder="1"
+                    value={cantidad}
+                    onChange={(event) => setCantidad(event.target.value)}
+                  />
+                </FormField>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full md:w-auto"
+                  disabled={isLoadingSelectors || !!selectoresError}
+                  onClick={agregarItem}
+                >
+                  <LuPlus aria-hidden="true" size={16} />
+                  Agregar
+                </Button>
+              </div>
+            </section>
+
+            {selectoresError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <p role="alert" className="text-sm text-red-700">{selectoresError}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  disabled={isLoadingSelectors}
+                  onClick={() => void cargarSelectores()}
+                >
+                  {isLoadingSelectors ? 'Cargando…' : 'Reintentar carga'}
+                </Button>
+              </div>
+            )}
+
+            <Table
+              columns={DETALLE_COLUMNAS}
+              data={items.map((item) => ({
+                ...item,
+                onQuitar: () => quitarItem(item.productoId),
+              }))}
+              getRowKey={(row) => row.productoId}
+              emptyMessage="Agregá productos para comenzar a armar la venta."
+            />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,0.8fr)]">
+              <FormField label="Medio de pago" htmlFor="nueva-venta-pago" required>
+                <Select
+                  id="nueva-venta-pago"
+                  value={medioPago}
+                  onChange={(event) => setMedioPago(event.target.value as MetodoPagoBackend)}
+                  options={NUEVA_VENTA_MEDIO_PAGO_OPCIONES}
+                />
+              </FormField>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                <div className="flex justify-between text-sm text-zinc-600">
+                  <span>Productos</span>
+                  <span className="tabular-nums">
+                    {items.reduce((total, item) => total + item.cantidad, 0)}
+                  </span>
+                </div>
+                <div className="mt-2 flex justify-between border-t border-zinc-200 pt-2 text-base font-semibold text-zinc-950">
+                  <span>Total estimado</span>
+                  <span className="tabular-nums">{formatoMoneda(totalEstimado)}</span>
+                </div>
+                <p className="mt-2 text-xs text-zinc-500">
+                  El sistema calcula el total definitivo al confirmar.
+                </p>
+              </div>
+            </div>
+
+            {ventaError && (
+              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {ventaError}
+              </p>
+            )}
+          </form>
+        )}
+      </Modal>
 
       <Modal
         open={detalleId !== null}

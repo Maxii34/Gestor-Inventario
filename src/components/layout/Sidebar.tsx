@@ -15,6 +15,7 @@ import {
 } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
 import { MODULO_CLIENTES } from "@/lib/config";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 
 const NAV_ITEMS = [
   {
@@ -40,7 +41,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/movimientos",
-    label: "Movimientos",
+    label: "Control de stock",
     icon: LuArrowUpDown,
     accent: "border-teal-400 bg-teal-500/10 text-teal-200",
     accentIcon: "text-teal-400",
@@ -79,13 +80,12 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
 
   return (
     <div className="flex h-full flex-col bg-zinc-900 text-zinc-300">
-      <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 pb-5 pt-6">
-        <div>
-          <p className="text-base font-semibold tracking-tight text-white">
-            Gestor de Inventario
-          </p>
-          <p className="mt-1 text-xs text-zinc-400">Panel administrativo</p>
-        </div>
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 pb-5 pt-6">
+        <BrandLockup
+          variant="dark"
+          size="sm"
+          subtitle="Gestión inteligente de tu negocio"
+        />
         {onClose && (
           <button
             type="button"

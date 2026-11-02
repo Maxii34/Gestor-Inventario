@@ -1,13 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuFilter, LuPlus, LuSave } from 'react-icons/lu';
+import {
+  LuArrowDownToLine,
+  LuArrowUpDown,
+  LuArrowUpFromLine,
+  LuClipboardList,
+  LuFilter,
+  LuPlus,
+  LuSave,
+  LuX,
+} from 'react-icons/lu';
 import {
   Badge,
   Button,
   Card,
   FormField,
   Input,
+  Modal,
   PageHeader,
   Pagination,
   SearchInput,
@@ -187,6 +197,8 @@ export default function MovimientosPage() {
   const [motivo, setMotivo] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [productosOpciones, setProductosOpciones] = useState<
     { value: string; label: string }[]
@@ -224,6 +236,7 @@ export default function MovimientosPage() {
   }, []);
 
   const cargarProductos = useCallback(async (): Promise<void> => {
+    setIsLoadingProducts(true);
     setProductosError(null);
     try {
       const resultado = await listarProductos(1, PRODUCTOS_PAGE_SIZE);
@@ -240,6 +253,8 @@ export default function MovimientosPage() {
           ? err.message
           : 'No pudimos cargar los productos.',
       );
+    } finally {
+      setIsLoadingProducts(false);
     }
   }, []);
 
@@ -265,10 +280,9 @@ export default function MovimientosPage() {
     if (hayFiltros) return;
     async function cargarInicial(): Promise<void> {
       await cargarPagina(page);
-      await cargarProductos();
     }
     void cargarInicial();
-  }, [page, hayFiltros, cargarPagina, cargarProductos]);
+  }, [page, hayFiltros, cargarPagina]);
 
   useEffect(() => {
     if (!hayFiltros) return;
@@ -279,11 +293,18 @@ export default function MovimientosPage() {
   }, [hayFiltros, cargarTodoParaFiltrar]);
 
   function limpiarFormulario(): void {
+    setIsFormOpen(false);
     setProductoId('');
     setTipo('ENTRADA');
     setCantidad('');
     setMotivo('');
     setFormError(null);
+  }
+
+  function abrirFormulario(): void {
+    limpiarFormulario();
+    if (productosOpciones.length === 0 && !isLoadingProducts) void cargarProductos();
+    setIsFormOpen(true);
   }
 
   async function guardarMovimiento(): Promise<void> {
@@ -353,19 +374,20 @@ export default function MovimientosPage() {
   const filasTabla = hayFiltros
     ? movimientosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
     : movimientos;
+  const entradasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'ENTRADA').length;
+  const salidasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'SALIDA').length;
+  const ajustesEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'AJUSTE').length;
 
   return (
     <>
       <PageHeader
-        title="Movimientos de stock"
-        description="Consulta y registra los movimientos de inventario."
+        title="Control de stock"
+        description="Registrá entradas, salidas y ajustes; consultá el historial de cambios del inventario."
         actions={
           <Button
             type="button"
             className="w-full sm:w-auto"
-            onClick={() =>
-              document.getElementById('movimiento-formulario')?.scrollIntoView({ behavior: 'smooth' })
-            }
+            onClick={abrirFormulario}
           >
             <LuPlus aria-hidden="true" size={16} />
             Registrar movimiento
@@ -373,27 +395,85 @@ export default function MovimientosPage() {
         }
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex flex-col gap-5">
+        <section
+          aria-label="Resumen del control de stock"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        >
           <Reveal delay={0}>
-            <Card title="Movimientos totales" subtitle="Movimientos en el sistema">
-              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
-              <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+                  <LuClipboardList aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Movimientos registrados</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
-        </div>
+          <Reveal delay={0.05}>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <LuArrowDownToLine aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Entradas en esta página</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading || isFiltering ? '—' : entradasEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-700">
+                  <LuArrowUpFromLine aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Salidas en esta página</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading || isFiltering ? '—' : salidasEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <Card className="border-zinc-200/80 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+                  <LuArrowUpDown aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-zinc-500">Ajustes en esta página</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                    {isLoading || isFiltering ? '—' : ajustesEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+        </section>
 
         <Reveal delay={0.05}>
           <Card
-            title="Filtros"
-            subtitle="Filtros aplicados sobre los datos cargados"
+            title="Buscar en el historial"
+            subtitle="Filtrá por producto, motivo, tipo de movimiento o período."
             actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+            className="border-zinc-200/80 shadow-sm"
           >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <SearchInput
               id="buscar-movimiento"
-              label="Buscar"
-              placeholder="Buscar producto o motivo..."
+              label="Producto o motivo"
+              placeholder="Ej. Leche, compra a proveedor…"
               value={busqueda}
               onChange={(valor) => {
                 setBusqueda(valor);
@@ -420,17 +500,47 @@ export default function MovimientosPage() {
             options={PERIODO_OPCIONES}
           />
           </div>
+          {hayFiltros && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+              <p className="text-xs text-zinc-500">
+                {movimientosFiltrados.length.toLocaleString('es-AR')}{' '}
+                {movimientosFiltrados.length === 1 ? 'resultado' : 'resultados'}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setBusqueda('');
+                  setFiltroTipo('todos');
+                  setFiltroPeriodo('todos');
+                  setDesdePeriodo(null);
+                  setPage(1);
+                }}
+              >
+                <LuX aria-hidden="true" size={14} />
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
           </Card>
         </Reveal>
 
         <Reveal delay={0.1}>
           <Card
-            title="Historial de movimientos"
+            title="Historial de stock"
             subtitle={
               hayFiltros
-                ? `${movimientosFiltrados.length} movimientos encontrados`
-                : `${meta.total} movimientos registrados`
+                ? `${movimientosFiltrados.length.toLocaleString('es-AR')} resultados`
+                : `${meta.total.toLocaleString('es-AR')} movimientos registrados`
             }
+            actions={
+              <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
+                <LuClipboardList aria-hidden="true" size={15} />
+                {hayFiltros ? 'Vista filtrada' : 'Todos los registros'}
+              </span>
+            }
+            className="border-zinc-200/80 shadow-sm"
           >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
@@ -476,7 +586,9 @@ export default function MovimientosPage() {
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row">
                 <p className="text-xs text-zinc-500 tabular-nums">
-                  Página {paginaVisible} de {totalPaginasVisibles}
+                  {hayFiltros
+                    ? `${movimientosFiltrados.length === 0 ? 0 : (paginaVisible - 1) * PAGE_SIZE + 1}–${Math.min(paginaVisible * PAGE_SIZE, movimientosFiltrados.length)} de ${movimientosFiltrados.length}`
+                    : `Página ${paginaVisible} de ${totalPaginasVisibles} · ${meta.total} registros`}
                 </p>
                 <Pagination
                   page={paginaVisible}
@@ -489,15 +601,49 @@ export default function MovimientosPage() {
           </Card>
         </Reveal>
 
-        <Reveal delay={0.15}>
-          <Card title="Registrar movimiento" subtitle="Formulario conectado al backend">
-          <div id="movimiento-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
+      </div>
+
+      <Modal
+        open={isFormOpen}
+        title="Registrar movimiento de stock"
+        description="Elegí el producto y registrá cómo cambia su existencia."
+        size="lg"
+        onClose={() => {
+          if (!isSubmitting) limpiarFormulario();
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={limpiarFormulario}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" form="movimiento-formulario" disabled={isSubmitting}>
+              <LuSave aria-hidden="true" size={16} />
+              {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
+            </Button>
+          </>
+        }
+      >
+        <form
+          id="movimiento-formulario"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void guardarMovimiento();
+          }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
             <FormField label="Producto" htmlFor="movimiento-producto" required>
               <Select
                 id="movimiento-producto"
                 value={productoId}
                 onChange={(event) => setProductoId(event.target.value)}
-                placeholder="Seleccionar producto"
+                required
+                disabled={isLoadingProducts}
+                placeholder={isLoadingProducts ? 'Cargando productos…' : 'Seleccionar producto'}
                 options={productosOpciones}
               />
             </FormField>
@@ -506,6 +652,7 @@ export default function MovimientosPage() {
                 id="movimiento-tipo"
                 value={tipo}
                 onChange={(event) => setTipo(event.target.value as TipoMovimientoBackend)}
+                required
                 options={[
                   { value: 'ENTRADA', label: 'Entrada' },
                   { value: 'SALIDA', label: 'Salida' },
@@ -519,8 +666,10 @@ export default function MovimientosPage() {
               required
               hint={
                 tipo === 'AJUSTE'
-                  ? 'En un ajuste, la cantidad será el stock resultante.'
-                  : undefined
+                ? 'Indicá el stock final que debería quedar para el producto.'
+                : tipo === 'ENTRADA'
+                  ? 'La cantidad se sumará al stock actual.'
+                  : 'La cantidad se descontará del stock actual.'
               }
             >
               <Input
@@ -528,6 +677,7 @@ export default function MovimientosPage() {
                 type="number"
                 min={1}
                 step={1}
+                required
                 placeholder="0"
                 value={cantidad}
                 onChange={(event) => setCantidad(event.target.value)}
@@ -541,32 +691,31 @@ export default function MovimientosPage() {
                 onChange={(event) => setMotivo(event.target.value)}
               />
             </FormField>
-          </div>
           {productosError && (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-              {productosError}
-            </p>
+            <div className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <p role="alert" className="text-sm font-medium text-red-700">{productosError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                disabled={isLoadingProducts}
+                onClick={() => void cargarProductos()}
+              >
+                {isLoadingProducts ? 'Cargando…' : 'Reintentar carga de productos'}
+              </Button>
+            </div>
           )}
           {formError && (
             <p
               role="alert"
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+              className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
             >
               {formError}
             </p>
           )}
-          <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={limpiarFormulario}>
-              Cancelar
-            </Button>
-            <Button type="button" onClick={() => void guardarMovimiento()} disabled={isSubmitting}>
-              <LuSave aria-hidden="true" size={16} />
-              {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
-            </Button>
-          </div>
-          </Card>
-        </Reveal>
-      </div>
+        </form>
+      </Modal>
     </>
   );
 }

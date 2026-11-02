@@ -43,8 +43,8 @@ export function Header({ title, onOpenMobileMenu }: HeaderProps) {
             <h1 className="truncate text-base font-semibold text-zinc-900 md:text-lg">
               {title}
             </h1>
-            <p className="hidden text-xs text-zinc-500 sm:block">
-              Gestor de Inventario
+            <p className="hidden text-xs font-medium tracking-wide text-indigo-600 sm:block">
+              StockNext
             </p>
           </div>
         </div>

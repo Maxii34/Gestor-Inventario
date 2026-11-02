@@ -10,7 +10,7 @@ const SECTION_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/productos": "Productos",
   "/categorias": "Categorías",
-  "/movimientos": "Movimientos de stock",
+  "/movimientos": "Control de stock",
   "/clientes": "Clientes",
   "/ventas": "Ventas",
   "/usuarios": "Usuarios",
@@ -21,7 +21,7 @@ function getSectionTitle(pathname: string): string {
   const match = Object.keys(SECTION_TITLES).find(
     (base) => pathname.startsWith(`${base}/`),
   );
-  return match ? SECTION_TITLES[match] : "Gestor de Inventario";
+  return match ? SECTION_TITLES[match] : "StockNext";
 }
 
 interface AppLayoutProps {

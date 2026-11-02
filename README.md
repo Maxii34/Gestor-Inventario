@@ -1,4 +1,4 @@
-# 📦 Gestor de Inventario — Frontend
+# 📦 StockNext — Frontend
 
 Panel administrativo web para la gestión de inventario, ventas, clientes y usuarios. Incluye dashboard con métricas, control de stock, ventas presenciales con medios de pago directos (efectivo, transferencia y tarjeta), y autenticación con roles.
 
@@ -20,7 +20,7 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 
 ## ✨ Descripción
 
-**Gestor de Inventario** es una aplicación full-stack para pequeños y medianos negocios:
+**StockNext** es una aplicación full-stack para pequeños y medianos negocios:
 
 - Control de **productos, categorías y stock** (con mínimo y alertas de stock bajo / crítico).
 - Registro de **movimientos de stock** (entradas, salidas, ajustes).

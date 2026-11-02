@@ -6,6 +6,7 @@ import { LuArrowRight, LuShieldCheck } from 'react-icons/lu';
 import { ApiError } from '@/lib/api/client';
 import { plataformaTokenStorage } from '@/lib/auth/plataforma-storage';
 import { iniciarSesionPlataforma } from '@/services/plataforma.service';
+import { BrandLockup } from '@/components/ui/BrandLockup';
 
 export default function PlataformaLoginPage() {
   const router = useRouter();
@@ -48,14 +49,11 @@ export default function PlataformaLoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-40 -left-28 h-[30rem] w-[30rem] rounded-full bg-sky-500/10 blur-3xl"
         />
-        <div className="relative flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-zinc-950">
-            <LuShieldCheck aria-hidden="true" size={22} />
-          </span>
-          <div>
-            <p className="font-semibold">Gestor de Inventario</p>
-            <p className="text-xs text-zinc-400">Administración de plataforma</p>
-          </div>
+        <div className="relative">
+          <BrandLockup
+            variant="dark"
+            subtitle="Administración de plataforma"
+          />
         </div>
         <div className="relative max-w-xl">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">
@@ -76,8 +74,8 @@ export default function PlataformaLoginPage() {
 
       <section className="flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 text-white lg:hidden">
-            <LuShieldCheck aria-hidden="true" size={22} />
+          <div className="mb-8 lg:hidden">
+            <BrandLockup size="sm" subtitle="Administración de plataforma" />
           </div>
           <p className="text-sm font-medium text-indigo-700">Panel de plataforma</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">

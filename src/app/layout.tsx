@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gestor de Inventario",
-  description: "Sistema de gestión de inventario, ventas y stock",
+  title: "StockNext | Gestión de inventario",
+  description: "Gestioná inventario, ventas y stock de tu negocio con StockNext.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
