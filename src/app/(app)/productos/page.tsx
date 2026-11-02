@@ -1,7 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuFilter, LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
+import {
+  LuFilter,
+  LuPackage,
+  LuPencil,
+  LuPlus,
+  LuSearch,
+  LuSave,
+  LuTrash2,
+  LuTriangleAlert,
+  LuX,
+} from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -119,6 +129,7 @@ export default function ProductosPage() {
 
   const [form, setForm] = useState<FormularioProducto>(FORMULARIO_VACIO);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -217,6 +228,7 @@ export default function ProductosPage() {
   function comenzarEdicion(producto: BackendProducto): void {
     setEditingId(producto.id);
     setFormError(null);
+    setIsFormOpen(true);
     setForm({
       nombre: producto.nombre,
       descripcion: producto.descripcion ?? '',
@@ -226,11 +238,11 @@ export default function ProductosPage() {
       stockMinimo: String(producto.stockMinimo),
       categoriaId: String(producto.categoriaId),
     });
-    document.getElementById('producto-formulario')?.scrollIntoView({ behavior: 'smooth' });
   }
 
   function cancelarEdicion(): void {
     setEditingId(null);
+    setIsFormOpen(false);
     setForm(FORMULARIO_VACIO);
     setFormError(null);
   }
@@ -238,7 +250,7 @@ export default function ProductosPage() {
   function nuevoProducto(): void {
     cancelarEdicion();
     if (categorias.length === 0) void cargarCategorias();
-    document.getElementById('producto-formulario')?.scrollIntoView({ behavior: 'smooth' });
+    setIsFormOpen(true);
   }
 
   async function guardarProducto(): Promise<void> {
@@ -340,15 +352,43 @@ export default function ProductosPage() {
       key: 'nombre',
       header: 'Producto',
       render: (row) => (
-        <span className="block font-medium text-zinc-900">{row.nombre}</span>
+        <div className="min-w-40">
+          <p className="font-semibold text-zinc-900">{row.nombre}</p>
+          {row.descripcion && (
+            <p className="mt-0.5 max-w-64 truncate text-xs text-zinc-500" title={row.descripcion}>
+              {row.descripcion}
+            </p>
+          )}
+        </div>
       ),
     },
-    { key: 'categoria', header: 'Categoría', render: (row) => row.categoria?.nombre ?? '—' },
+    {
+      key: 'categoria',
+      header: 'Categoría',
+      render: (row) => (
+        <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
+          {row.categoria?.nombre ?? 'Sin categoría'}
+        </span>
+      ),
+    },
     {
       key: 'precioVenta',
       header: 'Precio venta',
       align: 'right',
-      render: (row) => formatoMoneda(row.precioVenta),
+      render: (row) => (
+        <div className="text-right">
+          <p className="font-semibold text-zinc-900">{formatoMoneda(row.precioVenta)}</p>
+          {isAdmin && Number(row.precioVenta) > 0 && (
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+              Margen bruto{' '}
+              {(((Number(row.precioVenta) - Number(row.precioCompra)) / Number(row.precioVenta)) * 100).toLocaleString('es-AR', {
+                maximumFractionDigits: 1,
+              })}
+              %
+            </p>
+          )}
+        </div>
+      ),
     },
     {
       key: 'stock',
@@ -357,16 +397,19 @@ export default function ProductosPage() {
       render: (row) => {
         const visual = estadoStock(row);
         return (
-          <span className="inline-flex flex-col items-center gap-1">
-            <span className="font-medium">{row.stock}</span>
-            <Badge tone={visual.tono} size="sm">
-              {visual.etiqueta}
-            </Badge>
+          <span className="inline-flex min-w-20 flex-col items-center gap-1">
+            <span className="text-base font-semibold tabular-nums">{row.stock}</span>
+            <Badge tone={visual.tono} size="sm">{visual.etiqueta}</Badge>
           </span>
         );
       },
     },
-    { key: 'stockMinimo', header: 'Stock mínimo', align: 'center' },
+    {
+      key: 'stockMinimo',
+      header: 'Mínimo',
+      align: 'center',
+      render: (row) => <span className="text-zinc-600 tabular-nums">{row.stockMinimo}</span>,
+    },
     {
       key: 'activo',
       header: 'Estado',
@@ -417,7 +460,7 @@ export default function ProductosPage() {
     <>
       <PageHeader
         title="Productos"
-        description="Gestiona el catálogo y controla el stock."
+        description="Encontrá productos, revisá existencias y mantené actualizado tu catálogo."
         actions={
           isAdmin ? (
             <Button type="button" className="w-full sm:w-auto" onClick={nuevoProducto}>
@@ -428,18 +471,68 @@ export default function ProductosPage() {
         }
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-5">
+        <section
+          aria-label="Resumen del catálogo"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+        >
+          <Card className="border-zinc-200/80 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+                <LuPackage aria-hidden="true" size={19} />
+              </span>
+              <div>
+                <p className="text-xs font-medium text-zinc-500">Productos en catálogo</p>
+                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  {meta.total.toLocaleString('es-AR')}
+                </p>
+              </div>
+            </div>
+          </Card>
+          <Card className="border-zinc-200/80 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+                <LuFilter aria-hidden="true" size={18} />
+              </span>
+              <div>
+                <p className="text-xs font-medium text-zinc-500">Categorías disponibles</p>
+                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  {categorias.length.toLocaleString('es-AR')}
+                </p>
+              </div>
+            </div>
+          </Card>
+          <Card className="border-zinc-200/80 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                <LuTriangleAlert aria-hidden="true" size={19} />
+              </span>
+              <div>
+                <p className="text-xs font-medium text-zinc-500">
+                  Stock bajo en esta página
+                </p>
+                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  {isLoading || isFiltering
+                    ? '—'
+                    : filasTabla.filter((producto) => estadoStock(producto).etiqueta === 'Stock bajo').length}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </section>
+
         <Reveal delay={0}>
         <Card
-          title="Filtros"
-          subtitle="Filtros aplicados sobre los datos cargados"
-          actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+          title="Encontrar un producto"
+          subtitle="Buscá por nombre y combiná los filtros para acotar resultados."
+          actions={<LuSearch aria-hidden="true" size={17} className="text-zinc-400" />}
+          className="border-zinc-200/80 shadow-sm"
         >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <SearchInput
               id="buscar-producto"
-              label="Buscar"
-              placeholder="Buscar producto..."
+              label="Nombre del producto"
+              placeholder="Ej. Yerba, aceite, arroz…"
               value={busqueda}
               onChange={(valor) => {
                 setBusqueda(valor);
@@ -456,7 +549,7 @@ export default function ProductosPage() {
               options={opcionesCategoria}
             />
             <Select
-              label="Estado"
+              label="Disponibilidad"
               value={filtroEstado}
               onChange={(event) => {
                 setFiltroEstado(event.target.value);
@@ -465,17 +558,46 @@ export default function ProductosPage() {
               options={ESTADO_OPCIONES}
             />
           </div>
+          {hayFiltros && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+              <p className="text-xs text-zinc-500">
+                Filtros activos · {productosFiltrados.length}{' '}
+                {productosFiltrados.length === 1 ? 'resultado' : 'resultados'}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setBusqueda('');
+                  setFiltroCategoria('todas');
+                  setFiltroEstado('todos');
+                  setPage(1);
+                }}
+              >
+                <LuX aria-hidden="true" size={14} />
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
         </Card>
         </Reveal>
 
         <Reveal delay={0.05}>
         <Card
-          title="Listado de productos"
+          title="Catálogo"
           subtitle={
             hayFiltros
-              ? `${productosFiltrados.length} productos encontrados`
-              : `${meta.total} productos registrados`
+              ? `${productosFiltrados.length.toLocaleString('es-AR')} resultados para tu búsqueda`
+              : `${meta.total.toLocaleString('es-AR')} productos registrados`
           }
+          actions={
+            <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
+              <LuPackage aria-hidden="true" size={15} />
+              {hayFiltros ? 'Vista filtrada' : 'Todos los productos'}
+            </span>
+          }
+          className="border-zinc-200/80 shadow-sm"
         >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
@@ -516,7 +638,9 @@ export default function ProductosPage() {
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
                 <p className="text-xs text-zinc-500">
-                  Página {paginaVisible} de {totalPaginasVisibles}
+                  {hayFiltros
+                    ? `${productosFiltrados.length === 0 ? 0 : (paginaVisible - 1) * PAGE_SIZE + 1}–${Math.min(paginaVisible * PAGE_SIZE, productosFiltrados.length)} de ${productosFiltrados.length}`
+                    : `Página ${paginaVisible} de ${totalPaginasVisibles} · ${meta.total} productos`}
                 </p>
                 <Pagination
                   page={paginaVisible}
@@ -530,16 +654,48 @@ export default function ProductosPage() {
         </Reveal>
 
         {isAdmin && (
-          <Reveal delay={0.1}>
-          <Card
-            title={editingId === null ? 'Nuevo producto' : 'Editar producto'}
-            subtitle="Formulario conectado al backend"
+          <Modal
+            open={isFormOpen}
+            title={editingId === null ? 'Agregar producto' : 'Editar producto'}
+            description={
+              editingId === null
+                ? 'Completá la información para incorporarlo al catálogo.'
+                : 'Actualizá los datos del producto y guardá los cambios.'
+            }
+            size="lg"
+            onClose={() => {
+              if (!isSubmitting) cancelarEdicion();
+            }}
+            footer={
+              <>
+                <Button type="button" variant="outline" disabled={isSubmitting} onClick={cancelarEdicion}>
+                  Cancelar
+                </Button>
+                <Button type="submit" form="producto-formulario" disabled={isSubmitting}>
+                  <LuSave aria-hidden="true" size={16} />
+                  {isSubmitting
+                    ? 'Guardando…'
+                    : editingId === null
+                      ? 'Agregar al catálogo'
+                      : 'Guardar cambios'}
+                </Button>
+              </>
+            }
           >
-            <div id="producto-formulario" className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <form
+              id="producto-formulario"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void guardarProducto();
+              }}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            >
               <FormField label="Nombre" htmlFor="producto-nombre">
                 <Input
                   id="producto-nombre"
                   placeholder="Ej: Notebook Lenovo IdeaPad"
+                  autoFocus
+                  required
                   value={form.nombre}
                   onChange={(event) => setCampo('nombre', event.target.value)}
                 />
@@ -549,6 +705,7 @@ export default function ProductosPage() {
                   id="producto-categoria"
                   value={form.categoriaId}
                   onChange={(event) => setCampo('categoriaId', event.target.value)}
+                  required
                   placeholder="Seleccionar categoría"
                   options={categorias.map((categoria) => ({
                     value: String(categoria.id),
@@ -556,7 +713,7 @@ export default function ProductosPage() {
                   }))}
                 />
               </FormField>
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <FormField label="Descripción" htmlFor="producto-descripcion">
                   <Input
                     id="producto-descripcion"
@@ -570,7 +727,9 @@ export default function ProductosPage() {
                 <Input
                   id="producto-precio-compra"
                   type="number"
-                  min={0}
+                  min={0.01}
+                  step="0.01"
+                  required
                   placeholder="0"
                   value={form.precioCompra}
                   onChange={(event) => setCampo('precioCompra', event.target.value)}
@@ -580,7 +739,9 @@ export default function ProductosPage() {
                 <Input
                   id="producto-precio-venta"
                   type="number"
-                  min={0}
+                  min={0.01}
+                  step="0.01"
+                  required
                   placeholder="0"
                   value={form.precioVenta}
                   onChange={(event) => setCampo('precioVenta', event.target.value)}
@@ -592,6 +753,7 @@ export default function ProductosPage() {
                   type="number"
                   min={0}
                   step={1}
+                  required
                   placeholder="0"
                   value={form.stock}
                   onChange={(event) => setCampo('stock', event.target.value)}
@@ -603,35 +765,24 @@ export default function ProductosPage() {
                   type="number"
                   min={0}
                   step={1}
+                  required
                   placeholder="0"
                   value={form.stockMinimo}
                   onChange={(event) => setCampo('stockMinimo', event.target.value)}
                 />
               </FormField>
-            </div>
             {categoriasError && (
-              <p className="mt-2 text-xs text-red-600">{categoriasError}</p>
+              <p role="alert" className="sm:col-span-2 mt-2 text-xs text-red-600">
+                {categoriasError}
+              </p>
             )}
             {formError && (
-              <p role="alert" className="mt-2 text-sm text-red-600">
+              <p role="alert" className="sm:col-span-2 mt-2 text-sm text-red-600">
                 {formError}
               </p>
             )}
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={cancelarEdicion}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={() => void guardarProducto()} disabled={isSubmitting}>
-                <LuSave aria-hidden="true" size={16} />
-                {isSubmitting
-                  ? 'Guardando…'
-                  : editingId === null
-                    ? 'Crear producto'
-                    : 'Guardar cambios'}
-              </Button>
-            </div>
-          </Card>
-          </Reveal>
+            </form>
+          </Modal>
         )}
       </div>
 
