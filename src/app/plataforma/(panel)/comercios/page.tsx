@@ -22,6 +22,7 @@ import {
 } from '@/components';
 import { Pagination } from '@/components/tables';
 import { ApiError } from '@/lib/api/client';
+import { confirmAction, notifySuccess } from '@/lib/notifications/toast';
 import {
   cambiarPlanComercio,
   crearComercio,
@@ -151,7 +152,6 @@ export default function PlataformaDashboardPage() {
   const [extendDays, setExtendDays] = useState('10');
   const [selectedPlan, setSelectedPlan] = useState<PlanComercio>('MENSUAL');
   const [paymentForm, setPaymentForm] = useState<RegistrarPagoInput>(FORMULARIO_PAGO_INICIAL);
-  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     void Promise.resolve().then(() => {
@@ -248,9 +248,9 @@ export default function PlataformaDashboardPage() {
         ...(createForm.slug?.trim() ? { slug: createForm.slug.trim() } : { slug: undefined }),
       };
       await crearComercio(input);
+      notifySuccess('Comercio registrado', `${input.nombre} ya está en la plataforma.`);
       setIsCreateOpen(false);
       setCreateForm(FORMULARIO_INICIAL);
-      setNotice('El comercio se creó correctamente.');
       setIsLoading(true);
       setPage(1);
       await loadComercios();
@@ -292,6 +292,7 @@ export default function PlataformaDashboardPage() {
     setActionError(null);
     setIsActing(true);
     try {
+      const nombreComercio = selected.nombre;
       if (action === 'suspender') {
         if (!suspendReason.trim()) {
           setActionError('Indicá un motivo para suspender el comercio.');
@@ -325,12 +326,20 @@ export default function PlataformaDashboardPage() {
         });
       }
 
+      if (action === 'suspender') {
+        notifySuccess('Comercio suspendido', `${nombreComercio} ya no tiene acceso activo.`);
+      } else if (action === 'extender') {
+        notifySuccess('Acceso extendido', `Se extendió el acceso de ${nombreComercio}.`);
+      } else if (action === 'plan') {
+        notifySuccess('Plan actualizado', `${nombreComercio} ahora tiene el plan ${selectedPlan}.`);
+      } else {
+        notifySuccess('Pago registrado', `El pago de ${nombreComercio} quedó asentado.`);
+      }
       setAction(null);
       setSuspendReason('');
       if (action === 'pago') {
         setPaymentForm({ ...FORMULARIO_PAGO_INICIAL });
       }
-      setNotice('La operación se realizó correctamente.');
       setIsLoading(true);
       await Promise.all([loadComercios(), reloadSelected()]);
     } catch (error) {
@@ -342,12 +351,17 @@ export default function PlataformaDashboardPage() {
 
   async function reactivateSelected(): Promise<void> {
     if (!selected || isActing) return;
-    if (!window.confirm(`¿Querés reactivar el acceso de ${selected.nombre}?`)) return;
+    const confirmed = await confirmAction(
+      '¿Reactivar comercio?',
+      `Se restablecerá el acceso de ${selected.nombre}.`,
+      'Sí, reactivar acceso',
+    );
+    if (!confirmed) return;
     setIsActing(true);
     setDetailError(null);
     try {
       await reactivarComercio(selected.id);
-      setNotice('El comercio se reactivó correctamente.');
+      notifySuccess('Comercio reactivado', `${selected.nombre} volvió a tener acceso.`);
       await Promise.all([loadComercios(), reloadSelected()]);
     } catch (error) {
       setDetailError(error instanceof ApiError ? error.message : 'No se pudo reactivar el comercio.');
@@ -439,15 +453,6 @@ export default function PlataformaDashboardPage() {
           </>
         }
       />
-
-      {notice && (
-        <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          <span role="status">{notice}</span>
-          <button type="button" onClick={() => setNotice(null)} className="text-xs font-medium hover:underline">
-            Cerrar
-          </button>
-        </div>
-      )}
 
       <section id="comercios" className="scroll-mt-24">
         <Card

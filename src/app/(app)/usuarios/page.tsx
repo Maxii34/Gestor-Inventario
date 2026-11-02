@@ -29,6 +29,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   actualizarUsuario,
   crearUsuario,
@@ -244,7 +245,8 @@ export default function UsuariosPage() {
     setFormError(null);
     setIsSubmitting(true);
     try {
-      if (editingId === null) {
+      const esEdicion = editingId !== null;
+      if (!esEdicion) {
         await crearUsuario({ nombre: nombre.trim(), email: email.trim(), password, rol });
       } else {
         await actualizarUsuario(editingId, {
@@ -253,6 +255,10 @@ export default function UsuariosPage() {
           rol,
         });
       }
+      notifySuccess(
+        esEdicion ? 'Datos del equipo actualizados' : 'Acceso creado',
+        `${nombre.trim()} ${esEdicion ? 'ya tiene sus datos actualizados.' : 'ya puede acceder al comercio.'}`,
+      );
       cancelarEdicion();
       await cargarListado();
     } catch (err) {
@@ -271,7 +277,13 @@ export default function UsuariosPage() {
     setToggleError(null);
     setIsToggling(true);
     try {
-      await actualizarUsuario(toggleTarget.id, { activo: !toggleTarget.activo });
+      const usuario = toggleTarget;
+      const ahoraActivo = !usuario.activo;
+      await actualizarUsuario(usuario.id, { activo: ahoraActivo });
+      notifySuccess(
+        ahoraActivo ? 'Acceso activado' : 'Acceso desactivado',
+        `${usuario.nombre} ${ahoraActivo ? 'ya puede ingresar al sistema.' : 'ya no puede ingresar al sistema.'}`,
+      );
       setToggleTarget(null);
       await cargarListado();
     } catch (err) {

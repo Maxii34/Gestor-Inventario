@@ -30,6 +30,7 @@ import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   actualizarProducto,
   crearProducto,
@@ -272,11 +273,16 @@ export default function ProductosPage() {
         stockMinimo: Number(form.stockMinimo),
         categoriaId: Number(form.categoriaId),
       };
-      if (editingId === null) {
+      const esEdicion = editingId !== null;
+      if (!esEdicion) {
         await crearProducto(input);
       } else {
         await actualizarProducto(editingId, input);
       }
+      notifySuccess(
+        esEdicion ? 'Producto actualizado' : 'Producto agregado',
+        `"${input.nombre}" ya está en tu catálogo.`,
+      );
       cancelarEdicion();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
@@ -299,7 +305,9 @@ export default function ProductosPage() {
     setDeleteError(null);
     setIsDeleting(true);
     try {
+      const nombreProducto = deleteTarget.nombre;
       await eliminarProducto(deleteTarget.id);
+      notifySuccess('Producto eliminado', `"${nombreProducto}" se quitó del catálogo.`);
       setDeleteTarget(null);
       if (hayFiltros) {
         await cargarTodoParaFiltrar();

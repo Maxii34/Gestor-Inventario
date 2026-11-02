@@ -19,6 +19,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   actualizarCliente,
   crearCliente,
@@ -283,11 +284,16 @@ export default function ClientesPage() {
         ...(form.telefono.trim() ? { telefono: form.telefono.trim() } : {}),
         ...(form.email.trim() ? { email: form.email.trim() } : {}),
       };
-      if (editingId === null) {
+      const esEdicion = editingId !== null;
+      if (!esEdicion) {
         await crearCliente(input);
       } else {
         await actualizarCliente(editingId, input);
       }
+      notifySuccess(
+        esEdicion ? 'Cliente actualizado' : 'Cliente agregado',
+        `${input.nombre} ${input.apellido} ya está en tu listado.`,
+      );
       cancelarEdicion();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
@@ -310,7 +316,9 @@ export default function ClientesPage() {
     setDeleteError(null);
     setIsDeleting(true);
     try {
+      const nombreCliente = `${deleteTarget.nombre} ${deleteTarget.apellido}`.trim();
       await eliminarCliente(deleteTarget.id);
+      notifySuccess('Cliente eliminado', `${nombreCliente} se quitó de tu listado.`);
       setDeleteTarget(null);
       if (hayFiltros) {
         await cargarTodoParaFiltrar();

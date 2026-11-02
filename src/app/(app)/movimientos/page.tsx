@@ -28,6 +28,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   listarMovimientos,
   registrarMovimiento,
@@ -322,12 +323,21 @@ export default function MovimientosPage() {
     setFormError(null);
     setIsSubmitting(true);
     try {
+      const producto = productosOpciones.find((opcion) => opcion.value === productoId);
       await registrarMovimiento({
         tipo,
         cantidad: cantidadNumero,
         productoId: productoIdNumero,
         ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
       });
+      notifySuccess(
+        tipo === 'ENTRADA'
+          ? 'Entrada de stock registrada'
+          : tipo === 'SALIDA'
+            ? 'Salida de stock registrada'
+            : 'Ajuste de stock registrado',
+        producto ? `Inventario actualizado para "${producto.label}".` : 'El inventario fue actualizado.',
+      );
       limpiarFormulario();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();

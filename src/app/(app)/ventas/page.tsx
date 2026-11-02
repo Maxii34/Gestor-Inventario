@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
-  LuCircleCheck,
   LuEye,
   LuPlus,
   LuReceipt,
@@ -18,6 +17,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  SearchInput,
   Select,
   Table,
   type TableColumn,
@@ -31,6 +31,7 @@ import {
 } from '@/components/estadisticas';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
+import { notifySuccess } from '@/lib/notifications/toast';
 import { listarClientes } from '@/services/clientes.service';
 import { listarProductos } from '@/services/productos.service';
 import {
@@ -42,7 +43,6 @@ import {
   type BackendVentaDetalle,
   type EstadoVentaBackend,
   type MetodoPagoBackend,
-  type VentaCreada,
 } from '@/services/ventas.service';
 import type { PageMeta } from '@/types/api';
 
@@ -246,8 +246,7 @@ export default function VentasPage() {
 
   const [clienteId, setClienteId] = useState('');
   const [clienteOpciones, setClienteOpciones] = useState<{ value: string; label: string }[]>([]);
-  const [productoId, setProductoId] = useState('');
-  const [cantidad, setCantidad] = useState('');
+  const [busquedaProducto, setBusquedaProducto] = useState('');
   const [productoOpciones, setProductoOpciones] = useState<ProductoOpcion[]>([]);
   const [isLoadingSelectors, setIsLoadingSelectors] = useState(true);
   const [selectoresError, setSelectoresError] = useState<string | null>(null);
@@ -255,7 +254,6 @@ export default function VentasPage() {
   const [medioPago, setMedioPago] = useState<MetodoPagoBackend>('EFECTIVO');
   const [ventaError, setVentaError] = useState<string | null>(null);
   const [isRegistrando, setIsRegistrando] = useState(false);
-  const [ventaCreada, setVentaCreada] = useState<VentaCreada | null>(null);
   const [isVentaOpen, setIsVentaOpen] = useState(false);
 
   const recaudacion = useRecaudacion();
@@ -366,6 +364,7 @@ export default function VentasPage() {
     try {
       const idAnulada = anularTarget.id;
       await anularVenta(idAnulada, motivoLimpio);
+      notifySuccess('Venta anulada', `La venta #${idAnulada} quedó anulada correctamente.`);
       setAnularTarget(null);
       setMotivoAnulacion('');
       await cargarPagina(page);
@@ -384,20 +383,10 @@ export default function VentasPage() {
     }
   }
 
-  function agregarItem(): void {
+  function agregarItem(opcion: ProductoOpcion): void {
     setVentaError(null);
-    const opcion = productoOpciones.find((item) => item.value === productoId);
-    const cantidadNumero = Number(cantidad);
-    if (!opcion) {
-      setVentaError('Seleccioná un producto para agregarlo.');
-      return;
-    }
-    if (!Number.isInteger(cantidadNumero) || cantidadNumero <= 0) {
-      setVentaError('La cantidad debe ser un número entero mayor a 0.');
-      return;
-    }
-    const existente = items.find((item) => item.productoId === Number(productoId));
-    const cantidadTotal = (existente?.cantidad ?? 0) + cantidadNumero;
+    const existente = items.find((item) => item.productoId === Number(opcion.value));
+    const cantidadTotal = (existente?.cantidad ?? 0) + 1;
     if (cantidadTotal > opcion.stock) {
       setVentaError(`Stock disponible de "${opcion.label}": ${opcion.stock}.`);
       return;
@@ -414,16 +403,14 @@ export default function VentasPage() {
       setItems([
         ...items,
         {
-          productoId: Number(productoId),
+          productoId: Number(opcion.value),
           nombre: opcion.label,
           precioUnitario: opcion.precio,
-          cantidad: cantidadNumero,
+          cantidad: 1,
           stock: opcion.stock,
         },
       ]);
     }
-    setProductoId('');
-    setCantidad('');
   }
 
   function quitarItem(productoIdQuitar: number): void {
@@ -432,12 +419,10 @@ export default function VentasPage() {
 
   function reiniciarCamposVenta(): void {
     setClienteId('');
-    setProductoId('');
-    setCantidad('');
+    setBusquedaProducto('');
     setItems([]);
     setMedioPago('EFECTIVO');
     setVentaError(null);
-    setVentaCreada(null);
   }
 
   function limpiarNuevaVenta(): void {
@@ -467,6 +452,8 @@ export default function VentasPage() {
           cantidad: item.cantidad,
         })),
       });
+      notifySuccess('Venta registrada', `La venta #${creada.ventaId} quedó confirmada.`);
+      limpiarNuevaVenta();
       if (page === 1) {
         await cargarPagina(1);
       } else {
@@ -474,7 +461,6 @@ export default function VentasPage() {
       }
       await cargarSelectores();
       void recaudacion.consultar(recaudacion.desde, recaudacion.hasta);
-      setVentaCreada(creada);
     } catch (err) {
       setVentaError(
         err instanceof ApiError
@@ -501,12 +487,10 @@ export default function VentasPage() {
     (acumulado, item) => acumulado + item.precioUnitario * item.cantidad,
     0,
   );
-  const productoSeleccionado = productoOpciones.find((opcion) => opcion.value === productoId);
-  const cantidadEnCarrito =
-    items.find((item) => item.productoId === Number(productoId))?.cantidad ?? 0;
-  const stockRestante = productoSeleccionado
-    ? Math.max(0, productoSeleccionado.stock - cantidadEnCarrito)
-    : undefined;
+  const textoBusquedaProducto = busquedaProducto.trim().toLocaleLowerCase('es-AR');
+  const productosFiltrados = productoOpciones.filter((producto) =>
+    producto.label.toLocaleLowerCase('es-AR').includes(textoBusquedaProducto),
+  );
 
   return (
     <>
@@ -622,69 +606,41 @@ export default function VentasPage() {
 
       <Modal
         open={isVentaOpen}
-        title={ventaCreada ? 'Venta registrada' : 'Registrar una venta'}
-        description={
-          ventaCreada
-            ? undefined
-            : 'Agregá los productos, verificá el total y confirmá el medio de pago.'
-        }
-        size="lg"
+        title="Registrar una venta"
+        description="Agregá los productos, verificá el total y confirmá el medio de pago."
+        size="xl"
         onClose={() => {
           if (!isRegistrando) limpiarNuevaVenta();
         }}
         footer={
-          !ventaCreada ? (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isRegistrando}
-                onClick={limpiarNuevaVenta}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                form="nueva-venta-formulario"
-                disabled={isRegistrando || isLoadingSelectors || !!selectoresError}
-              >
-                <LuSave aria-hidden="true" size={16} />
-                {isRegistrando ? 'Registrando…' : 'Confirmar venta'}
-              </Button>
-            </>
-          ) : undefined
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isRegistrando}
+              onClick={limpiarNuevaVenta}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="nueva-venta-formulario"
+              disabled={isRegistrando || isLoadingSelectors || !!selectoresError}
+            >
+              <LuSave aria-hidden="true" size={16} />
+              {isRegistrando ? 'Registrando…' : 'Confirmar venta'}
+            </Button>
+          </>
         }
       >
-        {ventaCreada ? (
-          <div className="flex flex-col items-center py-4 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-              <LuCircleCheck aria-hidden="true" size={28} />
-            </span>
-            <h3 className="mt-4 text-lg font-semibold text-zinc-950">
-              Venta #{ventaCreada.ventaId} creada correctamente
-            </h3>
-            <p className="mt-1 text-sm text-zinc-600">
-              La operación quedó registrada con estado completada.
-            </p>
-            <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row">
-              <Button type="button" variant="outline" onClick={limpiarNuevaVenta}>
-                Cerrar
-              </Button>
-              <Button type="button" onClick={reiniciarCamposVenta}>
-                <LuPlus aria-hidden="true" size={16} />
-                Registrar otra venta
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <form
-            id="nueva-venta-formulario"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void registrarVenta();
-            }}
-            className="flex flex-col gap-5"
-          >
+        <form
+          id="nueva-venta-formulario"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void registrarVenta();
+          }}
+          className="flex flex-col gap-5"
+        >
             {MODULO_CLIENTES && (
               <FormField label="Cliente" htmlFor="nueva-venta-cliente">
                 <Select
@@ -704,54 +660,83 @@ export default function VentasPage() {
                   Productos de la venta
                 </h3>
                 <p className="mt-0.5 text-xs text-zinc-500">
-                  Revisá el precio y el stock antes de agregarlos.
+                  Buscá un producto y tocá su opción para agregar una unidad al carrito.
                 </p>
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_120px_auto] md:items-end">
-                <FormField label="Producto" htmlFor="nueva-venta-producto">
-                  <Select
-                    id="nueva-venta-producto"
-                    value={productoId}
-                    onChange={(event) => {
-                      setProductoId(event.target.value);
-                      setVentaError(null);
-                    }}
-                    disabled={isLoadingSelectors || !!selectoresError}
-                    placeholder={
-                      isLoadingSelectors ? 'Cargando productos…' : 'Seleccionar producto'
-                    }
-                    options={productoOpciones.map((opcion) => ({
-                      value: opcion.value,
-                      label: `${opcion.label} · ${formatoMoneda(opcion.precio)} · stock ${opcion.stock}`,
-                      disabled: opcion.stock <= 0,
-                    }))}
-                  />
-                </FormField>
-                <FormField
-                  label="Cantidad"
-                  htmlFor="nueva-venta-cantidad"
-                >
-                  <Input
-                    id="nueva-venta-cantidad"
-                    type="number"
-                    min={1}
-                    max={stockRestante}
-                    step={1}
-                    placeholder="1"
-                    value={cantidad}
-                    onChange={(event) => setCantidad(event.target.value)}
-                  />
-                </FormField>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full md:w-auto"
+              <div className="flex flex-col gap-3">
+                <SearchInput
+                  id="buscar-producto-venta"
+                  label="Buscar producto"
+                  placeholder="Escribí el nombre del producto…"
+                  value={busquedaProducto}
                   disabled={isLoadingSelectors || !!selectoresError}
-                  onClick={agregarItem}
-                >
-                  <LuPlus aria-hidden="true" size={16} />
-                  Agregar
-                </Button>
+                  onChange={(valor) => {
+                    setBusquedaProducto(valor);
+                    setVentaError(null);
+                  }}
+                />
+                {!textoBusquedaProducto ? null : isLoadingSelectors ? (
+                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-4 text-center text-sm text-zinc-500">
+                    Cargando productos…
+                  </p>
+                ) : !selectoresError && productosFiltrados.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-4 text-center text-sm text-zinc-500">
+                    No encontramos productos con ese nombre.
+                  </p>
+                ) : (
+                  <ul
+                    aria-label="Productos disponibles para agregar a la venta"
+                    className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2"
+                  >
+                    {productosFiltrados.map((opcion) => {
+                      const cantidadEnCarrito =
+                        items.find((item) => item.productoId === Number(opcion.value))?.cantidad ?? 0;
+                      const stockRestante = Math.max(0, opcion.stock - cantidadEnCarrito);
+                      const sinStock = stockRestante === 0;
+
+                      return (
+                        <li key={opcion.value}>
+                          <button
+                            type="button"
+                            disabled={sinStock || isRegistrando}
+                            aria-label={
+                              sinStock
+                                ? `${opcion.label}, sin unidades disponibles`
+                                : `Agregar una unidad de ${opcion.label} al carrito`
+                            }
+                            onClick={() => agregarItem(opcion)}
+                            className="group flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-left transition hover:border-indigo-300 hover:bg-indigo-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-medium text-zinc-900">
+                                {opcion.label}
+                              </span>
+                              <span className="mt-1 block text-xs text-zinc-500">
+                                {formatoMoneda(opcion.precio)}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-right">
+                              <span className="block text-xs font-medium text-zinc-600">
+                                {sinStock ? 'Sin stock' : `${stockRestante} disponibles`}
+                              </span>
+                              {cantidadEnCarrito > 0 && (
+                                <span className="mt-1 block text-[11px] font-medium text-indigo-700">
+                                  {cantidadEnCarrito} en carrito
+                                </span>
+                              )}
+                              {!sinStock && (
+                                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 group-hover:text-indigo-800">
+                                  <LuPlus aria-hidden="true" size={12} />
+                                  Agregar
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             </section>
 
@@ -812,8 +797,7 @@ export default function VentasPage() {
                 {ventaError}
               </p>
             )}
-          </form>
-        )}
+        </form>
       </Modal>
 
       <Modal

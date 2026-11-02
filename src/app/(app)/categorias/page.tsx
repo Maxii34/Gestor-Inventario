@@ -28,6 +28,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   actualizarCategoria,
   crearCategoria,
@@ -117,11 +118,16 @@ export default function CategoriasPage() {
         nombre: nombre.trim(),
         ...(descripcion.trim() ? { descripcion: descripcion.trim() } : {}),
       };
-      if (editingId === null) {
+      const esEdicion = editingId !== null;
+      if (!esEdicion) {
         await crearCategoria(input);
       } else {
         await actualizarCategoria(editingId, input);
       }
+      notifySuccess(
+        esEdicion ? 'Categoría actualizada' : 'Categoría creada',
+        `"${input.nombre}" ya está disponible en el catálogo.`,
+      );
       cancelarEdicion();
       await cargarListado();
     } catch (err) {
@@ -140,7 +146,9 @@ export default function CategoriasPage() {
     setDeleteError(null);
     setIsDeleting(true);
     try {
+      const nombreCategoria = deleteTarget.nombre;
       await eliminarCategoria(deleteTarget.id);
+      notifySuccess('Categoría eliminada', `"${nombreCategoria}" se quitó del catálogo.`);
       setDeleteTarget(null);
       await cargarListado();
     } catch (err) {

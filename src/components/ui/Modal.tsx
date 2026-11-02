@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { LuX } from 'react-icons/lu';
 
-type ModalSize = 'sm' | 'md' | 'lg';
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface ModalProps {
   open: boolean;
@@ -19,6 +19,7 @@ const SIZES: Record<ModalSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
+  xl: 'max-w-2xl',
 };
 
 export function Modal({
