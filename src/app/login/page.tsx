@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { LuBoxes, LuChartColumn, LuCircleHelp, LuLockKeyhole, LuShieldCheck } from 'react-icons/lu';
@@ -220,14 +219,8 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
-            <p className="text-sm text-zinc-600">
-              ¿Todavía no tenés comercio?{' '}
-              <Link
-                href="/register"
-                className="font-medium text-zinc-900 underline-offset-2 hover:underline"
-              >
-                Registralo
-              </Link>
+            <p className="text-xs leading-5 text-zinc-500">
+              El alta de comercios está a cargo del superadministrador de la plataforma.
             </p>
             <Button type="submit" size="lg" fullWidth disabled={isSubmitting}>
               {isSubmitting ? 'Ingresando…' : 'Iniciar sesión'}
