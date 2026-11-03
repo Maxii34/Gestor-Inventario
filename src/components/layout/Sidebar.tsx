@@ -4,9 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LuArrowUpDown,
+  LuBoxes,
   LuLayoutDashboard,
   LuLogOut,
   LuPackage,
+  LuPanelLeftClose,
+  LuPanelLeftOpen,
   LuShoppingCart,
   LuTags,
   LuUserCog,
@@ -73,19 +76,43 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onClose?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  onClose,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  onNavigate?: () => void;
+  onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const isAdmin = user?.rol === "ADMIN";
 
   return (
     <div className="flex h-full flex-col bg-zinc-900 text-zinc-300">
-      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 pb-5 pt-6">
-        <BrandLockup
-          variant="dark"
-          size="sm"
-          subtitle="Gestión inteligente de tu negocio"
-        />
+      <div
+        className={`flex items-center border-b border-white/10 ${
+          collapsed ? "flex-col gap-3 px-2 py-4" : "justify-between gap-4 px-5 pb-5 pt-6"
+        }`}
+      >
+        {collapsed ? (
+          <span
+            role="img"
+            aria-label="StockNext"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-sm shadow-indigo-950/20"
+          >
+            <LuBoxes aria-hidden="true" size={18} strokeWidth={2.2} />
+          </span>
+        ) : (
+          <BrandLockup
+            variant="dark"
+            size="sm"
+            subtitle="Gestión inteligente de tu negocio"
+          />
+        )}
         {onClose && (
           <button
             type="button"
@@ -94,6 +121,24 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
             className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/5 hover:text-white"
           >
             <LuX aria-hidden="true" size={18} />
+          </button>
+        )}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Expandir menú" : "Contraer menú"}
+            className={`rounded-lg p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white ${
+              collapsed ? "" : "shrink-0"
+            }`}
+          >
+            {collapsed ? (
+              <LuPanelLeftOpen aria-hidden="true" size={18} />
+            ) : (
+              <LuPanelLeftClose aria-hidden="true" size={18} />
+            )}
           </button>
         )}
       </div>
@@ -113,7 +158,11 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center rounded-lg py-2 text-sm transition-colors ${
+                    collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+                  } ${
                     active
                       ? `border-l-2 font-medium ${item.accent}`
                       : "border-l-2 border-transparent text-zinc-400 hover:bg-white/5 hover:text-white"
@@ -124,7 +173,7 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
                     size={18}
                     className={`shrink-0 ${active ? item.accentIcon : "text-zinc-500"}`}
                   />
-                  {item.label}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             );
@@ -139,10 +188,14 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
             onNavigate?.();
             void logout();
           }}
-          className="flex w-full items-center gap-2.5 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-red-300/80 transition-colors hover:border-red-400 hover:bg-red-500/10 hover:text-red-200"
+          aria-label={collapsed ? "Cerrar sesión" : undefined}
+          title={collapsed ? "Cerrar sesión" : undefined}
+          className={`flex w-full items-center rounded-lg border-l-2 border-transparent py-2 text-sm text-red-300/80 transition-colors hover:border-red-400 hover:bg-red-500/10 hover:text-red-200 ${
+            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          }`}
         >
           <LuLogOut aria-hidden="true" size={18} className="shrink-0 text-red-400" />
-          Cerrar sesión
+          {!collapsed && "Cerrar sesión"}
         </button>
       </div>
     </div>
@@ -152,15 +205,29 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
 interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  desktopCollapsed: boolean;
+  onToggleDesktop: () => void;
 }
 
-export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
+export function Sidebar({
+  mobileOpen,
+  onCloseMobile,
+  desktopCollapsed,
+  onToggleDesktop,
+}: SidebarProps) {
   return (
     <>
       {/* Desktop / tablet horizontal amplia: sidebar fijo */}
-      <aside className="hidden w-64 shrink-0 lg:block">
+      <aside
+        className={`hidden shrink-0 transition-[width] duration-200 lg:block ${
+          desktopCollapsed ? "w-20" : "w-64"
+        }`}
+      >
         <div className="sticky top-0 h-screen">
-          <SidebarContent />
+          <SidebarContent
+            collapsed={desktopCollapsed}
+            onToggleCollapse={onToggleDesktop}
+          />
         </div>
       </aside>
 

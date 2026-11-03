@@ -31,11 +31,17 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const pathname = usePathname();
 
   return (
     <div className="flex min-h-screen bg-zinc-100 text-zinc-900">
-      <Sidebar mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+        desktopCollapsed={desktopSidebarCollapsed}
+        onToggleDesktop={() => setDesktopSidebarCollapsed((collapsed) => !collapsed)}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
           title={getSectionTitle(pathname)}
