@@ -334,7 +334,7 @@ export default function MovimientosPage() {
       });
       notifySuccess(
         tipo === 'ENTRADA'
-          ? 'Entrada de stock registrada'
+          ? 'Stock repuesto'
           : tipo === 'SALIDA'
             ? 'Salida de stock registrada'
             : 'Ajuste de stock registrado',
@@ -394,7 +394,7 @@ export default function MovimientosPage() {
     <>
       <PageHeader
         title="Control de stock"
-        description="Registrá entradas, salidas y ajustes; consultá el historial de cambios del inventario."
+        description="Reponé stock, registrá salidas por ventas u otros motivos y ajustá existencias. Consultá el historial de cambios del inventario."
         actions={
           <Button
             type="button"
@@ -404,7 +404,7 @@ export default function MovimientosPage() {
             title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuPlus aria-hidden="true" size={16} />
-            Registrar movimiento
+            Reponer stock
           </Button>
         }
       />
@@ -436,7 +436,7 @@ export default function MovimientosPage() {
                   <LuArrowDownToLine aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Entradas en esta página</p>
+                  <p className="text-xs font-medium text-zinc-500">Reposiciones mostradas.</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : entradasEnPagina}
                   </p>
@@ -451,7 +451,7 @@ export default function MovimientosPage() {
                   <LuArrowUpFromLine aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Salidas en esta página</p>
+                  <p className="text-xs font-medium text-zinc-500">Salidas mostradas.</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : salidasEnPagina}
                   </p>
@@ -466,7 +466,7 @@ export default function MovimientosPage() {
                   <LuArrowUpDown aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Ajustes en esta página</p>
+                  <p className="text-xs font-medium text-zinc-500">Ajustes de stock.</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : ajustesEnPagina}
                   </p>
@@ -546,7 +546,7 @@ export default function MovimientosPage() {
             subtitle={
               hayFiltros
                 ? `${movimientosFiltrados.length.toLocaleString('es-AR')} resultados`
-                : `${meta.total.toLocaleString('es-AR')} movimientos registrados`
+                : `${meta.total.toLocaleString('es-AR')} movimientos registrados.`
             }
             actions={
               <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
@@ -619,8 +619,8 @@ export default function MovimientosPage() {
 
       <Modal
         open={isFormOpen}
-        title="Registrar movimiento de stock"
-        description="Elegí el producto y registrá cómo cambia su existencia."
+        title="Reponer stock"
+        description="Elegí el producto y la cantidad que querés agregar. También podés registrar una salida o ajustar las existencias."
         size="lg"
         onClose={() => {
           if (!isSubmitting) limpiarFormulario();
@@ -642,7 +642,7 @@ export default function MovimientosPage() {
               title={soloLectura ? motivoSoloLectura : undefined}
             >
               <LuSave aria-hidden="true" size={16} />
-              {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
+              {isSubmitting ? 'Registrando…' : 'Guardar movimiento'}
             </Button>
           </>
         }

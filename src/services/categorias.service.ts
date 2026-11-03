@@ -11,6 +11,7 @@ export interface BackendCategoria {
 export interface CategoriaInput {
   nombre: string;
   descripcion?: string;
+  activo?: boolean;
 }
 
 export async function listarCategorias(): Promise<BackendCategoria[]> {

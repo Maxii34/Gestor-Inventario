@@ -17,6 +17,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   FormField,
   Input,
   Modal,
@@ -49,6 +50,7 @@ export default function CategoriasPage() {
 
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [activo, setActivo] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export default function CategoriasPage() {
     setFormError(null);
     setNombre(categoria.nombre);
     setDescripcion(categoria.descripcion ?? '');
+    setActivo(categoria.activo);
     setIsFormOpen(true);
   }
 
@@ -99,6 +102,7 @@ export default function CategoriasPage() {
     setIsFormOpen(false);
     setNombre('');
     setDescripcion('');
+    setActivo(true);
     setFormError(null);
   }
 
@@ -116,11 +120,12 @@ export default function CategoriasPage() {
     setFormError(null);
     setIsSubmitting(true);
     try {
+      const esEdicion = editingId !== null;
       const input = {
         nombre: nombre.trim(),
         ...(descripcion.trim() ? { descripcion: descripcion.trim() } : {}),
+        ...(esEdicion ? { activo } : {}),
       };
-      const esEdicion = editingId !== null;
       if (!esEdicion) {
         await crearCategoria(input);
       } else {
@@ -478,6 +483,20 @@ export default function CategoriasPage() {
                 onChange={(event) => setDescripcion(event.target.value)}
               />
             </FormField>
+            {editingId !== null && (
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                <Checkbox
+                  id="categoria-activa"
+                  label="Categoría activa"
+                  checked={activo}
+                  disabled={isSubmitting || soloLectura}
+                  onChange={(event) => setActivo(event.target.checked)}
+                />
+                <p className="ml-6 mt-1 text-xs leading-5 text-zinc-500">
+                  Si la desactivás, se conserva y podés volver a activarla más adelante.
+                </p>
+              </div>
+            )}
             {formError && (
               <p
                 role="alert"
@@ -495,7 +514,7 @@ export default function CategoriasPage() {
         title="Eliminar categoría"
         description={
           deleteTarget
-            ? `¿Eliminar "${deleteTarget.nombre}"? Esta acción no se puede deshacer.`
+            ? `Estás por eliminar la categoría "${deleteTarget.nombre}". Esta acción no se puede deshacer.`
             : undefined
         }
         onClose={() => {
@@ -532,7 +551,8 @@ export default function CategoriasPage() {
           </p>
         ) : (
           <p className="text-sm leading-relaxed text-zinc-600">
-            Si la categoría tiene productos asociados, el sistema rechazará la eliminación.
+            Solo podés eliminar categorías sin productos asociados. Si querés conservarla
+            sin que siga disponible, podés desactivarla desde la opción Editar.
           </p>
         )}
       </Modal>
