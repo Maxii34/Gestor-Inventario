@@ -6,6 +6,7 @@ import {
   LuArrowUpDown,
   LuBoxes,
   LuLayoutDashboard,
+  LuLifeBuoy,
   LuLogOut,
   LuPackage,
   LuPanelLeftClose,
@@ -102,7 +103,7 @@ function SidebarContent({
           <span
             role="img"
             aria-label="StockNext"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-sm shadow-indigo-950/20"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-cyan-500 text-white shadow-sm shadow-indigo-950/20"
           >
             <LuBoxes aria-hidden="true" size={18} strokeWidth={2.2} />
           </span>
@@ -181,7 +182,30 @@ function SidebarContent({
         </ul>
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="flex flex-col gap-1 border-t border-white/10 p-3">
+        <Link
+          href="/soporte"
+          onClick={onNavigate}
+          aria-current={isActive(pathname, "/soporte") ? "page" : undefined}
+          aria-label={collapsed ? "Soporte" : undefined}
+          title={collapsed ? "Soporte" : undefined}
+          className={`flex items-center rounded-lg border-l-2 py-2 text-sm transition-colors ${
+            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          } ${
+            isActive(pathname, "/soporte")
+              ? "border-indigo-400 bg-indigo-500/10 font-medium text-indigo-200"
+              : "border-transparent text-zinc-400 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <LuLifeBuoy
+            aria-hidden="true"
+            size={18}
+            className={`shrink-0 ${
+              isActive(pathname, "/soporte") ? "text-indigo-400" : "text-zinc-500"
+            }`}
+          />
+          {!collapsed && "Soporte"}
+        </Link>
         <button
           type="button"
           onClick={() => {

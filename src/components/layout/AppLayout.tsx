@@ -15,6 +15,7 @@ const SECTION_TITLES: Record<string, string> = {
   "/clientes": "Clientes",
   "/ventas": "Ventas",
   "/usuarios": "Usuarios",
+  "/soporte": "Centro de ayuda",
 };
 
 function getSectionTitle(pathname: string): string {

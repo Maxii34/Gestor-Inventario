@@ -502,7 +502,7 @@ export default function ProductosPage() {
                 <LuPackage aria-hidden="true" size={19} />
               </span>
               <div>
-                <p className="text-xs font-medium text-zinc-500">Productos en catálogo</p>
+                <p className="text-xs font-medium text-zinc-500">Productos</p>
                 <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                   {meta.total.toLocaleString('es-AR')}
                 </p>
@@ -515,7 +515,7 @@ export default function ProductosPage() {
                 <LuFilter aria-hidden="true" size={18} />
               </span>
               <div>
-                <p className="text-xs font-medium text-zinc-500">Categorías disponibles</p>
+                <p className="text-xs font-medium text-zinc-500">Categorías</p>
                 <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                   {categorias.length.toLocaleString('es-AR')}
                 </p>
@@ -529,7 +529,7 @@ export default function ProductosPage() {
               </span>
               <div>
                 <p className="text-xs font-medium text-zinc-500">
-                  Stock bajo en esta página
+                  Stock bajo
                 </p>
                 <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                   {isLoading || isFiltering

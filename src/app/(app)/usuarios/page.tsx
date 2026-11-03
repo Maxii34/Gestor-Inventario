@@ -429,7 +429,7 @@ export default function UsuariosPage() {
                   <LuUsers aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Personas en el equipo</p>
+                  <p className="text-xs font-medium text-zinc-500">Personas</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
@@ -445,7 +445,7 @@ export default function UsuariosPage() {
                 </span>
                 <div>
                   <p className="text-xs font-medium text-zinc-500">
-                    {hayFiltros ? 'Con acceso activo' : 'Activos en esta página'}
+                    Activos
                   </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : activos.toLocaleString('es-AR')}
@@ -462,7 +462,7 @@ export default function UsuariosPage() {
                 </span>
                 <div>
                   <p className="text-xs font-medium text-zinc-500">
-                    {hayFiltros ? 'Empleados' : 'Empleados en esta página'}
+                    Vendedores
                   </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : vendedores.toLocaleString('es-AR')}
@@ -479,7 +479,7 @@ export default function UsuariosPage() {
                 </span>
                 <div>
                   <p className="text-xs font-medium text-zinc-500">
-                    {hayFiltros ? 'Sin acceso' : 'Sin acceso en esta página'}
+                    Sin acceso
                   </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering

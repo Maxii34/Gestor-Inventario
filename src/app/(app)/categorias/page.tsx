@@ -332,7 +332,7 @@ export default function CategoriasPage() {
                   <LuFolder aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Total de categorías</p>
+                  <p className="text-xs font-medium text-zinc-500">Categorías</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
@@ -348,7 +348,7 @@ export default function CategoriasPage() {
                 </span>
                 <div>
                   <p className="text-xs font-medium text-zinc-500">
-                    {hayFiltros ? 'Categorías activas' : 'Activas en esta página'}
+                    Activas
                   </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering ? '—' : activas.toLocaleString('es-AR')}
@@ -365,7 +365,7 @@ export default function CategoriasPage() {
                 </span>
                 <div>
                   <p className="text-xs font-medium text-zinc-500">
-                    {hayFiltros ? 'Categorías inactivas' : 'Inactivas en esta página'}
+                    Inactivas
                   </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
                     {isLoading || isFiltering
