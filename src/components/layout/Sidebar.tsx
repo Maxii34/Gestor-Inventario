@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LuArrowUpDown,
+  LuArrowUpRight,
   LuBoxes,
   LuLayoutDashboard,
   LuLifeBuoy,
@@ -182,29 +183,39 @@ function SidebarContent({
         </ul>
       </nav>
 
-      <div className="flex flex-col gap-1 border-t border-white/10 p-3">
+      <div className="border-t border-white/10 bg-zinc-950/20 p-3">
         <Link
           href="/soporte"
           onClick={onNavigate}
           aria-current={isActive(pathname, "/soporte") ? "page" : undefined}
           aria-label={collapsed ? "Soporte" : undefined}
           title={collapsed ? "Soporte" : undefined}
-          className={`flex items-center rounded-lg border-l-2 py-2 text-sm transition-colors ${
-            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          className={`group flex items-center rounded-xl border p-2.5 transition-colors ${
+            collapsed ? "justify-center" : "gap-3"
           } ${
             isActive(pathname, "/soporte")
-              ? "border-indigo-400 bg-indigo-500/10 font-medium text-indigo-200"
-              : "border-transparent text-zinc-400 hover:bg-white/5 hover:text-white"
+              ? "border-indigo-400/30 bg-indigo-500/10 text-white"
+              : "border-white/5 bg-white/3 text-zinc-300 hover:border-indigo-400/25 hover:bg-indigo-500/10"
           }`}
         >
-          <LuLifeBuoy
-            aria-hidden="true"
-            size={18}
-            className={`shrink-0 ${
-              isActive(pathname, "/soporte") ? "text-indigo-400" : "text-zinc-500"
-            }`}
-          />
-          {!collapsed && "Soporte"}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500/20 to-cyan-500/20 text-indigo-300 ring-1 ring-white/10 transition-colors group-hover:text-cyan-200">
+            <LuLifeBuoy aria-hidden="true" size={18} />
+          </span>
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium leading-5">Centro de ayuda</span>
+                <span className="block text-xs leading-4 text-zinc-500 group-hover:text-zinc-400">
+                  Estamos para ayudarte
+                </span>
+              </span>
+              <LuArrowUpRight
+                aria-hidden="true"
+                size={16}
+                className="shrink-0 text-zinc-500 transition-colors group-hover:text-cyan-300"
+              />
+            </>
+          )}
         </Link>
         <button
           type="button"
@@ -214,13 +225,21 @@ function SidebarContent({
           }}
           aria-label={collapsed ? "Cerrar sesión" : undefined}
           title={collapsed ? "Cerrar sesión" : undefined}
-          className={`flex w-full items-center rounded-lg border-l-2 border-transparent py-2 text-sm text-red-300/80 transition-colors hover:border-red-400 hover:bg-red-500/10 hover:text-red-200 ${
-            collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+          className={`mt-2 flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-200 ${
+            collapsed ? "justify-center" : "gap-3"
           }`}
         >
-          <LuLogOut aria-hidden="true" size={18} className="shrink-0 text-red-400" />
+          <LuLogOut aria-hidden="true" size={18} className="shrink-0 text-zinc-500" />
           {!collapsed && "Cerrar sesión"}
         </button>
+        {!collapsed && (
+          <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-zinc-600">
+            <span>© {new Date().getFullYear()} StockNext</span>
+            <span className="rounded-full border border-white/5 px-2 py-0.5 text-zinc-500">
+              v1.0.0
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
