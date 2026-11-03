@@ -21,6 +21,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Pagination,
   SearchInput,
   Select,
   Table,
@@ -31,13 +32,17 @@ import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { notifySuccess } from '@/lib/notifications/toast';
+import type { PageMeta } from '@/types/api';
 import {
   actualizarUsuario,
   crearUsuario,
   listarUsuarios,
+  listarUsuariosPaginados,
   type BackendUsuario,
 } from '@/services/usuarios.service';
 import type { AuthRole } from '@/types/auth';
+
+const PAGE_SIZE = 10;
 
 const ROL_OPCIONES = [
   { value: 'todos', label: 'Todos' },
@@ -164,8 +169,13 @@ export default function UsuariosPage() {
   const isAdmin = user?.rol === 'ADMIN';
 
   const [usuarios, setUsuarios] = useState<BackendUsuario[]>([]);
+  const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+  const [todosUsuarios, setTodosUsuarios] = useState<BackendUsuario[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
@@ -182,12 +192,16 @@ export default function UsuariosPage() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('todos');
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const hayFiltros =
+    busqueda.trim() !== '' || filtroRol !== 'todos' || filtroEstado !== 'todos';
 
-  const cargarListado = useCallback(async (): Promise<void> => {
+  const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
     try {
-      setUsuarios(await listarUsuarios());
+      const resultado = await listarUsuariosPaginados(pagina, PAGE_SIZE);
+      setUsuarios(resultado.usuarios);
+      setMeta(resultado.meta);
     } catch (err) {
       setUsuarios([]);
       setListError(
@@ -200,16 +214,45 @@ export default function UsuariosPage() {
     }
   }, []);
 
+  const cargarTodasParaFiltrar = useCallback(async (): Promise<void> => {
+    setIsFiltering(true);
+    setFilterError(null);
+    try {
+      setTodosUsuarios(await listarUsuarios());
+    } catch (err) {
+      setTodosUsuarios([]);
+      setFilterError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsFiltering(false);
+    }
+  }, []);
+
+  const cargarListado = useCallback(async (pagina = page): Promise<void> => {
+    if (hayFiltros) {
+      await cargarTodasParaFiltrar();
+    } else {
+      await cargarPagina(pagina);
+    }
+  }, [cargarPagina, cargarTodasParaFiltrar, hayFiltros, page]);
+
   useEffect(() => {
     async function cargarInicial(): Promise<void> {
       if (!isAdmin) {
         setIsLoading(false);
         return;
       }
-      await cargarListado();
+      if (hayFiltros) {
+        await cargarTodasParaFiltrar();
+      } else {
+        await cargarPagina(page);
+      }
     }
     void cargarInicial();
-  }, [isAdmin, cargarListado]);
+  }, [isAdmin, hayFiltros, page, cargarPagina, cargarTodasParaFiltrar]);
 
   function comenzarEdicion(usuario: BackendUsuario): void {
     setEditingId(usuario.id);
@@ -305,12 +348,10 @@ export default function UsuariosPage() {
     }
   }
 
-  const total = usuarios.length;
-  const vendedores = usuarios.filter((usuario) => usuario.rol === 'VENDEDOR').length;
-  const activos = usuarios.filter((usuario) => usuario.activo).length;
+  const usuariosBase = hayFiltros ? todosUsuarios : usuarios;
   const usuariosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLocaleLowerCase('es-AR');
-    return usuarios.filter((usuario) => {
+    return usuariosBase.filter((usuario) => {
       if (
         texto &&
         !`${usuario.nombre} ${usuario.email}`.toLocaleLowerCase('es-AR').includes(texto)
@@ -322,8 +363,19 @@ export default function UsuariosPage() {
       if (filtroEstado === 'inactivos' && usuario.activo) return false;
       return true;
     });
-  }, [usuarios, busqueda, filtroRol, filtroEstado]);
-  const filas: FilaUsuario[] = usuariosFiltrados.map((usuario) => ({
+  }, [usuariosBase, busqueda, filtroRol, filtroEstado]);
+  const total = hayFiltros ? todosUsuarios.length : meta.total;
+  const usuariosResumen = hayFiltros ? usuariosFiltrados : usuarios;
+  const vendedores = usuariosResumen.filter((usuario) => usuario.rol === 'VENDEDOR').length;
+  const activos = usuariosResumen.filter((usuario) => usuario.activo).length;
+  const totalPaginasVisibles = hayFiltros
+    ? Math.max(1, Math.ceil(usuariosFiltrados.length / PAGE_SIZE))
+    : Math.max(1, meta.totalPaginas);
+  const paginaVisible = Math.min(page, totalPaginasVisibles);
+  const usuariosVisibles = hayFiltros
+    ? usuariosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
+    : usuarios;
+  const filas: FilaUsuario[] = usuariosVisibles.map((usuario) => ({
     ...usuario,
     onEdit: () => comenzarEdicion(usuario),
     onToggleActive: () => {
@@ -333,9 +385,6 @@ export default function UsuariosPage() {
     soloLectura,
     motivoSoloLectura,
   }));
-  const hayFiltros =
-    busqueda.trim() !== '' || filtroRol !== 'todos' || filtroEstado !== 'todos';
-
   if (!isAdmin) {
     return (
       <>
@@ -382,7 +431,7 @@ export default function UsuariosPage() {
                 <div>
                   <p className="text-xs font-medium text-zinc-500">Personas en el equipo</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : total.toLocaleString('es-AR')}
+                    {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -395,9 +444,11 @@ export default function UsuariosPage() {
                   <LuCircleCheck aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Con acceso activo</p>
+                  <p className="text-xs font-medium text-zinc-500">
+                    {hayFiltros ? 'Con acceso activo' : 'Activos en esta página'}
+                  </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : activos.toLocaleString('es-AR')}
+                    {isLoading || isFiltering ? '—' : activos.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -410,9 +461,11 @@ export default function UsuariosPage() {
                   <LuBriefcaseBusiness aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Empleados</p>
+                  <p className="text-xs font-medium text-zinc-500">
+                    {hayFiltros ? 'Empleados' : 'Empleados en esta página'}
+                  </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : vendedores.toLocaleString('es-AR')}
+                    {isLoading || isFiltering ? '—' : vendedores.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -425,9 +478,13 @@ export default function UsuariosPage() {
                   <LuCircleX aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Sin acceso</p>
+                  <p className="text-xs font-medium text-zinc-500">
+                    {hayFiltros ? 'Sin acceso' : 'Sin acceso en esta página'}
+                  </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : (total - activos).toLocaleString('es-AR')}
+                    {isLoading || isFiltering
+                      ? '—'
+                      : (usuariosResumen.length - activos).toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -448,18 +505,27 @@ export default function UsuariosPage() {
                 label="Nombre o correo"
                 placeholder="Ej. María Gómez, maria@comercio.com"
                 value={busqueda}
-                onChange={setBusqueda}
+                onChange={(valor) => {
+                  setBusqueda(valor);
+                  setPage(1);
+                }}
               />
               <Select
                 label="Permisos"
                 value={filtroRol}
-                onChange={(event) => setFiltroRol(event.target.value)}
+                onChange={(event) => {
+                  setFiltroRol(event.target.value);
+                  setPage(1);
+                }}
                 options={ROL_OPCIONES}
               />
               <Select
                 label="Acceso"
                 value={filtroEstado}
-                onChange={(event) => setFiltroEstado(event.target.value)}
+                onChange={(event) => {
+                  setFiltroEstado(event.target.value);
+                  setPage(1);
+                }}
                 options={ESTADO_OPCIONES}
               />
             </div>
@@ -477,6 +543,7 @@ export default function UsuariosPage() {
                     setBusqueda('');
                     setFiltroRol('todos');
                     setFiltroEstado('todos');
+                    setPage(1);
                   }}
                 >
                   Limpiar filtros
@@ -496,14 +563,23 @@ export default function UsuariosPage() {
             }
             className="border-zinc-200/80 shadow-sm"
           >
-          {isLoading ? (
+          {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               {[0, 1, 2].map((item) => (
                 <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
               ))}
               <span className="sr-only">Cargando usuarios…</span>
             </div>
-          ) : listError ? (
+          ) : hayFiltros && filterError ? (
+            <div>
+              <p className="text-sm text-zinc-500">{filterError}</p>
+              <div className="mt-4">
+                <Button type="button" onClick={() => void cargarTodasParaFiltrar()}>
+                  Reintentar
+                </Button>
+              </div>
+            </div>
+          ) : !hayFiltros && listError ? (
             <div>
               <p className="text-sm text-zinc-500">{listError}</p>
               <div className="mt-4">
@@ -513,16 +589,30 @@ export default function UsuariosPage() {
               </div>
             </div>
           ) : (
-            <Table
-              columns={USUARIO_COLUMNAS}
-              data={filas}
-              getRowKey={(row) => row.id}
-              emptyMessage={
-                hayFiltros
-                  ? 'No encontramos personas con esos filtros.'
-                  : 'Todavía no hay personas en el equipo.'
-              }
-            />
+            <>
+              <Table
+                columns={USUARIO_COLUMNAS}
+                data={filas}
+                getRowKey={(row) => row.id}
+                emptyMessage={
+                  hayFiltros
+                    ? 'No encontramos personas con esos filtros.'
+                    : 'Todavía no hay personas en el equipo.'
+                }
+              />
+              <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p className="text-xs text-zinc-500">
+                  {hayFiltros
+                    ? `${usuariosFiltrados.length === 0 ? 0 : (paginaVisible - 1) * PAGE_SIZE + 1}–${Math.min(paginaVisible * PAGE_SIZE, usuariosFiltrados.length)} de ${usuariosFiltrados.length}`
+                    : `Página ${paginaVisible} de ${totalPaginasVisibles} · ${meta.total} personas`}
+                </p>
+                <Pagination
+                  page={paginaVisible}
+                  totalPages={totalPaginasVisibles}
+                  onPageChange={setPage}
+                />
+              </div>
+            </>
           )}
           </Card>
         </Reveal>

@@ -1,5 +1,6 @@
 import { apiRequest } from '@/lib/api/client';
-import type { ApiSuccess } from '@/types/api';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import type { ApiListResponse, PageMeta, ApiSuccess } from '@/types/api';
 
 export interface BackendCategoria {
   id: number;
@@ -14,11 +15,24 @@ export interface CategoriaInput {
   activo?: boolean;
 }
 
+export interface CategoriasPaginadas {
+  categorias: BackendCategoria[];
+  meta: PageMeta;
+}
+
 export async function listarCategorias(): Promise<BackendCategoria[]> {
-  const response = await apiRequest<ApiSuccess<BackendCategoria[]>>('/categorias', {
-    auth: true,
-  });
-  return response.data;
+  return cargarTodasLasPaginas<BackendCategoria>('/categorias');
+}
+
+export async function listarCategoriasPaginadas(
+  page: number,
+  limit: number,
+): Promise<CategoriasPaginadas> {
+  const response = await apiRequest<ApiListResponse<BackendCategoria>>(
+    `/categorias?page=${page}&limit=${limit}`,
+    { auth: true },
+  );
+  return { categorias: response.data, meta: response.meta };
 }
 
 export async function crearCategoria(input: CategoriaInput): Promise<BackendCategoria> {

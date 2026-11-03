@@ -22,6 +22,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Pagination,
   SearchInput,
   Table,
   type TableColumn,
@@ -31,13 +32,17 @@ import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { notifySuccess } from '@/lib/notifications/toast';
+import type { PageMeta } from '@/types/api';
 import {
   actualizarCategoria,
   crearCategoria,
   eliminarCategoria,
   listarCategorias,
+  listarCategoriasPaginadas,
   type BackendCategoria,
 } from '@/services/categorias.service';
+
+const PAGE_SIZE = 10;
 
 export default function CategoriasPage() {
   const { user } = useAuth();
@@ -45,8 +50,13 @@ export default function CategoriasPage() {
   const isAdmin = user?.rol === 'ADMIN';
 
   const [categorias, setCategorias] = useState<BackendCategoria[]>([]);
+  const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+  const [todasCategorias, setTodasCategorias] = useState<BackendCategoria[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -60,12 +70,15 @@ export default function CategoriasPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
+  const hayFiltros = busqueda.trim() !== '';
 
-  const cargarListado = useCallback(async (): Promise<void> => {
+  const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
     try {
-      setCategorias(await listarCategorias());
+      const resultado = await listarCategoriasPaginadas(pagina, PAGE_SIZE);
+      setCategorias(resultado.categorias);
+      setMeta(resultado.meta);
     } catch (err) {
       setCategorias([]);
       setListError(
@@ -78,15 +91,62 @@ export default function CategoriasPage() {
     }
   }, []);
 
+  const cargarTodasParaFiltrar = useCallback(async (): Promise<void> => {
+    setIsFiltering(true);
+    setFilterError(null);
+    try {
+      setTodasCategorias(await listarCategorias());
+    } catch (err) {
+      setTodasCategorias([]);
+      setFilterError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos aplicar la búsqueda. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsFiltering(false);
+    }
+  }, []);
+
+  const cargarListado = useCallback(async (pagina = page): Promise<void> => {
+    if (hayFiltros) {
+      await cargarTodasParaFiltrar();
+    } else {
+      await cargarPagina(pagina);
+    }
+  }, [cargarPagina, cargarTodasParaFiltrar, hayFiltros, page]);
+
   useEffect(() => {
     async function cargarInicial(): Promise<void> {
-      await cargarListado();
+      if (hayFiltros) {
+        await cargarTodasParaFiltrar();
+      } else {
+        await cargarPagina(page);
+      }
     }
     void cargarInicial();
-  }, [cargarListado]);
+  }, [cargarPagina, cargarTodasParaFiltrar, hayFiltros, page]);
 
-  const total = categorias.length;
-  const activas = categorias.filter((categoria) => categoria.activo).length;
+  const categoriasBase = hayFiltros ? todasCategorias : categorias;
+  const categoriasFiltradas = useMemo(() => {
+    const texto = busqueda.trim().toLocaleLowerCase('es-AR');
+    if (!texto) return categoriasBase;
+    return categoriasBase.filter((categoria) =>
+      [categoria.nombre, categoria.descripcion ?? ''].some((valor) =>
+        valor.toLocaleLowerCase('es-AR').includes(texto),
+      ),
+    );
+  }, [categoriasBase, busqueda]);
+  const total = hayFiltros ? todasCategorias.length : meta.total;
+  const categoriasResumen = hayFiltros ? categoriasFiltradas : categorias;
+  const activas = categoriasResumen.filter((categoria) => categoria.activo).length;
+  const totalPaginasVisibles = hayFiltros
+    ? Math.max(1, Math.ceil(categoriasFiltradas.length / PAGE_SIZE))
+    : Math.max(1, meta.totalPaginas);
+  const paginaVisible = Math.min(page, totalPaginasVisibles);
+  const filasTabla = hayFiltros
+    ? categoriasFiltradas.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
+    : categorias;
 
   function comenzarEdicion(categoria: BackendCategoria): void {
     setEditingId(categoria.id);
@@ -157,7 +217,11 @@ export default function CategoriasPage() {
       await eliminarCategoria(deleteTarget.id);
       notifySuccess('Categoría eliminada', `"${nombreCategoria}" se quitó del catálogo.`);
       setDeleteTarget(null);
-      await cargarListado();
+      if (!hayFiltros && categorias.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await cargarListado();
+      }
     } catch (err) {
       setDeleteError(
         err instanceof ApiError
@@ -168,16 +232,6 @@ export default function CategoriasPage() {
       setIsDeleting(false);
     }
   }
-
-  const categoriasFiltradas = useMemo(() => {
-    const texto = busqueda.trim().toLocaleLowerCase('es-AR');
-    if (!texto) return categorias;
-    return categorias.filter((categoria) =>
-      [categoria.nombre, categoria.descripcion ?? ''].some((valor) =>
-        valor.toLocaleLowerCase('es-AR').includes(texto),
-      ),
-    );
-  }, [categorias, busqueda]);
 
   const columnas: TableColumn<BackendCategoria>[] = [
     {
@@ -280,7 +334,7 @@ export default function CategoriasPage() {
                 <div>
                   <p className="text-xs font-medium text-zinc-500">Total de categorías</p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : total.toLocaleString('es-AR')}
+                    {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -293,9 +347,11 @@ export default function CategoriasPage() {
                   <LuCircleCheck aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Categorías activas</p>
+                  <p className="text-xs font-medium text-zinc-500">
+                    {hayFiltros ? 'Categorías activas' : 'Activas en esta página'}
+                  </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : activas.toLocaleString('es-AR')}
+                    {isLoading || isFiltering ? '—' : activas.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -308,9 +364,13 @@ export default function CategoriasPage() {
                   <LuCircleOff aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Categorías inactivas</p>
+                  <p className="text-xs font-medium text-zinc-500">
+                    {hayFiltros ? 'Categorías inactivas' : 'Inactivas en esta página'}
+                  </p>
                   <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
-                    {isLoading ? '—' : (total - activas).toLocaleString('es-AR')}
+                    {isLoading || isFiltering
+                      ? '—'
+                      : (categoriasResumen.length - activas).toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -331,7 +391,10 @@ export default function CategoriasPage() {
                 label="Nombre o descripción"
                 placeholder="Ej. Bebidas, productos de limpieza…"
                 value={busqueda}
-                onChange={setBusqueda}
+                onChange={(valor) => {
+                  setBusqueda(valor);
+                  setPage(1);
+                }}
               />
               {busqueda.trim() && (
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
@@ -339,7 +402,15 @@ export default function CategoriasPage() {
                     {categoriasFiltradas.length.toLocaleString('es-AR')}{' '}
                     {categoriasFiltradas.length === 1 ? 'resultado' : 'resultados'}
                   </p>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setBusqueda('')}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setBusqueda('');
+                      setPage(1);
+                    }}
+                  >
                     <LuX aria-hidden="true" size={14} />
                     Limpiar búsqueda
                   </Button>
@@ -386,7 +457,7 @@ export default function CategoriasPage() {
             }
             className="border-zinc-200/80 shadow-sm"
           >
-          {isLoading ? (
+          {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
               <div className="h-10 animate-pulse rounded-lg bg-zinc-100" />
               {[0, 1, 2].map((item) => (
@@ -394,7 +465,16 @@ export default function CategoriasPage() {
               ))}
               <span className="sr-only">Cargando categorías…</span>
             </div>
-          ) : listError ? (
+          ) : hayFiltros && filterError ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm font-medium text-red-800">{filterError}</p>
+              <div className="mt-3">
+                <Button type="button" variant="outline" onClick={() => void cargarTodasParaFiltrar()}>
+                  Reintentar
+                </Button>
+              </div>
+            </div>
+          ) : !hayFiltros && listError ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
               <p className="text-sm font-medium text-red-800">{listError}</p>
               <div className="mt-3">
@@ -404,16 +484,30 @@ export default function CategoriasPage() {
               </div>
             </div>
           ) : (
-            <Table
-              columns={columnas}
-              data={categoriasFiltradas}
-              getRowKey={(row) => row.id}
-              emptyMessage={
-                busqueda.trim()
-                  ? 'No encontramos categorías con esa búsqueda.'
-                  : 'Todavía no hay categorías registradas.'
-              }
-            />
+            <>
+              <Table
+                columns={columnas}
+                data={filasTabla}
+                getRowKey={(row) => row.id}
+                emptyMessage={
+                  busqueda.trim()
+                    ? 'No encontramos categorías con esa búsqueda.'
+                    : 'Todavía no hay categorías registradas.'
+                }
+              />
+              <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <p className="text-xs text-zinc-500">
+                  {hayFiltros
+                    ? `${categoriasFiltradas.length === 0 ? 0 : (paginaVisible - 1) * PAGE_SIZE + 1}–${Math.min(paginaVisible * PAGE_SIZE, categoriasFiltradas.length)} de ${categoriasFiltradas.length}`
+                    : `Página ${paginaVisible} de ${totalPaginasVisibles} · ${meta.total} categorías`}
+                </p>
+                <Pagination
+                  page={paginaVisible}
+                  totalPages={totalPaginasVisibles}
+                  onPageChange={setPage}
+                />
+              </div>
+            </>
           )}
           </Card>
         </Reveal>
