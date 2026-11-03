@@ -10,3 +10,4 @@ export * from './clientes.service';
 export * from './usuarios.service';
 export * from './ventas.service';
 export * from './estadisticas.service';
+export * from './suscripcion.service';
