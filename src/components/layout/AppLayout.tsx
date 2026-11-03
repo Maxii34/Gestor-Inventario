@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { RouteNotice } from "./RouteNotice";
+import { SuscripcionBanner } from "./SuscripcionBanner";
 
 const SECTION_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -42,6 +43,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         />
         <main className="flex-1">
           <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
+            <SuscripcionBanner />
             <Suspense fallback={null}>
               <RouteNotice />
             </Suspense>

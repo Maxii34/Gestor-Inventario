@@ -17,6 +17,7 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -62,6 +63,8 @@ function validarFormulario(form: FormularioCliente): string | null {
 interface FilaCliente extends BackendCliente {
   onEdit: () => void;
   onDelete: () => void;
+  soloLectura: boolean;
+  motivoSoloLectura: string;
 }
 
 const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
@@ -141,6 +144,8 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
           size="sm"
           aria-label={`Editar ${row.nombre} ${row.apellido}`}
           onClick={row.onEdit}
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
           className="hover:border-zinc-200 hover:bg-zinc-100"
         >
           <LuPencil aria-hidden="true" size={14} />
@@ -152,6 +157,8 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
           size="sm"
           aria-label={`Eliminar ${row.nombre} ${row.apellido}`}
           onClick={row.onDelete}
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
           className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
         >
           <LuTrash2 aria-hidden="true" size={14} />
@@ -163,6 +170,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
 ];
 
 export default function ClientesPage() {
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const [clientes, setClientes] = useState<BackendCliente[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -369,6 +377,8 @@ export default function ClientesPage() {
       setDeleteError(null);
       setDeleteTarget(cliente);
     },
+    soloLectura,
+    motivoSoloLectura,
   }));
 
   return (
@@ -377,7 +387,13 @@ export default function ClientesPage() {
         title="Clientes"
         description="Administra la información de los clientes registrados."
         actions={
-          <Button type="button" className="w-full sm:w-auto" onClick={nuevoCliente}>
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={nuevoCliente}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
+          >
             <LuPlus aria-hidden="true" size={16} />
             Nuevo cliente
           </Button>
@@ -552,7 +568,12 @@ export default function ClientesPage() {
             <Button type="button" variant="outline" onClick={cancelarEdicion}>
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void guardarCliente()} disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={() => void guardarCliente()}
+              disabled={isSubmitting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
@@ -589,7 +610,8 @@ export default function ClientesPage() {
             <Button
               type="button"
               variant="danger"
-              disabled={isDeleting}
+              disabled={isDeleting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarEliminacion()}
             >
               {isDeleting ? 'Eliminando…' : 'Eliminar'}

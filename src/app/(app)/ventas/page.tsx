@@ -24,6 +24,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,
@@ -91,6 +92,8 @@ interface FilaVenta extends BackendVenta {
   onVerDetalle: () => void;
   onAnular: () => void;
   puedeAnular: boolean;
+  soloLectura: boolean;
+  motivoSoloLectura: string;
 }
 
 const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
@@ -144,6 +147,8 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
             size="sm"
             aria-label={`Anular la venta #${row.id}`}
             onClick={row.onAnular}
+            disabled={row.soloLectura}
+            title={row.soloLectura ? row.motivoSoloLectura : undefined}
           >
             <LuX aria-hidden="true" size={14} />
             Anular
@@ -226,6 +231,7 @@ const DETALLE_VENTA_COLUMNAS: TableColumn<BackendVentaDetalle>[] = [
 
 export default function VentasPage() {
   const { user } = useAuth();
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [ventas, setVentas] = useState<BackendVenta[]>([]);
@@ -481,6 +487,8 @@ export default function VentasPage() {
       setAnularTarget(venta);
     },
     puedeAnular: isAdmin,
+    soloLectura,
+    motivoSoloLectura,
   }));
 
   const totalEstimado = items.reduce(
@@ -502,6 +510,8 @@ export default function VentasPage() {
             type="button"
             className="w-full sm:w-auto"
             onClick={abrirNuevaVenta}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuPlus aria-hidden="true" size={16} />
             Nueva venta
@@ -625,7 +635,8 @@ export default function VentasPage() {
             <Button
               type="submit"
               form="nueva-venta-formulario"
-              disabled={isRegistrando || isLoadingSelectors || !!selectoresError}
+              disabled={isRegistrando || isLoadingSelectors || !!selectoresError || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
             >
               <LuSave aria-hidden="true" size={16} />
               {isRegistrando ? 'Registrando…' : 'Confirmar venta'}
@@ -698,7 +709,8 @@ export default function VentasPage() {
                         <li key={opcion.value}>
                           <button
                             type="button"
-                            disabled={sinStock || isRegistrando}
+                            disabled={sinStock || isRegistrando || soloLectura}
+                            title={soloLectura ? motivoSoloLectura : undefined}
                             aria-label={
                               sinStock
                                 ? `${opcion.label}, sin unidades disponibles`
@@ -876,7 +888,8 @@ export default function VentasPage() {
             <Button
               type="button"
               variant="danger"
-              disabled={isAnulando}
+              disabled={isAnulando || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarAnulacion()}
             >
               {isAnulando ? 'Anulando…' : 'Anular venta'}

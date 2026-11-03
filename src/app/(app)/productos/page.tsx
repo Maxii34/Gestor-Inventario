@@ -28,6 +28,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -117,6 +118,7 @@ function validarFormulario(form: FormularioProducto): string | null {
 
 export default function ProductosPage() {
   const { user } = useAuth();
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [productos, setProductos] = useState<BackendProducto[]>([]);
@@ -442,6 +444,8 @@ export default function ProductosPage() {
             size="sm"
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuPencil aria-hidden="true" size={14} />
             Editar
@@ -455,6 +459,8 @@ export default function ProductosPage() {
               setDeleteError(null);
               setDeleteTarget(row);
             }}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuTrash2 aria-hidden="true" size={14} />
             Eliminar
@@ -471,7 +477,13 @@ export default function ProductosPage() {
         description="Encontrá productos, revisá existencias y mantené actualizado tu catálogo."
         actions={
           isAdmin ? (
-            <Button type="button" className="w-full sm:w-auto" onClick={nuevoProducto}>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={nuevoProducto}
+              disabled={soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuPlus aria-hidden="true" size={16} />
               Nuevo producto
             </Button>
@@ -679,7 +691,12 @@ export default function ProductosPage() {
                 <Button type="button" variant="outline" disabled={isSubmitting} onClick={cancelarEdicion}>
                   Cancelar
                 </Button>
-                <Button type="submit" form="producto-formulario" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  form="producto-formulario"
+                  disabled={isSubmitting || soloLectura}
+                  title={soloLectura ? motivoSoloLectura : undefined}
+                >
                   <LuSave aria-hidden="true" size={16} />
                   {isSubmitting
                     ? 'Guardando…'
@@ -818,7 +835,8 @@ export default function ProductosPage() {
             <Button
               type="button"
               variant="danger"
-              disabled={isDeleting}
+              disabled={isDeleting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarEliminacion()}
             >
               {isDeleting ? 'Eliminando…' : 'Eliminar'}

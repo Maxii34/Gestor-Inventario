@@ -26,6 +26,7 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -186,6 +187,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
 ];
 
 export default function MovimientosPage() {
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const [movimientos, setMovimientos] = useState<BackendMovimiento[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -398,6 +400,8 @@ export default function MovimientosPage() {
             type="button"
             className="w-full sm:w-auto"
             onClick={abrirFormulario}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuPlus aria-hidden="true" size={16} />
             Registrar movimiento
@@ -631,7 +635,12 @@ export default function MovimientosPage() {
             >
               Cancelar
             </Button>
-            <Button type="submit" form="movimiento-formulario" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              form="movimiento-formulario"
+              disabled={isSubmitting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuSave aria-hidden="true" size={16} />
               {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
             </Button>

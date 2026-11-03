@@ -27,6 +27,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { notifySuccess } from '@/lib/notifications/toast';
 import {
@@ -39,6 +40,7 @@ import {
 
 export default function CategoriasPage() {
   const { user } = useAuth();
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [categorias, setCategorias] = useState<BackendCategoria[]>([]);
@@ -224,6 +226,8 @@ export default function CategoriasPage() {
             size="sm"
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
             className="hover:border-zinc-200 hover:bg-zinc-100"
           >
             <LuPencil aria-hidden="true" size={14} />
@@ -238,6 +242,8 @@ export default function CategoriasPage() {
               setDeleteError(null);
               setDeleteTarget(row);
             }}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
             className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
           >
             <LuTrash2 aria-hidden="true" size={14} />
@@ -348,6 +354,8 @@ export default function CategoriasPage() {
                   type="button"
                   className="w-full sm:w-auto"
                   onClick={nuevaCategoria}
+                  disabled={soloLectura}
+                  title={soloLectura ? motivoSoloLectura : undefined}
                 >
                   <LuPlus aria-hidden="true" size={16} />
                   Nueva categoría
@@ -428,7 +436,12 @@ export default function CategoriasPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" form="categoria-formulario" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                form="categoria-formulario"
+                disabled={isSubmitting || soloLectura}
+                title={soloLectura ? motivoSoloLectura : undefined}
+              >
                 <LuSave aria-hidden="true" size={16} />
                 {isSubmitting
                   ? 'Guardando…'
@@ -501,7 +514,8 @@ export default function CategoriasPage() {
             <Button
               type="button"
               variant="danger"
-              disabled={isDeleting}
+              disabled={isDeleting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarEliminacion()}
             >
               {isDeleting ? 'Eliminando…' : 'Eliminar'}

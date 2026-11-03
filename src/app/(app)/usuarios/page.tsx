@@ -28,6 +28,7 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { notifySuccess } from '@/lib/notifications/toast';
 import {
@@ -63,6 +64,8 @@ const ROL_VISUAL: Record<AuthRole, { etiqueta: string; tono: 'info' | 'neutral' 
 interface FilaUsuario extends BackendUsuario {
   onEdit: () => void;
   onToggleActive: () => void;
+  soloLectura: boolean;
+  motivoSoloLectura: string;
 }
 
 const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
@@ -123,6 +126,8 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
           size="sm"
           aria-label={`Editar ${row.nombre}`}
           onClick={row.onEdit}
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
         >
           <LuPencil aria-hidden="true" size={14} />
           Editar
@@ -133,6 +138,8 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
           size="sm"
           aria-label={`${row.activo ? 'Desactivar' : 'Activar'} ${row.nombre}`}
           onClick={row.onToggleActive}
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
         >
           {row.activo ? (
             <>
@@ -153,6 +160,7 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
 
 export default function UsuariosPage() {
   const { user } = useAuth();
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [usuarios, setUsuarios] = useState<BackendUsuario[]>([]);
@@ -322,6 +330,8 @@ export default function UsuariosPage() {
       setToggleError(null);
       setToggleTarget(usuario);
     },
+    soloLectura,
+    motivoSoloLectura,
   }));
   const hayFiltros =
     busqueda.trim() !== '' || filtroRol !== 'todos' || filtroEstado !== 'todos';
@@ -348,7 +358,13 @@ export default function UsuariosPage() {
         title="Equipo"
         description="Gestioná quién puede acceder al comercio y qué permisos tiene cada persona."
         actions={
-          <Button type="button" className="w-full sm:w-auto" onClick={nuevoUsuario}>
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={nuevoUsuario}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
+          >
             <LuPlus aria-hidden="true" size={16} />
             Agregar empleado
           </Button>
@@ -534,7 +550,12 @@ export default function UsuariosPage() {
             >
               Cancelar
             </Button>
-            <Button type="submit" form="usuario-formulario" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              form="usuario-formulario"
+              disabled={isSubmitting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
@@ -643,7 +664,8 @@ export default function UsuariosPage() {
             <Button
               type="button"
               variant={toggleTarget?.activo ? 'danger' : 'primary'}
-              disabled={isToggling}
+              disabled={isToggling || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarToggle()}
             >
               {isToggling ? 'Guardando…' : toggleTarget?.activo ? 'Desactivar' : 'Activar'}

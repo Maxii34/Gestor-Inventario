@@ -26,6 +26,7 @@ import {
 } from '@/components';
 import { useRecaudacion } from '@/components/estadisticas';
 import { useAuth } from '@/context/AuthContext';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
 import { getDatosDashboard } from '@/services/dashboard.service';
@@ -233,6 +234,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const { user } = useAuth();
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const recaudacion = useRecaudacion();
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -311,7 +313,12 @@ export default function DashboardPage() {
               />
               Actualizar
             </Button>
-            <Button type="button" onClick={() => router.push('/ventas')}>
+            <Button
+              type="button"
+              onClick={() => router.push('/ventas')}
+              disabled={soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuPlus aria-hidden="true" size={16} />
               Nueva venta
             </Button>
