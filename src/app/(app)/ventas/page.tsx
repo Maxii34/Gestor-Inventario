@@ -732,12 +732,12 @@ export default function VentasPage() {
                                 {sinStock ? 'Sin stock' : `${stockRestante} disponibles`}
                               </span>
                               {cantidadEnCarrito > 0 && (
-                                <span className="mt-1 block text-[11px] font-medium text-indigo-700">
+                                <span className="mt-1 block text-xs font-medium text-indigo-700">
                                   {cantidadEnCarrito} en carrito
                                 </span>
                               )}
                               {!sinStock && (
-                                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 group-hover:text-indigo-800">
+                                <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 group-hover:text-indigo-800">
                                   <LuPlus aria-hidden="true" size={12} />
                                   Agregar
                                 </span>

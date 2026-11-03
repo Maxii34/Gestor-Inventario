@@ -692,13 +692,13 @@ export default function PlataformaDashboardPage() {
                   <h3 className="mb-2 text-sm font-semibold">Pagos recientes</h3>
                   {payments.length ? (
                     <div className="overflow-x-auto rounded-lg border border-zinc-200">
-                      <table className="w-full min-w-130 text-left text-xs">
+                      <table className="w-full min-w-130 text-left text-sm">
                         <thead className="bg-zinc-50 text-zinc-500">
                           <tr>
-                            <th className="px-3 py-2 font-medium">Fecha</th>
-                            <th className="px-3 py-2 font-medium">Plan</th>
-                            <th className="px-3 py-2 font-medium">Método</th>
-                            <th className="px-3 py-2 text-right font-medium">Monto</th>
+                            <th className="px-3 py-2 font-semibold">Fecha</th>
+                            <th className="px-3 py-2 font-semibold">Plan</th>
+                            <th className="px-3 py-2 font-semibold">Método</th>
+                            <th className="px-3 py-2 text-right font-semibold">Monto</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-100">
@@ -707,7 +707,7 @@ export default function PlataformaDashboardPage() {
                               <td className="px-3 py-2.5">{mostrarFecha(payment.fecha ?? payment.fechaCreacion ?? payment.createdAt)}</td>
                               <td className="px-3 py-2.5">{payment.plan || '—'}</td>
                               <td className="px-3 py-2.5">{payment.metodo || '—'}</td>
-                              <td className="px-3 py-2.5 text-right font-medium">{mostrarMoneda(payment.monto)}</td>
+                              <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{mostrarMoneda(payment.monto)}</td>
                             </tr>
                           ))}
                         </tbody>

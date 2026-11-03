@@ -30,7 +30,7 @@ export function Pagination({ page, totalPages, onPageChange, disabled = false, c
   if (totalPages <= 1) return null;
   const items = getPageItems(page, totalPages);
   const baseButton =
-    'rounded-lg border px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+    'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50';
 
   return (
     <nav aria-label="Paginación" className={`flex flex-wrap items-center gap-1.5 ${className}`}>

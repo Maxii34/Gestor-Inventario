@@ -60,7 +60,7 @@ export default function PlataformaLoginPage() {
             <LuShieldCheck aria-hidden="true" size={14} />
             Centro de control
           </span>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
+          <h1 className="text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
             Toda la plataforma, bajo control.
           </h1>
           <p className="mt-5 max-w-lg text-base leading-7 text-zinc-400">
@@ -78,7 +78,7 @@ export default function PlataformaLoginPage() {
             <BrandLockup size="sm" subtitle="Administración de plataforma" />
           </div>
           <p className="text-sm font-medium text-indigo-700">Panel de plataforma</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-zinc-950">
             Iniciar sesión
           </h2>
           <p className="mt-2 text-sm leading-6 text-zinc-500">

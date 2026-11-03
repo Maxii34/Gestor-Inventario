@@ -65,7 +65,7 @@ export function PlataformaShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav aria-label="Navegación de plataforma" className="flex-1 px-3 py-5">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-[0.18em] text-zinc-500 uppercase">
+          <p className="px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-zinc-500 uppercase">
             Administración
           </p>
           <ul className="flex gap-1 overflow-x-auto lg:flex-col">
@@ -97,10 +97,10 @@ export function PlataformaShell({ children }: { children: ReactNode }) {
 
         <div className="flex items-center justify-between border-t border-white/10 p-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium tracking-wider text-zinc-500 uppercase">
+            <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
               Sesión activa
             </p>
-            <p className="max-w-40 truncate text-xs text-zinc-300">{email}</p>
+            <p className="max-w-40 truncate text-sm text-zinc-300">{email}</p>
           </div>
           <button
             type="button"

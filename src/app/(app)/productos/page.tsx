@@ -389,7 +389,7 @@ export default function ProductosPage() {
         <div className="text-right">
           <p className="font-semibold text-zinc-900">{formatoMoneda(row.precioVenta)}</p>
           {isAdmin && Number(row.precioVenta) > 0 && (
-            <p className="mt-0.5 text-[11px] text-zinc-500">
+            <p className="mt-0.5 text-xs text-zinc-500">
               Margen bruto{' '}
               {(((Number(row.precioVenta) - Number(row.precioCompra)) / Number(row.precioVenta)) * 100).toLocaleString('es-AR', {
                 maximumFractionDigits: 1,

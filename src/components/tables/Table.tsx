@@ -46,7 +46,7 @@ export function Table<T>({
     <div
       className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${className}`}
     >
-      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <table className="w-full min-w-[640px] border-collapse text-left text-sm font-normal">
         {caption && <caption className="px-4 py-2 text-left text-xs text-zinc-500">{caption}</caption>}
         <thead>
           <tr className="border-b border-zinc-200 bg-zinc-50">
@@ -54,7 +54,7 @@ export function Table<T>({
               <th
                 key={column.key}
                 scope="col"
-                className={`whitespace-nowrap px-4 py-3 text-[11px] font-semibold tracking-wider text-zinc-500 uppercase ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
+                className={`whitespace-nowrap px-4 py-3 text-xs font-semibold tracking-wide text-zinc-500 uppercase ${ALIGN[column.align ?? 'left']} ${column.className ?? ''}`}
               >
                 {column.header}
               </th>

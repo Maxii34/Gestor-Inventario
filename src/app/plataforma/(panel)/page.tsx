@@ -138,8 +138,8 @@ export default function PlataformaDashboardPage() {
                 <Card key={item.label} className="border-zinc-200/80 shadow-sm">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-zinc-500">{item.label}</p>
-                      <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">{value}</p>
+                      <p className="truncate text-sm font-medium text-zinc-500">{item.label}</p>
+                      <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 tabular-nums">{value}</p>
                     </div>
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
                       <Icon aria-hidden="true" size={19} />
@@ -161,7 +161,7 @@ export default function PlataformaDashboardPage() {
         <Card className="overflow-hidden border-zinc-200/80 bg-white shadow-sm">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
             <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-indigo-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">
                 <LuActivity aria-hidden="true" size={13} />
                 Centro de operaciones
               </span>

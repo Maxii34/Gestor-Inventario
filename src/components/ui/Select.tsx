@@ -33,7 +33,7 @@ export function Select({
         <select
           id={selectId}
           aria-invalid={error ? true : undefined}
-          className={`w-full appearance-none rounded-lg border bg-white py-2 pl-3 pr-9 text-zinc-900 outline-none transition-colors focus:border-zinc-900 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400 ${error ? 'border-red-500 focus:border-red-600' : 'border-zinc-300'} ${className}`}
+          className={`w-full appearance-none rounded-lg border bg-white py-2 pl-3 pr-9 text-sm font-normal text-zinc-900 outline-none transition-colors focus:border-zinc-900 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400 ${error ? 'border-red-500 focus:border-red-600' : 'border-zinc-300'} ${className}`}
           {...props}
         >
           {placeholder && (
