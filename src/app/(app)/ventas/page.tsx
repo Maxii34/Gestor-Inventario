@@ -3,9 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   LuEye,
+  LuMinus,
+  LuPin,
+  LuPinOff,
   LuPlus,
   LuReceipt,
   LuSave,
+  LuSquare,
   LuX,
 } from 'react-icons/lu';
 import {
@@ -49,6 +53,7 @@ import type { PageMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
 const SELECTOR_PAGE_SIZE = 100;
+const VENTA_MODAL_SIZE_KEY = 'gestor.ventas.modalSize';
 
 const NUEVA_VENTA_MEDIO_PAGO_OPCIONES = [
   { value: 'EFECTIVO', label: 'Efectivo' },
@@ -174,40 +179,6 @@ interface ProductoOpcion {
   stock: number;
 }
 
-const DETALLE_COLUMNAS: TableColumn<ItemNuevaVenta & { onQuitar: () => void }>[] = [
-  { key: 'nombre', header: 'Producto' },
-  {
-    key: 'precioUnitario',
-    header: 'Precio',
-    align: 'right',
-    render: (row) => formatoMoneda(row.precioUnitario),
-  },
-  { key: 'cantidad', header: 'Cantidad', align: 'center' },
-  {
-    key: 'subtotal',
-    header: 'Subtotal',
-    align: 'right',
-    render: (row) => formatoMoneda(row.precioUnitario * row.cantidad),
-  },
-  {
-    key: 'accion',
-    header: 'Acción',
-    align: 'right',
-    render: (row) => (
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={`Quitar ${row.nombre}`}
-        onClick={row.onQuitar}
-      >
-        <LuX aria-hidden="true" size={14} />
-        Quitar
-      </Button>
-    ),
-  },
-];
-
 const DETALLE_VENTA_COLUMNAS: TableColumn<BackendVentaDetalle>[] = [
   {
     key: 'producto',
@@ -261,6 +232,12 @@ export default function VentasPage() {
   const [ventaError, setVentaError] = useState<string | null>(null);
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [isVentaOpen, setIsVentaOpen] = useState(false);
+  const [ventaModalAncho, setVentaModalAncho] = useState(
+    () => typeof window !== 'undefined' && window.localStorage.getItem(VENTA_MODAL_SIZE_KEY) === 'wide',
+  );
+  const [tamanoVentaFijado, setTamanoVentaFijado] = useState(
+    () => typeof window !== 'undefined' && window.localStorage.getItem(VENTA_MODAL_SIZE_KEY) !== null,
+  );
 
   const recaudacion = useRecaudacion();
 
@@ -438,7 +415,27 @@ export default function VentasPage() {
 
   function abrirNuevaVenta(): void {
     reiniciarCamposVenta();
+    const tamanoGuardado = window.localStorage.getItem(VENTA_MODAL_SIZE_KEY);
+    setVentaModalAncho(tamanoGuardado === 'wide');
+    setTamanoVentaFijado(tamanoGuardado !== null);
     setIsVentaOpen(true);
+  }
+
+  function cambiarTamanoVenta(ancho: boolean): void {
+    setVentaModalAncho(ancho);
+    if (tamanoVentaFijado) {
+      window.localStorage.setItem(VENTA_MODAL_SIZE_KEY, ancho ? 'wide' : 'regular');
+    }
+  }
+
+  function alternarTamanoFijado(): void {
+    if (tamanoVentaFijado) {
+      window.localStorage.removeItem(VENTA_MODAL_SIZE_KEY);
+      setTamanoVentaFijado(false);
+      return;
+    }
+    window.localStorage.setItem(VENTA_MODAL_SIZE_KEY, ventaModalAncho ? 'wide' : 'regular');
+    setTamanoVentaFijado(true);
   }
 
   async function registrarVenta(): Promise<void> {
@@ -498,6 +495,90 @@ export default function VentasPage() {
   const textoBusquedaProducto = busquedaProducto.trim().toLocaleLowerCase('es-AR');
   const productosFiltrados = productoOpciones.filter((producto) =>
     producto.label.toLocaleLowerCase('es-AR').includes(textoBusquedaProducto),
+  );
+
+  const campoBusquedaProducto = (
+    <SearchInput
+      id="buscar-producto-venta"
+      label="Buscar producto"
+      placeholder="Escribí el nombre del producto…"
+      value={busquedaProducto}
+      disabled={isLoadingSelectors || !!selectoresError}
+      onChange={(valor) => {
+        setBusquedaProducto(valor);
+        setVentaError(null);
+      }}
+    />
+  );
+
+  const listaProductosDisponibles = !textoBusquedaProducto ? (
+    <p className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-500">
+      Buscá un producto para ver las opciones disponibles.
+    </p>
+  ) : isLoadingSelectors ? (
+    <p className="rounded-lg border border-zinc-200 bg-white px-3 py-4 text-center text-sm text-zinc-500">
+      Cargando productos…
+    </p>
+  ) : !selectoresError && productosFiltrados.length === 0 ? (
+    <p className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-4 text-center text-sm text-zinc-500">
+      No encontramos productos con ese nombre.
+    </p>
+  ) : (
+    <ul
+      aria-label="Productos disponibles para agregar a la venta"
+      className={`grid grid-cols-1 gap-2 overflow-y-auto pr-1 ${
+        ventaModalAncho
+          ? 'min-h-0 flex-1 xl:grid-cols-2'
+          : 'max-h-80 sm:grid-cols-2'
+      }`}
+    >
+      {productosFiltrados.map((opcion) => {
+        const cantidadEnCarrito =
+          items.find((item) => item.productoId === Number(opcion.value))?.cantidad ?? 0;
+        const stockRestante = Math.max(0, opcion.stock - cantidadEnCarrito);
+        const sinStock = stockRestante === 0;
+
+        return (
+          <li key={opcion.value}>
+            <button
+              type="button"
+              disabled={sinStock || isRegistrando || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+              aria-label={
+                sinStock
+                  ? `${opcion.label}, sin unidades disponibles`
+                  : `Agregar una unidad de ${opcion.label} al carrito`
+              }
+              onClick={() => agregarItem(opcion)}
+              className="group flex w-full flex-col gap-1 rounded-xl border border-zinc-200/90 bg-white px-2.5 py-1.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
+            >
+              <span className="block w-full truncate text-[13px] font-medium leading-4 text-zinc-900">
+                  {opcion.label}
+              </span>
+              <span className="flex w-full min-w-0 items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold leading-5 text-zinc-800 tabular-nums">
+                  {formatoMoneda(opcion.precio)}
+                </span>
+                <span
+                  className={`shrink-0 text-[10px] font-medium leading-4 tabular-nums ${
+                    sinStock
+                      ? 'rounded-full border border-zinc-200 bg-zinc-50 px-1.5 text-zinc-400'
+                      : stockRestante <= 5
+                        ? 'rounded-full border border-amber-200 bg-amber-50 px-1.5 text-amber-700'
+                        : 'rounded-full border border-emerald-200 bg-emerald-50 px-1.5 text-emerald-700'
+                  }`}
+                >
+                  {sinStock ? 'Sin stock' : `Stock ${stockRestante}`}
+                </span>
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-700 transition-colors group-hover:border-indigo-200 group-hover:bg-indigo-100">
+                  <LuPlus aria-hidden="true" size={15} />
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 
   return (
@@ -618,7 +699,59 @@ export default function VentasPage() {
         open={isVentaOpen}
         title="Registrar una venta"
         description="Agregá los productos, verificá el total y confirmá el medio de pago."
-        size="xl"
+        size={ventaModalAncho ? 'wide' : 'xl'}
+        headerActions={
+          <div className="mr-1 flex items-center gap-1">
+            <div className="flex items-center rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
+              <button
+                type="button"
+                aria-label="Usar tamaño actual"
+                aria-pressed={!ventaModalAncho}
+                title="Tamaño actual"
+                onClick={() => cambiarTamanoVenta(false)}
+                className={`flex h-7 w-8 items-center justify-center rounded-md transition-colors ${
+                  !ventaModalAncho
+                    ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-zinc-200'
+                    : 'text-zinc-500 hover:bg-white hover:text-zinc-800'
+                }`}
+              >
+                <LuMinus aria-hidden="true" size={16} />
+              </button>
+              <button
+                type="button"
+                aria-label="Expandir ventana"
+                aria-pressed={ventaModalAncho}
+                title="Expandir ventana"
+                onClick={() => cambiarTamanoVenta(true)}
+                className={`flex h-7 w-8 items-center justify-center rounded-md transition-colors ${
+                  ventaModalAncho
+                    ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-zinc-200'
+                    : 'text-zinc-500 hover:bg-white hover:text-zinc-800'
+                }`}
+              >
+                <LuSquare aria-hidden="true" size={14} />
+              </button>
+            </div>
+            <button
+              type="button"
+              aria-label={tamanoVentaFijado ? 'Desbloquear tamaño de ventana' : 'Fijar tamaño de ventana'}
+              aria-pressed={tamanoVentaFijado}
+              title={tamanoVentaFijado ? 'Tamaño fijado' : 'Fijar este tamaño'}
+              onClick={alternarTamanoFijado}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                tamanoVentaFijado
+                  ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                  : 'border-transparent text-zinc-500 hover:border-zinc-200 hover:bg-zinc-50 hover:text-zinc-800'
+              }`}
+            >
+              {tamanoVentaFijado ? (
+                <LuPin aria-hidden="true" size={15} />
+              ) : (
+                <LuPinOff aria-hidden="true" size={15} />
+              )}
+            </button>
+          </div>
+        }
         onClose={() => {
           if (!isRegistrando) limpiarNuevaVenta();
         }}
@@ -640,20 +773,24 @@ export default function VentasPage() {
             >
               <LuSave aria-hidden="true" size={16} />
               {isRegistrando ? 'Registrando…' : 'Confirmar venta'}
-            </Button>
+              </Button>
           </>
         }
       >
         <form
           id="nueva-venta-formulario"
           onSubmit={(event) => {
-            event.preventDefault();
-            void registrarVenta();
+              event.preventDefault();
+              void registrarVenta();
           }}
-          className="flex flex-col gap-5"
+          className={ventaModalAncho ? 'grid grid-cols-1 gap-4 lg:grid-cols-2' : 'flex flex-col gap-5'}
         >
-            {MODULO_CLIENTES && (
-              <FormField label="Cliente" htmlFor="nueva-venta-cliente">
+          {MODULO_CLIENTES && (
+              <FormField
+                label="Cliente"
+                htmlFor="nueva-venta-cliente"
+                className={ventaModalAncho ? 'lg:col-span-2' : ''}
+              >
                 <Select
                   id="nueva-venta-cliente"
                   value={clienteId}
@@ -663,152 +800,138 @@ export default function VentasPage() {
                   options={clienteOpciones}
                 />
               </FormField>
-            )}
+          )}
 
-            <section aria-labelledby="nueva-venta-productos-titulo">
+          {ventaModalAncho && (
+              <div className="lg:col-span-2">{campoBusquedaProducto}</div>
+          )}
+
+          <section
+              aria-labelledby="nueva-venta-productos-titulo"
+              className={`min-w-0 ${
+                ventaModalAncho
+                  ? `flex flex-col lg:col-start-1 ${
+                      MODULO_CLIENTES ? 'lg:row-start-3' : 'lg:row-start-2'
+                    }`
+                  : ''
+              }`}
+          >
               <div className="mb-3">
                 <h3 id="nueva-venta-productos-titulo" className="text-sm font-semibold text-zinc-900">
-                  Productos de la venta
+                  Productos disponibles
                 </h3>
                 <p className="mt-0.5 text-xs text-zinc-500">
-                  Buscá un producto y tocá su opción para agregar una unidad al carrito.
+                  Elegí un producto para agregarlo a la venta.
                 </p>
               </div>
-              <div className="flex flex-col gap-3">
-                <SearchInput
-                  id="buscar-producto-venta"
-                  label="Buscar producto"
-                  placeholder="Escribí el nombre del producto…"
-                  value={busquedaProducto}
-                  disabled={isLoadingSelectors || !!selectoresError}
-                  onChange={(valor) => {
-                    setBusquedaProducto(valor);
-                    setVentaError(null);
-                  }}
-                />
-                {!textoBusquedaProducto ? null : isLoadingSelectors ? (
-                  <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-4 text-center text-sm text-zinc-500">
-                    Cargando productos…
-                  </p>
-                ) : !selectoresError && productosFiltrados.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-4 text-center text-sm text-zinc-500">
-                    No encontramos productos con ese nombre.
-                  </p>
-                ) : (
-                  <ul
-                    aria-label="Productos disponibles para agregar a la venta"
-                    className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2"
+              {!ventaModalAncho && <div className="mb-3">{campoBusquedaProducto}</div>}
+              {listaProductosDisponibles}
+              {selectoresError && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                  <p role="alert" className="text-sm text-red-700">{selectoresError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    disabled={isLoadingSelectors}
+                    onClick={() => void cargarSelectores()}
                   >
-                    {productosFiltrados.map((opcion) => {
-                      const cantidadEnCarrito =
-                        items.find((item) => item.productoId === Number(opcion.value))?.cantidad ?? 0;
-                      const stockRestante = Math.max(0, opcion.stock - cantidadEnCarrito);
-                      const sinStock = stockRestante === 0;
+                    {isLoadingSelectors ? 'Cargando…' : 'Reintentar carga'}
+                  </Button>
+                </div>
+              )}
+          </section>
 
-                      return (
-                        <li key={opcion.value}>
-                          <button
-                            type="button"
-                            disabled={sinStock || isRegistrando || soloLectura}
-                            title={soloLectura ? motivoSoloLectura : undefined}
-                            aria-label={
-                              sinStock
-                                ? `${opcion.label}, sin unidades disponibles`
-                                : `Agregar una unidad de ${opcion.label} al carrito`
-                            }
-                            onClick={() => agregarItem(opcion)}
-                            className="group flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-left transition hover:border-indigo-300 hover:bg-indigo-50/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
-                          >
-                            <span className="min-w-0">
-                              <span className="block truncate text-sm font-medium text-zinc-900">
-                                {opcion.label}
-                              </span>
-                              <span className="mt-1 block text-xs text-zinc-500">
-                                {formatoMoneda(opcion.precio)}
-                              </span>
-                            </span>
-                            <span className="shrink-0 text-right">
-                              <span className="block text-xs font-medium text-zinc-600">
-                                {sinStock ? 'Sin stock' : `${stockRestante} disponibles`}
-                              </span>
-                              {cantidadEnCarrito > 0 && (
-                                <span className="mt-1 block text-xs font-medium text-indigo-700">
-                                  {cantidadEnCarrito} en carrito
-                                </span>
-                              )}
-                              {!sinStock && (
-                                <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 group-hover:text-indigo-800">
-                                  <LuPlus aria-hidden="true" size={12} />
-                                  Agregar
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </section>
-
-            {selectoresError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                <p role="alert" className="text-sm text-red-700">{selectoresError}</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  disabled={isLoadingSelectors}
-                  onClick={() => void cargarSelectores()}
-                >
-                  {isLoadingSelectors ? 'Cargando…' : 'Reintentar carga'}
-                </Button>
-              </div>
-            )}
-
-            <Table
-              columns={DETALLE_COLUMNAS}
-              data={items.map((item) => ({
-                ...item,
-                onQuitar: () => quitarItem(item.productoId),
-              }))}
-              getRowKey={(row) => row.productoId}
-              emptyMessage="Agregá productos para comenzar a armar la venta."
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,0.8fr)]">
-              <FormField label="Medio de pago" htmlFor="nueva-venta-pago" required>
-                <Select
-                  id="nueva-venta-pago"
-                  value={medioPago}
-                  onChange={(event) => setMedioPago(event.target.value as MetodoPagoBackend)}
-                  options={NUEVA_VENTA_MEDIO_PAGO_OPCIONES}
-                />
-              </FormField>
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                <div className="flex justify-between text-sm text-zinc-600">
-                  <span>Productos</span>
-                  <span className="tabular-nums">
-                    {items.reduce((total, item) => total + item.cantidad, 0)}
+          <section
+              aria-labelledby="carrito-venta-titulo"
+              className={`flex min-w-0 flex-col gap-3 ${
+                ventaModalAncho
+                  ? `rounded-2xl border border-zinc-200 bg-linear-to-b from-zinc-50 to-white p-4 shadow-sm ring-1 ring-zinc-950/[0.03] lg:col-start-2 ${
+                      MODULO_CLIENTES ? 'lg:row-start-3' : 'lg:row-start-2'
+                    }`
+                  : ''
+              }`}
+          >
+              <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 id="carrito-venta-titulo" className="text-sm font-semibold text-zinc-900">
+                      Carrito de venta
+                    </h3>
+                    <p className="mt-0.5 text-xs text-zinc-500">Productos y cantidades</p>
+                  </div>
+                  <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-indigo-700 ring-1 ring-indigo-100">
+                    {items.length} {items.length === 1 ? 'producto' : 'productos'}
                   </span>
-                </div>
-                <div className="mt-2 flex justify-between border-t border-zinc-200 pt-2 text-base font-semibold text-zinc-950">
-                  <span>Total estimado</span>
-                  <span className="tabular-nums">{formatoMoneda(totalEstimado)}</span>
-                </div>
-                <p className="mt-2 text-xs text-zinc-500">
-                  El sistema calcula el total definitivo al confirmar.
-                </p>
               </div>
-            </div>
 
-            {ventaError && (
-              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {items.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-5 text-center text-xs text-zinc-500">
+                  El carrito está vacío. Agregá productos desde el listado.
+                </p>
+              ) : (
+                <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                  {items.map((item) => (
+                    <div
+                      key={item.productoId}
+                      className="flex min-h-12 items-center gap-2 rounded-xl border border-zinc-200/90 bg-white px-2.5 py-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-zinc-300"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium leading-4 text-zinc-900">
+                          {item.nombre}
+                        </p>
+                        <p className="mt-0.5 text-[11px] leading-4 text-zinc-500">
+                          {formatoMoneda(item.precioUnitario)} × {item.cantidad}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-xs font-semibold tabular-nums text-zinc-800">
+                        {formatoMoneda(item.precioUnitario * item.cantidad)}
+                      </p>
+                      <button
+                        type="button"
+                        aria-label={`Quitar ${item.nombre}`}
+                        onClick={() => quitarItem(item.productoId)}
+                        className="shrink-0 rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                      >
+                        <LuX aria-hidden="true" size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className={ventaModalAncho ? 'flex flex-col gap-3' : 'grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,0.8fr)]'}>
+                <FormField label="Medio de pago" htmlFor="nueva-venta-pago" required>
+                  <Select
+                    id="nueva-venta-pago"
+                    value={medioPago}
+                    onChange={(event) => setMedioPago(event.target.value as MetodoPagoBackend)}
+                    options={NUEVA_VENTA_MEDIO_PAGO_OPCIONES}
+                  />
+                </FormField>
+                <div className="rounded-xl border border-indigo-100 bg-linear-to-br from-indigo-50/70 via-white to-white p-3.5 shadow-sm">
+                  <div className="flex justify-between text-sm text-zinc-600">
+                    <span>Productos</span>
+                    <span className="tabular-nums">
+                      {items.reduce((total, item) => total + item.cantidad, 0)}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex justify-between border-t border-indigo-100 pt-2 text-base font-semibold text-zinc-950">
+                    <span>Total estimado</span>
+                    <span className="tabular-nums">{formatoMoneda(totalEstimado)}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    El sistema calcula el total definitivo al confirmar.
+                  </p>
+                </div>
+              </div>
+          </section>
+
+          {ventaError && (
+              <p role="alert" className={`rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 ${ventaModalAncho ? 'lg:col-span-2' : ''}`}>
                 {ventaError}
               </p>
-            )}
+          )}
         </form>
       </Modal>
 

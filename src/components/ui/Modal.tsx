@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { LuX } from 'react-icons/lu';
 
-type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'wide';
 
 interface ModalProps {
   open: boolean;
@@ -11,6 +11,7 @@ interface ModalProps {
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
+  headerActions?: ReactNode;
   size?: ModalSize;
   onClose: () => void;
 }
@@ -20,6 +21,7 @@ const SIZES: Record<ModalSize, string> = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  wide: 'max-w-5xl',
 };
 
 export function Modal({
@@ -28,6 +30,7 @@ export function Modal({
   description,
   children,
   footer,
+  headerActions,
   size = 'md',
   onClose,
 }: ModalProps) {
@@ -56,14 +59,17 @@ export function Modal({
             <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
             {description && <p className="mt-0.5 text-sm text-zinc-500">{description}</p>}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar ventana"
-            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-          >
-            <LuX aria-hidden="true" size={18} />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {headerActions}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar ventana"
+              className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+            >
+              <LuX aria-hidden="true" size={18} />
+            </button>
+          </div>
         </div>
         <div className="p-4">{children}</div>
         {footer && (
