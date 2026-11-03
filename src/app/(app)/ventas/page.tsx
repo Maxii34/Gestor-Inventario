@@ -96,10 +96,10 @@ interface FilaVenta extends BackendVenta {
 const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
   { key: 'id', header: 'Venta', render: (row) => `#${row.id}` },
   {
-    key: 'cliente',
-    header: 'Cliente',
-    render: (row) =>
-      row.cliente ? `${row.cliente.nombre} ${row.cliente.apellido}`.trim() : 'Consumidor final',
+    key: 'unidades',
+    header: 'Unidades',
+    align: 'center',
+    render: (row) => row.detalles?.reduce((total, detalle) => total + detalle.cantidad, 0) ?? '—',
   },
   { key: 'fecha', header: 'Fecha', render: (row) => formatoFecha(row.fecha) },
   {
