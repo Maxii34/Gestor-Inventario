@@ -30,9 +30,24 @@ const SuscripcionContext = createContext<SuscripcionContextValue | null>(null);
 
 export function SuscripcionProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  const [suscripcion, setSuscripcion] = useState<SuscripcionEstado | null>(null);
-  const [soloLecturaForzado, setSoloLecturaForzado] = useState(false);
+  const [estadoLocal, setEstadoLocal] = useState<{
+    autenticado: boolean;
+    suscripcion: SuscripcionEstado | null;
+    soloLecturaForzado: boolean;
+  }>(() => ({
+    autenticado: isAuthenticated,
+    suscripcion: null,
+    soloLecturaForzado: false,
+  }));
   const enVuelo = useRef<Promise<void> | null>(null);
+
+  if (estadoLocal.autenticado !== isAuthenticated) {
+    setEstadoLocal({
+      autenticado: isAuthenticated,
+      suscripcion: null,
+      soloLecturaForzado: false,
+    });
+  }
 
   const refrescar = useCallback(async (): Promise<void> => {
     if (!isAuthenticated) return;
@@ -41,8 +56,11 @@ export function SuscripcionProvider({ children }: { children: ReactNode }) {
     const tarea = (async () => {
       try {
         const datos = await obtenerSuscripcion();
-        setSuscripcion(datos);
-        setSoloLecturaForzado(false);
+        setEstadoLocal((actual) => ({
+          ...actual,
+          suscripcion: datos,
+          soloLecturaForzado: false,
+        }));
       } catch {
         // Un fallo de red (o del endpoint) no debe bloquear la pantalla ni
         // borrar el último estado conocido.
@@ -56,7 +74,7 @@ export function SuscripcionProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated]);
 
   const marcarSoloLectura = useCallback((): void => {
-    setSoloLecturaForzado(true);
+    setEstadoLocal((actual) => ({ ...actual, soloLecturaForzado: true }));
   }, []);
 
   useEffect(() => {
@@ -65,8 +83,6 @@ export function SuscripcionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setSuscripcion(null);
-      setSoloLecturaForzado(false);
       return;
     }
 
@@ -92,7 +108,10 @@ export function SuscripcionProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated, refrescar]);
 
-  const soloLectura = Boolean(suscripcion?.soloLectura) || soloLecturaForzado;
+  const soloLectura =
+    isAuthenticated &&
+    (Boolean(estadoLocal.suscripcion?.soloLectura) || estadoLocal.soloLecturaForzado);
+  const suscripcion = isAuthenticated ? estadoLocal.suscripcion : null;
 
   const value = useMemo<SuscripcionContextValue>(
     () => ({

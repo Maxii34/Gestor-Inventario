@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { LuClock, LuLockKeyhole, LuX } from 'react-icons/lu';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 
@@ -69,15 +69,11 @@ function Banner({ tono, icono, mensaje, cerrable, onCerrar }: BannerProps) {
 
 export function SuscripcionBanner() {
   const { suscripcion, soloLectura } = useSuscripcion();
-  const [cerrado, setCerrado] = useState(false);
+  const [firmaCerrada, setFirmaCerrada] = useState<string | null>(null);
 
   const firma = `${suscripcion?.estado ?? 'sin-estado'}:${suscripcion?.plan ?? ''}:${
     suscripcion?.diasRestantes ?? ''
   }:${soloLectura}`;
-
-  useEffect(() => {
-    setCerrado(false);
-  }, [firma]);
 
   if (!suscripcion && !soloLectura) return null;
 
@@ -114,7 +110,7 @@ export function SuscripcionBanner() {
     return null;
   }
 
-  if (cerrado) return null;
+  if (firmaCerrada === firma) return null;
 
   const esPrueba = plan === 'PRUEBA';
   const mensaje =
@@ -128,7 +124,7 @@ export function SuscripcionBanner() {
       icono="reloj"
       mensaje={mensaje}
       cerrable={dias > 3}
-      onCerrar={() => setCerrado(true)}
+      onCerrar={() => setFirmaCerrada(firma)}
     />
   );
 }

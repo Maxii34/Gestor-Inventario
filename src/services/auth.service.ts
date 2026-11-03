@@ -1,5 +1,5 @@
 import { apiRequest, setRefreshHandler, ApiError } from '@/lib/api/client';
-import { guardarAvisoLogin } from '@/lib/auth/notices';
+import { guardarAvisoLogin, limpiarAvisoLogin } from '@/lib/auth/notices';
 import { tokenStorage } from '@/lib/auth/storage';
 import {
   MENSAJE_CUENTA_SUSPENDIDA,
@@ -43,6 +43,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
   tokenStorage.setStoredUser(response.data.usuario);
   tokenStorage.setStoredComercio(response.data.comercio);
+  limpiarAvisoLogin();
   return response.data.usuario;
 }
 
