@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { onSuscripcionVencida } from '@/lib/api/client';
 import { MENSAJE_SOLO_LECTURA } from '@/lib/suscripcion';
 import { obtenerSuscripcion } from '@/services/suscripcion.service';
 import type { SuscripcionEstado } from '@/types/suscripcion';
@@ -57,6 +58,10 @@ export function SuscripcionProvider({ children }: { children: ReactNode }) {
   const marcarSoloLectura = useCallback((): void => {
     setSoloLecturaForzado(true);
   }, []);
+
+  useEffect(() => {
+    return onSuscripcionVencida(marcarSoloLectura);
+  }, [marcarSoloLectura]);
 
   useEffect(() => {
     if (!isAuthenticated) {

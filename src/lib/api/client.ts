@@ -1,5 +1,6 @@
 import type { ApiErrorBody } from '@/types/api';
 import { tokenStorage } from '@/lib/auth/storage';
+import { esMensajeSoloLectura } from '@/lib/suscripcion';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -48,6 +49,29 @@ function runRefresh(): Promise<string | null> {
 
 export function refreshAccessToken(): Promise<string | null> {
   return runRefresh();
+}
+
+type SuscripcionVencidaListener = () => void;
+
+const suscripcionVencidaListeners = new Set<SuscripcionVencidaListener>();
+
+export function onSuscripcionVencida(
+  listener: SuscripcionVencidaListener,
+): () => void {
+  suscripcionVencidaListeners.add(listener);
+  return () => {
+    suscripcionVencidaListeners.delete(listener);
+  };
+}
+
+function emitSuscripcionVencida(): void {
+  suscripcionVencidaListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // Un listener no debe interrumpir el manejo del error original.
+    }
+  });
 }
 
 function getBaseUrl(): string {
@@ -119,6 +143,9 @@ async function requestWithRetry<T>(
   }
   const responseBody = await readBody(response);
   if (!response.ok) {
+    // Un 401 por suspensión también hace un único intento de refresh (el flag
+    // `retried` impide encadenar reintentos). Si el refresh falla, se cierra la
+    // sesión y se propaga este 401 original.
     if (response.status === 401 && auth && !retried && refreshHandler) {
       const newAccessToken = await refreshAccessToken();
       if (newAccessToken) {
@@ -129,11 +156,11 @@ async function requestWithRetry<T>(
       response.status === 403
         ? 'No tenés permisos para realizar esta acción.'
         : `Error HTTP ${response.status}.`;
-    throw new ApiError(
-      response.status,
-      extractMessage(responseBody, fallbackMessage),
-      responseBody,
-    );
+    const message = extractMessage(responseBody, fallbackMessage);
+    if (response.status === 403 && esMensajeSoloLectura(message)) {
+      emitSuscripcionVencida();
+    }
+    throw new ApiError(response.status, message, responseBody);
   }
   return responseBody as T;
 }

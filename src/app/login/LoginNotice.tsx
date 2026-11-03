@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { consumirAvisoLogin, onAvisoLogin } from '@/lib/auth/notices';
 
 const AVISOS: Record<string, string> = {
   registro:
@@ -10,7 +12,15 @@ const AVISOS: Record<string, string> = {
 export function LoginNotice() {
   const searchParams = useSearchParams();
   const aviso = searchParams.get('aviso');
-  const mensaje = aviso ? AVISOS[aviso] : null;
+  const [avisoSesion, setAvisoSesion] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAvisoLogin(setAvisoSesion);
+    setAvisoSesion(consumirAvisoLogin());
+    return unsubscribe;
+  }, []);
+
+  const mensaje = aviso ? AVISOS[aviso] : avisoSesion;
 
   if (!mensaje) return null;
 

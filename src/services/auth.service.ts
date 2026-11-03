@@ -1,5 +1,10 @@
 import { apiRequest, setRefreshHandler, ApiError } from '@/lib/api/client';
+import { guardarAvisoLogin } from '@/lib/auth/notices';
 import { tokenStorage } from '@/lib/auth/storage';
+import {
+  MENSAJE_CUENTA_SUSPENDIDA,
+  esMensajeCuentaSuspendida,
+} from '@/lib/suscripcion';
 import type { ApiSuccess } from '@/types/api';
 import type {
   AuthTokens,
@@ -56,9 +61,14 @@ export async function refreshSession(): Promise<AuthTokens | null> {
     tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
     return tokens;
   } catch (error) {
-    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-      tokenStorage.clear();
-      emitSessionExpired();
+    if (error instanceof ApiError) {
+      if (esMensajeCuentaSuspendida(error.message)) {
+        guardarAvisoLogin(MENSAJE_CUENTA_SUSPENDIDA);
+      }
+      if (error.status === 401 || error.status === 403) {
+        tokenStorage.clear();
+        emitSessionExpired();
+      }
     }
     return null;
   }

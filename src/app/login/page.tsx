@@ -34,6 +34,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [errorEsSuspension, setErrorEsSuspension] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -59,16 +60,18 @@ export default function LoginPage() {
     event.preventDefault();
     if (isSubmitting) return;
     setError(null);
+    setErrorEsSuspension(false);
     setIsSubmitting(true);
     try {
       await login({ slug: slug.trim(), email, password });
       router.replace('/dashboard');
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'No se pudo iniciar sesión. Inténtalo nuevamente.',
-      );
+      if (err instanceof ApiError) {
+        setError(err.message);
+        setErrorEsSuspension(err.status === 403);
+      } else {
+        setError('No se pudo iniciar sesión. Inténtalo nuevamente.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -210,7 +213,14 @@ export default function LoginPage() {
               <LoginNotice />
             </Suspense>
             {error && (
-              <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              <p
+                role="alert"
+                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                  errorEsSuspension
+                    ? 'border-amber-200 bg-amber-50 text-amber-900'
+                    : 'border-red-200 bg-red-50 text-red-700'
+                }`}
+              >
                 {error}
               </p>
             )}
