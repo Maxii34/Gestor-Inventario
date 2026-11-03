@@ -199,6 +199,13 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
+            <a
+              href="#recuperar-clave"
+              onClick={(event) => event.preventDefault()}
+              className="-mt-2 self-end text-xs font-medium text-indigo-700 underline-offset-4 transition hover:text-indigo-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
             <Suspense fallback={null}>
               <LoginNotice />
             </Suspense>
@@ -235,6 +242,22 @@ export default function LoginPage() {
           <p className="mt-8 text-center text-xs text-zinc-400">
             © {new Date().getFullYear()} StockNext · v0.1.0
           </p>
+          <nav aria-label="Información legal" className="mt-3 flex justify-center gap-4">
+            <a
+              href="#politica-de-privacidad"
+              onClick={(event) => event.preventDefault()}
+              className="text-xs text-zinc-500 underline-offset-4 transition hover:text-zinc-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Política de privacidad
+            </a>
+            <a
+              href="#terminos-y-condiciones"
+              onClick={(event) => event.preventDefault()}
+              className="text-xs text-zinc-500 underline-offset-4 transition hover:text-zinc-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Términos y condiciones
+            </a>
+          </nav>
           </motion.div>
         </div>
       </main>
