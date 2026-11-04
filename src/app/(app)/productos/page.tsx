@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LuFilter,
   LuPackage,
@@ -73,6 +74,7 @@ function estadoStock(producto: BackendProducto): {
 interface FormularioProducto {
   nombre: string;
   descripcion: string;
+  codigoBarras: string;
   precioCompra: string;
   precioVenta: string;
   stock: string;
@@ -83,6 +85,7 @@ interface FormularioProducto {
 const FORMULARIO_VACIO: FormularioProducto = {
   nombre: '',
   descripcion: '',
+  codigoBarras: '',
   precioCompra: '',
   precioVenta: '',
   stock: '',
@@ -117,6 +120,7 @@ function validarFormulario(form: FormularioProducto): string | null {
 }
 
 export default function ProductosPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
@@ -134,7 +138,9 @@ export default function ProductosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [codigoBarrasError, setCodigoBarrasError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const codigoBarrasParamHandled = useRef(false);
 
   const [deleteTarget, setDeleteTarget] = useState<BackendProducto | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -224,17 +230,37 @@ export default function ProductosPage() {
     void cargarInicial();
   }, [cargarCategorias]);
 
+  useEffect(() => {
+    if (!isAdmin || codigoBarrasParamHandled.current) return;
+    const parametros = new URLSearchParams(window.location.search);
+    const codigoBarras = parametros.get('codigoBarras');
+    if (codigoBarras === null) return;
+
+    codigoBarrasParamHandled.current = true;
+    startTransition(() => {
+      setEditingId(null);
+      setForm({ ...FORMULARIO_VACIO, codigoBarras });
+      setFormError(null);
+      setCodigoBarrasError(null);
+      setIsFormOpen(true);
+    });
+    router.replace('/productos', { scroll: false });
+  }, [isAdmin, router]);
+
   function setCampo(campo: keyof FormularioProducto, valor: string): void {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
+    if (campo === 'codigoBarras') setCodigoBarrasError(null);
   }
 
   function comenzarEdicion(producto: BackendProducto): void {
     setEditingId(producto.id);
     setFormError(null);
+    setCodigoBarrasError(null);
     setIsFormOpen(true);
     setForm({
       nombre: producto.nombre,
       descripcion: producto.descripcion ?? '',
+      codigoBarras: producto.codigoBarras ?? '',
       precioCompra: String(producto.precioCompra),
       precioVenta: String(producto.precioVenta),
       stock: String(producto.stock),
@@ -248,6 +274,7 @@ export default function ProductosPage() {
     setIsFormOpen(false);
     setForm(FORMULARIO_VACIO);
     setFormError(null);
+    setCodigoBarrasError(null);
   }
 
   function nuevoProducto(): void {
@@ -258,12 +285,25 @@ export default function ProductosPage() {
 
   async function guardarProducto(): Promise<void> {
     if (isSubmitting) return;
+    const codigoBarras = form.codigoBarras.trim();
+    if (
+      codigoBarras &&
+      (codigoBarras.length > 64 || !/^[\x21-\x7E]+$/.test(codigoBarras))
+    ) {
+      setCodigoBarrasError(
+        codigoBarras.length > 64
+          ? 'El código de barras no puede superar los 64 caracteres.'
+          : 'El código de barras solo puede contener caracteres imprimibles sin espacios.',
+      );
+      return;
+    }
     const validacion = validarFormulario(form);
     if (validacion) {
       setFormError(validacion);
       return;
     }
     setFormError(null);
+    setCodigoBarrasError(null);
     setIsSubmitting(true);
     try {
       const input = {
@@ -277,9 +317,15 @@ export default function ProductosPage() {
       };
       const esEdicion = editingId !== null;
       if (!esEdicion) {
-        await crearProducto(input);
+        await crearProducto({
+          ...input,
+          ...(codigoBarras ? { codigoBarras } : {}),
+        });
       } else {
-        await actualizarProducto(editingId, input);
+        await actualizarProducto(editingId, {
+          ...input,
+          codigoBarras: codigoBarras || null,
+        });
       }
       notifySuccess(
         esEdicion ? 'Producto actualizado' : 'Producto agregado',
@@ -292,11 +338,19 @@ export default function ProductosPage() {
         await cargarPagina(page);
       }
     } catch (err) {
-      setFormError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos guardar el producto. Inténtalo nuevamente.',
-      );
+      if (
+        err instanceof ApiError &&
+        (err.status === 409 ||
+          (err.status === 400 && /c[oó]digo de barras/i.test(err.message)))
+      ) {
+        setCodigoBarrasError(err.message);
+      } else {
+        setFormError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos guardar el producto. Inténtalo nuevamente.',
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +394,13 @@ export default function ProductosPage() {
   const productosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
     return todosProductos.filter((producto) => {
-      if (texto && !producto.nombre.toLowerCase().includes(texto)) return false;
+      if (
+        texto &&
+        !producto.nombre.toLowerCase().includes(texto) &&
+        !producto.codigoBarras?.toLowerCase().includes(texto)
+      ) {
+        return false;
+      }
       if (filtroCategoria !== 'todas' && producto.categoriaId !== Number(filtroCategoria))
         return false;
       if (filtroEstado !== 'todos' && estadoStock(producto).etiqueta !== ESTADO_POR_FILTRO[filtroEstado])
@@ -364,6 +424,11 @@ export default function ProductosPage() {
       render: (row) => (
         <div className="min-w-40">
           <p className="font-semibold text-zinc-900">{row.nombre}</p>
+          {row.codigoBarras && (
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Código de barras: {row.codigoBarras}
+            </p>
+          )}
           {row.descripcion && (
             <p className="mt-0.5 max-w-64 truncate text-xs text-zinc-500" title={row.descripcion}>
               {row.descripcion}
@@ -745,6 +810,28 @@ export default function ProductosPage() {
                     placeholder="Descripción breve del producto (opcional)"
                     value={form.descripcion}
                     onChange={(event) => setCampo('descripcion', event.target.value)}
+                  />
+                </FormField>
+              </div>
+              <div className="sm:col-span-2">
+                <FormField
+                  label="Código de barras"
+                  htmlFor="producto-codigo-barras"
+                  error={codigoBarrasError ?? undefined}
+                  hint="Escaneá el código con el lector o escribilo"
+                >
+                  <Input
+                    id="producto-codigo-barras"
+                    placeholder="Opcional"
+                    value={form.codigoBarras}
+                    aria-invalid={Boolean(codigoBarrasError)}
+                    onChange={(event) => setCampo('codigoBarras', event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter') return;
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setCampo('codigoBarras', event.currentTarget.value.trim());
+                    }}
                   />
                 </FormField>
               </div>

@@ -9,6 +9,7 @@ export interface BackendProducto {
   id: number;
   nombre: string;
   descripcion?: string | null;
+  codigoBarras: string | null;
   precioCompra: number | string;
   precioVenta: number | string;
   stock: number;
@@ -21,6 +22,7 @@ export interface BackendProducto {
 export interface ProductoInput {
   nombre: string;
   descripcion?: string;
+  codigoBarras?: string;
   precioCompra: number;
   precioVenta: number;
   stock: number;
@@ -48,6 +50,16 @@ export async function obtenerProducto(id: number): Promise<BackendProducto> {
   return response.data;
 }
 
+export async function obtenerProductoPorCodigoBarras(
+  codigo: string,
+): Promise<BackendProducto> {
+  const response = await apiRequest<ApiSuccess<BackendProducto>>(
+    `/productos/codigo/${encodeURIComponent(codigo)}`,
+    { auth: true },
+  );
+  return response.data;
+}
+
 export async function crearProducto(input: ProductoInput): Promise<BackendProducto> {
   const response = await apiRequest<ApiSuccess<BackendProducto>>('/productos', {
     method: 'POST',
@@ -59,7 +71,7 @@ export async function crearProducto(input: ProductoInput): Promise<BackendProduc
 
 export async function actualizarProducto(
   id: number,
-  input: Partial<ProductoInput>,
+  input: Partial<ProductoInput> & { codigoBarras?: string | null },
 ): Promise<BackendProducto> {
   const response = await apiRequest<ApiSuccess<BackendProducto>>(`/productos/${id}`, {
     method: 'PUT',
