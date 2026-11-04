@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LuEye,
   LuMinus,
@@ -38,7 +39,10 @@ import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
 import { notifySuccess } from '@/lib/notifications/toast';
 import { listarClientes } from '@/services/clientes.service';
-import { listarProductos } from '@/services/productos.service';
+import {
+  listarProductos,
+  obtenerProductoPorCodigoBarras,
+} from '@/services/productos.service';
 import {
   anularVenta,
   crearVenta,
@@ -179,6 +183,12 @@ interface ProductoOpcion {
   stock: number;
 }
 
+interface FeedbackEscaneo {
+  mensaje: string;
+  tono: 'success' | 'error';
+  codigoNoRegistrado?: string;
+}
+
 const DETALLE_VENTA_COLUMNAS: TableColumn<BackendVentaDetalle>[] = [
   {
     key: 'producto',
@@ -201,6 +211,7 @@ const DETALLE_VENTA_COLUMNAS: TableColumn<BackendVentaDetalle>[] = [
 ];
 
 export default function VentasPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const isAdmin = user?.rol === 'ADMIN';
@@ -228,8 +239,13 @@ export default function VentasPage() {
   const [isLoadingSelectors, setIsLoadingSelectors] = useState(true);
   const [selectoresError, setSelectoresError] = useState<string | null>(null);
   const [items, setItems] = useState<ItemNuevaVenta[]>([]);
+  const itemsRef = useRef<ItemNuevaVenta[]>([]);
   const [medioPago, setMedioPago] = useState<MetodoPagoBackend>('EFECTIVO');
   const [ventaError, setVentaError] = useState<string | null>(null);
+  const [codigoEscaneo, setCodigoEscaneo] = useState('');
+  const [feedbackEscaneo, setFeedbackEscaneo] = useState<FeedbackEscaneo | null>(null);
+  const scanQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const scanSessionRef = useRef(0);
   const [isRegistrando, setIsRegistrando] = useState(false);
   const [isVentaOpen, setIsVentaOpen] = useState(false);
   const [ventaModalAncho, setVentaModalAncho] = useState(
@@ -310,6 +326,21 @@ export default function VentasPage() {
   }, [cargarPagina, cargarSelectores]);
 
   useEffect(() => {
+    if (!isVentaOpen || detalleId !== null || anularTarget !== null) return;
+    const frame = requestAnimationFrame(() => {
+      const input = document.getElementById('venta-escaner');
+      if (input instanceof HTMLInputElement) input.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isVentaOpen, detalleId, anularTarget]);
+
+  useEffect(() => {
+    if (!feedbackEscaneo) return;
+    const timeout = window.setTimeout(() => setFeedbackEscaneo(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [feedbackEscaneo]);
+
+  useEffect(() => {
     if (page === 1) return;
     async function cargarInicial(): Promise<void> {
       await cargarPagina(page);
@@ -366,25 +397,49 @@ export default function VentasPage() {
     }
   }
 
-  function agregarItem(opcion: ProductoOpcion): void {
+  function reemplazarItems(nuevosItems: ItemNuevaVenta[]): void {
+    itemsRef.current = nuevosItems;
+    setItems(nuevosItems);
+  }
+
+  function enfocarEscaner(): void {
+    if (!isVentaOpen) return;
+    requestAnimationFrame(() => {
+      const input = document.getElementById('venta-escaner');
+      if (input instanceof HTMLInputElement) input.focus();
+    });
+  }
+
+  function agregarItem(opcion: ProductoOpcion, porEscaneo = false): boolean {
     setVentaError(null);
-    const existente = items.find((item) => item.productoId === Number(opcion.value));
+    const itemsActuales = itemsRef.current;
+    const existente = itemsActuales.find((item) => item.productoId === Number(opcion.value));
     const cantidadTotal = (existente?.cantidad ?? 0) + 1;
     if (cantidadTotal > opcion.stock) {
-      setVentaError(`Stock disponible de "${opcion.label}": ${opcion.stock}.`);
-      return;
+      if (porEscaneo) {
+        setFeedbackEscaneo({ mensaje: 'Stock insuficiente', tono: 'error' });
+      } else {
+        setVentaError(`Stock disponible de "${opcion.label}": ${opcion.stock}.`);
+      }
+      return false;
     }
     if (existente) {
-      setItems(
-        items.map((item) =>
+      reemplazarItems(
+        itemsActuales.map((item) =>
           item.productoId === existente.productoId
-            ? { ...item, cantidad: cantidadTotal }
+            ? {
+                ...item,
+                nombre: opcion.label,
+                precioUnitario: opcion.precio,
+                stock: opcion.stock,
+                cantidad: cantidadTotal,
+              }
             : item,
         ),
       );
     } else {
-      setItems([
-        ...items,
+      reemplazarItems([
+        ...itemsActuales,
         {
           productoId: Number(opcion.value),
           nombre: opcion.label,
@@ -394,31 +449,101 @@ export default function VentasPage() {
         },
       ]);
     }
+    if (porEscaneo) {
+      setFeedbackEscaneo({ mensaje: `${opcion.label} agregado al carrito.`, tono: 'success' });
+    }
+    return true;
   }
 
   function quitarItem(productoIdQuitar: number): void {
-    setItems(items.filter((item) => item.productoId !== productoIdQuitar));
+    reemplazarItems(itemsRef.current.filter((item) => item.productoId !== productoIdQuitar));
+    enfocarEscaner();
   }
 
   function reiniciarCamposVenta(): void {
     setClienteId('');
     setBusquedaProducto('');
-    setItems([]);
+    reemplazarItems([]);
     setMedioPago('EFECTIVO');
     setVentaError(null);
+    setCodigoEscaneo('');
+    setFeedbackEscaneo(null);
   }
 
   function limpiarNuevaVenta(): void {
+    scanSessionRef.current += 1;
     reiniciarCamposVenta();
     setIsVentaOpen(false);
   }
 
   function abrirNuevaVenta(): void {
+    scanSessionRef.current += 1;
     reiniciarCamposVenta();
     const tamanoGuardado = window.localStorage.getItem(VENTA_MODAL_SIZE_KEY);
     setVentaModalAncho(tamanoGuardado === 'wide');
     setTamanoVentaFijado(tamanoGuardado !== null);
     setIsVentaOpen(true);
+  }
+
+  async function procesarCodigoEscaneado(codigo: string, sesion: number): Promise<void> {
+    try {
+      const producto = await obtenerProductoPorCodigoBarras(codigo);
+      if (scanSessionRef.current !== sesion) return;
+      if (soloLectura) {
+        setFeedbackEscaneo({
+          mensaje: `${producto.nombre} encontrado. La venta está deshabilitada por la suscripción.`,
+          tono: 'success',
+        });
+        return;
+      }
+      agregarItem(
+        {
+          value: String(producto.id),
+          label: producto.nombre,
+          precio: toNumber(producto.precioVenta),
+          stock: producto.stock,
+        },
+        true,
+      );
+    } catch (err) {
+      if (scanSessionRef.current !== sesion) return;
+      if (err instanceof ApiError && err.status === 404) {
+        setFeedbackEscaneo({
+          mensaje: `Código no registrado: ${codigo}`,
+          tono: 'error',
+          ...(isAdmin ? { codigoNoRegistrado: codigo } : {}),
+        });
+      } else {
+        setFeedbackEscaneo({
+          mensaje:
+            err instanceof ApiError
+              ? err.message
+              : 'No pudimos consultar el código de barras.',
+          tono: 'error',
+        });
+      }
+    } finally {
+      if (scanSessionRef.current === sesion) enfocarEscaner();
+    }
+  }
+
+  function encolarCodigoEscaneado(codigoSinRecortar: string): void {
+    const codigo = codigoSinRecortar.trim();
+    if (!codigo) return;
+    const sesion = scanSessionRef.current;
+    setFeedbackEscaneo(null);
+    scanQueueRef.current = scanQueueRef.current
+      .then(() => procesarCodigoEscaneado(codigo, sesion))
+      .catch(() => {
+        setFeedbackEscaneo({
+          mensaje: 'No pudimos consultar el código de barras.',
+          tono: 'error',
+        });
+      });
+  }
+
+  function crearProductoConCodigo(codigo: string): void {
+    router.push(`/productos?codigoBarras=${encodeURIComponent(codigo)}`);
   }
 
   function cambiarTamanoVenta(ancho: boolean): void {
@@ -549,7 +674,10 @@ export default function VentasPage() {
                   ? `${opcion.label}, sin unidades disponibles`
                   : `Agregar una unidad de ${opcion.label} al carrito`
               }
-              onClick={() => agregarItem(opcion)}
+              onClick={() => {
+                agregarItem(opcion);
+                enfocarEscaner();
+              }}
               className="group flex w-full flex-col gap-1 rounded-xl border border-zinc-200/90 bg-white px-2.5 py-1.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60"
             >
               <span className="block w-full truncate text-[13px] font-medium leading-4 text-zinc-900">
@@ -853,6 +981,50 @@ export default function VentasPage() {
                   : ''
               }`}
           >
+              <FormField label="Escáner de código de barras" htmlFor="venta-escaner">
+                <Input
+                  id="venta-escaner"
+                  placeholder="Escaneá un producto o escribí el código"
+                  autoComplete="off"
+                  autoFocus
+                  disabled={isRegistrando}
+                  value={codigoEscaneo}
+                  onChange={(event) => setCodigoEscaneo(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const codigo = event.currentTarget.value;
+                    setCodigoEscaneo('');
+                    encolarCodigoEscaneado(codigo);
+                    enfocarEscaner();
+                  }}
+                />
+              </FormField>
+              {feedbackEscaneo && (
+                <div
+                  role={feedbackEscaneo.tono === 'error' ? 'alert' : 'status'}
+                  className={`rounded-lg border px-3 py-2 text-sm ${
+                    feedbackEscaneo.tono === 'error'
+                      ? 'border-red-200 bg-red-50 text-red-700'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  }`}
+                >
+                  <p>{feedbackEscaneo.mensaje}</p>
+                  {feedbackEscaneo.codigoNoRegistrado && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const codigo = feedbackEscaneo.codigoNoRegistrado;
+                        if (codigo) crearProductoConCodigo(codigo);
+                      }}
+                      className="mt-1 font-semibold underline underline-offset-2"
+                    >
+                      Crear producto con este código
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 id="carrito-venta-titulo" className="text-sm font-semibold text-zinc-900">
