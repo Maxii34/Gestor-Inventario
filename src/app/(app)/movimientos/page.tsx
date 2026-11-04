@@ -421,6 +421,13 @@ export default function MovimientosPage() {
   const salidasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'SALIDA').length;
   const ajustesEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'AJUSTE').length;
   const productosSinStock = productosOpciones.filter((producto) => producto.stock <= 0);
+  const productoSeleccionado = productosOpciones.find((producto) => producto.value === productoId);
+  const opcionesProducto = productosOpciones.map((producto) => ({
+    value: producto.value,
+    label: `${producto.label} · Stock ${producto.stock}${
+      producto.stock <= producto.stockMinimo ? ' · STOCK BAJO' : ''
+    }`,
+  }));
 
   return (
     <>
@@ -727,7 +734,12 @@ export default function MovimientosPage() {
           }}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
         >
-            <FormField label="Producto" htmlFor="movimiento-producto" required>
+            <FormField
+              label="Producto"
+              htmlFor="movimiento-producto"
+              required
+              hint="Las opciones con “STOCK BAJO” están en el mínimo o por debajo."
+            >
               <Select
                 id="movimiento-producto"
                 value={productoId}
@@ -735,9 +747,28 @@ export default function MovimientosPage() {
                 required
                 disabled={isLoadingProducts}
                 placeholder={isLoadingProducts ? 'Cargando productos…' : 'Seleccionar producto'}
-                options={productosOpciones}
+                options={opcionesProducto}
               />
             </FormField>
+            {productoSeleccionado && (
+              <div
+                role="status"
+                className={`-mt-2 rounded-lg border px-3 py-2 text-xs sm:col-span-2 ${
+                  productoSeleccionado.stock <= productoSeleccionado.stockMinimo
+                    ? 'border-amber-200 bg-amber-50 text-amber-900'
+                    : 'border-zinc-200 bg-zinc-50 text-zinc-600'
+                }`}
+              >
+                <span className="font-semibold">{productoSeleccionado.label}</span>
+                <span className="mx-1.5" aria-hidden="true">·</span>
+                Stock actual: <strong>{productoSeleccionado.stock}</strong>
+                <span className="mx-1.5" aria-hidden="true">·</span>
+                Mínimo: <strong>{productoSeleccionado.stockMinimo}</strong>
+                {productoSeleccionado.stock <= productoSeleccionado.stockMinimo && (
+                  <span className="ml-2 font-semibold">Stock bajo</span>
+                )}
+              </div>
+            )}
             <FormField label="Tipo de movimiento" htmlFor="movimiento-tipo">
               <Select
                 id="movimiento-tipo"
