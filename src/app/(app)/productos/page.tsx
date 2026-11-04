@@ -61,6 +61,29 @@ function formatoMoneda(valor: number | string): string {
   return `$${seguro.toLocaleString('es-AR')}`;
 }
 
+function formatoCosto(valor: number | string, maxDecimales = 4): string {
+  const numero = typeof valor === 'string' ? Number(valor) : valor;
+  const seguro = Number.isFinite(numero) ? numero : 0;
+  return `$${seguro.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: maxDecimales,
+  })}`;
+}
+
+function unidadesDePaquete(producto: BackendProducto): number {
+  const unidades = Number(producto.unidadesPorPaquete ?? 1);
+  return Number.isInteger(unidades) && unidades > 0 ? unidades : 1;
+}
+
+function calcularCostoUnitario(form: FormularioProducto): number {
+  if (!form.compraPorPaquete) return Number(form.precioCompra);
+  const precioPaquete = Number(form.precioCompraPaquete);
+  const unidades = Number(form.unidadesPorPaquete);
+  if (!Number.isFinite(precioPaquete) || !Number.isInteger(unidades) || unidades < 1)
+    return Number.NaN;
+  return precioPaquete / unidades;
+}
+
 function estadoStock(producto: BackendProducto): {
   etiqueta: EstadoStockEtiqueta;
   tono: 'success' | 'warning' | 'danger';
@@ -75,9 +98,14 @@ interface FormularioProducto {
   nombre: string;
   descripcion: string;
   codigoBarras: string;
+  compraPorPaquete: boolean;
   precioCompra: string;
+  precioCompraPaquete: string;
+  unidadesPorPaquete: string;
   precioVenta: string;
+  margenDeseado: string;
   stock: string;
+  stockUnidad: 'unidad' | 'caja';
   stockMinimo: string;
   categoriaId: string;
 }
@@ -86,9 +114,14 @@ const FORMULARIO_VACIO: FormularioProducto = {
   nombre: '',
   descripcion: '',
   codigoBarras: '',
+  compraPorPaquete: false,
   precioCompra: '',
+  precioCompraPaquete: '',
+  unidadesPorPaquete: '',
   precioVenta: '',
+  margenDeseado: '',
   stock: '',
+  stockUnidad: 'unidad',
   stockMinimo: '',
   categoriaId: '',
 };
@@ -102,16 +135,26 @@ const ESTADO_POR_FILTRO: Record<string, EstadoStockEtiqueta> = {
 function validarFormulario(form: FormularioProducto): string | null {
   if (!form.nombre.trim()) return 'El nombre es obligatorio.';
   if (!form.categoriaId) return 'La categoría es obligatoria.';
-  const precioCompra = Number(form.precioCompra);
   const precioVenta = Number(form.precioVenta);
   const stock = Number(form.stock);
   const stockMinimo = Number(form.stockMinimo);
-  if (!Number.isFinite(precioCompra) || precioCompra <= 0)
-    return 'El precio de compra debe ser mayor a 0.';
+  if (form.compraPorPaquete) {
+    const precioPaquete = Number(form.precioCompraPaquete);
+    const unidades = Number(form.unidadesPorPaquete);
+    if (!Number.isFinite(precioPaquete) || precioPaquete <= 0)
+      return 'El precio de la caja debe ser mayor a 0.';
+    if (!Number.isInteger(unidades) || unidades < 1)
+      return 'Las unidades por caja deben ser un entero mayor o igual a 1.';
+  } else {
+    const precioCompra = Number(form.precioCompra);
+    if (!Number.isFinite(precioCompra) || precioCompra <= 0)
+      return 'El costo por unidad debe ser mayor a 0.';
+  }
+  const costoUnitario = calcularCostoUnitario(form);
   if (!Number.isFinite(precioVenta) || precioVenta <= 0)
     return 'El precio de venta debe ser mayor a 0.';
-  if (precioVenta <= precioCompra)
-    return 'El precio de venta debe ser mayor al de compra.';
+  if (!Number.isFinite(costoUnitario) || precioVenta <= costoUnitario)
+    return 'El precio de venta debe ser mayor al costo por unidad.';
   if (!Number.isInteger(stock) || stock < 0)
     return 'El stock debe ser un número entero mayor o igual a 0.';
   if (!Number.isInteger(stockMinimo) || stockMinimo < 0)
@@ -247,12 +290,19 @@ export default function ProductosPage() {
     router.replace('/productos', { scroll: false });
   }, [isAdmin, router]);
 
-  function setCampo(campo: keyof FormularioProducto, valor: string): void {
+  function setCampo<K extends keyof FormularioProducto>(
+    campo: K,
+    valor: FormularioProducto[K],
+  ): void {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
     if (campo === 'codigoBarras') setCodigoBarrasError(null);
   }
 
   function comenzarEdicion(producto: BackendProducto): void {
+    const tienePaquete =
+      producto.precioCompraPaquete !== null &&
+      producto.precioCompraPaquete !== undefined &&
+      unidadesDePaquete(producto) > 1;
     setEditingId(producto.id);
     setFormError(null);
     setCodigoBarrasError(null);
@@ -261,9 +311,18 @@ export default function ProductosPage() {
       nombre: producto.nombre,
       descripcion: producto.descripcion ?? '',
       codigoBarras: producto.codigoBarras ?? '',
+      compraPorPaquete: tienePaquete,
       precioCompra: String(producto.precioCompra),
+      precioCompraPaquete: tienePaquete
+        ? String(producto.precioCompraPaquete)
+        : '',
+      unidadesPorPaquete: tienePaquete
+        ? String(unidadesDePaquete(producto))
+        : '',
       precioVenta: String(producto.precioVenta),
+      margenDeseado: '',
       stock: String(producto.stock),
+      stockUnidad: 'unidad',
       stockMinimo: String(producto.stockMinimo),
       categoriaId: String(producto.categoriaId),
     });
@@ -306,16 +365,33 @@ export default function ProductosPage() {
     setCodigoBarrasError(null);
     setIsSubmitting(true);
     try {
+      const esEdicion = editingId !== null;
+      const unidadesPaquete = form.compraPorPaquete
+        ? Number(form.unidadesPorPaquete)
+        : 1;
+      const stockIngresado = Number(form.stock);
+      const stock =
+        !esEdicion && form.stockUnidad === 'caja'
+          ? stockIngresado * unidadesPaquete
+          : stockIngresado;
+      const costos = form.compraPorPaquete
+        ? {
+            precioCompraPaquete: Number(form.precioCompraPaquete),
+            unidadesPorPaquete: unidadesPaquete,
+          }
+        : {
+            precioCompra: Number(form.precioCompra),
+            ...(esEdicion ? { unidadesPorPaquete: 1 } : {}),
+          };
       const input = {
         nombre: form.nombre.trim(),
         ...(form.descripcion.trim() ? { descripcion: form.descripcion.trim() } : {}),
-        precioCompra: Number(form.precioCompra),
+        ...costos,
         precioVenta: Number(form.precioVenta),
-        stock: Number(form.stock),
+        stock,
         stockMinimo: Number(form.stockMinimo),
         categoriaId: Number(form.categoriaId),
       };
-      const esEdicion = editingId !== null;
       if (!esEdicion) {
         await crearProducto({
           ...input,
@@ -417,6 +493,43 @@ export default function ProductosPage() {
     ? productosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
     : productos;
 
+  const costoUnitarioFormulario = calcularCostoUnitario(form);
+  const precioVentaNumero = Number(form.precioVenta);
+  const margenMonto =
+    Number.isFinite(costoUnitarioFormulario) && Number.isFinite(precioVentaNumero)
+      ? precioVentaNumero - costoUnitarioFormulario
+      : Number.NaN;
+  const margenPorcentaje =
+    Number.isFinite(margenMonto) &&
+    Number.isFinite(costoUnitarioFormulario) &&
+    costoUnitarioFormulario > 0
+      ? (margenMonto / costoUnitarioFormulario) * 100
+      : Number.NaN;
+  const unidadesPaqueteFormulario = form.compraPorPaquete
+    ? Number(form.unidadesPorPaquete)
+    : 1;
+  const mostrarSelectorStock =
+    editingId === null &&
+    Number.isInteger(unidadesPaqueteFormulario) &&
+    unidadesPaqueteFormulario > 1;
+  const stockEnUnidadesFormulario =
+    Number(form.stock) *
+    (mostrarSelectorStock && form.stockUnidad === 'caja'
+      ? unidadesPaqueteFormulario
+      : 1);
+
+  function aplicarMargenDeseado(valor: string): void {
+    setCampo('margenDeseado', valor);
+    const margen = Number(valor);
+    if (
+      !Number.isFinite(margen) ||
+      !Number.isFinite(costoUnitarioFormulario) ||
+      costoUnitarioFormulario <= 0
+    )
+      return;
+    setCampo('precioVenta', (costoUnitarioFormulario * (1 + margen / 100)).toFixed(2));
+  }
+
   const columnas: TableColumn<BackendProducto>[] = [
     {
       key: 'nombre',
@@ -445,6 +558,29 @@ export default function ProductosPage() {
           {row.categoria?.nombre ?? 'Sin categoría'}
         </span>
       ),
+    },
+    {
+      key: 'costo',
+      header: 'Costo unitario',
+      align: 'right',
+      render: (row) => {
+        const tienePaquete =
+          row.precioCompraPaquete !== null &&
+          row.precioCompraPaquete !== undefined;
+        return (
+          <div className="text-right">
+            <p className="font-medium text-zinc-700 tabular-nums">
+              {formatoCosto(row.precioCompra, 2)}
+            </p>
+            {tienePaquete && (
+              <p className="mt-0.5 text-xs text-zinc-500">
+                caja de {unidadesDePaquete(row)} unidades a{' '}
+                {formatoCosto(row.precioCompraPaquete ?? 0, 2)}
+              </p>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'precioVenta',
@@ -835,18 +971,105 @@ export default function ProductosPage() {
                   />
                 </FormField>
               </div>
-              <FormField label="Precio compra" htmlFor="producto-precio-compra">
-                <Input
-                  id="producto-precio-compra"
-                  type="number"
-                  min={0.01}
-                  step="0.01"
-                  required
-                  placeholder="0"
-                  value={form.precioCompra}
-                  onChange={(event) => setCampo('precioCompra', event.target.value)}
-                />
-              </FormField>
+              <div className="sm:col-span-2 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-800">
+                      Lo compro por caja o pack
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      Cargá el precio de la caja y el sistema calcula el costo por unidad.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.compraPorPaquete}
+                    aria-label="Lo compro por caja o pack"
+                    onClick={() => {
+                      setForm((anterior) => ({
+                        ...anterior,
+                        compraPorPaquete: !anterior.compraPorPaquete,
+                        stockUnidad: 'unidad',
+                      }));
+                      setFormError(null);
+                    }}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                      form.compraPorPaquete ? 'bg-zinc-900' : 'bg-zinc-300'
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        form.compraPorPaquete ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              {form.compraPorPaquete ? (
+                <>
+                  <FormField label="Precio de la caja" htmlFor="producto-precio-paquete">
+                    <Input
+                      id="producto-precio-paquete"
+                      type="number"
+                      min={0.01}
+                      step="0.01"
+                      required
+                      placeholder="0"
+                      value={form.precioCompraPaquete}
+                      onChange={(event) =>
+                        setCampo('precioCompraPaquete', event.target.value)
+                      }
+                    />
+                  </FormField>
+                  <FormField
+                    label="Unidades por caja"
+                    htmlFor="producto-unidades-paquete"
+                  >
+                    <Input
+                      id="producto-unidades-paquete"
+                      type="number"
+                      min={1}
+                      step={1}
+                      required
+                      placeholder="1"
+                      value={form.unidadesPorPaquete}
+                      onChange={(event) =>
+                        setCampo('unidadesPorPaquete', event.target.value)
+                      }
+                    />
+                  </FormField>
+                  <FormField
+                    label="Costo por unidad"
+                    htmlFor="producto-costo-calculado"
+                    hint="Calculado automáticamente desde la caja"
+                  >
+                    <div
+                      id="producto-costo-calculado"
+                      className="rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-900 tabular-nums"
+                    >
+                      {Number.isFinite(costoUnitarioFormulario) &&
+                      costoUnitarioFormulario > 0
+                        ? formatoCosto(costoUnitarioFormulario)
+                        : '—'}
+                    </div>
+                  </FormField>
+                </>
+              ) : (
+                <FormField label="Costo por unidad" htmlFor="producto-precio-compra">
+                  <Input
+                    id="producto-precio-compra"
+                    type="number"
+                    min={0.01}
+                    step="0.0001"
+                    required
+                    placeholder="0"
+                    value={form.precioCompra}
+                    onChange={(event) => setCampo('precioCompra', event.target.value)}
+                  />
+                </FormField>
+              )}
               <FormField label="Precio venta" htmlFor="producto-precio-venta">
                 <Input
                   id="producto-precio-venta"
@@ -859,7 +1082,58 @@ export default function ProductosPage() {
                   onChange={(event) => setCampo('precioVenta', event.target.value)}
                 />
               </FormField>
-              <FormField label="Stock" htmlFor="producto-stock">
+              <FormField
+                label="Margen deseado %"
+                htmlFor="producto-margen-deseado"
+                hint="Sugiere el precio de venta sobre el costo"
+              >
+                <Input
+                  id="producto-margen-deseado"
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  placeholder="Opcional"
+                  value={form.margenDeseado}
+                  onChange={(event) => aplicarMargenDeseado(event.target.value)}
+                />
+              </FormField>
+              <div
+                role="status"
+                className={`sm:col-span-2 rounded-lg border px-3 py-2 text-xs ${
+                  Number.isFinite(margenMonto) && margenMonto > 0
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                    : 'border-amber-200 bg-amber-50 text-amber-900'
+                }`}
+              >
+                {Number.isFinite(costoUnitarioFormulario) &&
+                costoUnitarioFormulario > 0 &&
+                Number.isFinite(precioVentaNumero) &&
+                precioVentaNumero > 0 ? (
+                  <>
+                    Costo por unidad:{' '}
+                    <strong>{formatoCosto(costoUnitarioFormulario)}</strong>
+                    <span className="mx-1.5" aria-hidden="true">·</span>
+                    Margen:{' '}
+                    <strong>{formatoCosto(margenMonto, 2)}</strong>
+                    {Number.isFinite(margenPorcentaje) && (
+                      <> ({margenPorcentaje.toLocaleString('es-AR', {
+                        maximumFractionDigits: 1,
+                      })}%)</>
+                    )}
+                    {margenMonto <= 0 && (
+                      <span className="ml-2 font-semibold">
+                        El precio de venta no supera el costo.
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  'Completá el costo y el precio de venta para ver el margen.'
+                )}
+              </div>
+              <FormField
+                label={editingId === null ? 'Stock inicial' : 'Stock'}
+                htmlFor="producto-stock"
+              >
                 <Input
                   id="producto-stock"
                   type="number"
@@ -871,6 +1145,32 @@ export default function ProductosPage() {
                   onChange={(event) => setCampo('stock', event.target.value)}
                 />
               </FormField>
+              {mostrarSelectorStock && (
+                <FormField
+                  label="Cargar stock en"
+                  htmlFor="producto-stock-unidad"
+                  hint={
+                    form.stockUnidad === 'caja'
+                      ? `= ${stockEnUnidadesFormulario} unidades`
+                      : 'El stock se guarda siempre en unidades'
+                  }
+                >
+                  <Select
+                    id="producto-stock-unidad"
+                    value={form.stockUnidad}
+                    onChange={(event) =>
+                      setCampo(
+                        'stockUnidad',
+                        event.target.value as FormularioProducto['stockUnidad'],
+                      )
+                    }
+                    options={[
+                      { value: 'unidad', label: 'Unidades' },
+                      { value: 'caja', label: 'Cajas' },
+                    ]}
+                  />
+                </FormField>
+              )}
               <FormField label="Stock mínimo" htmlFor="producto-stock-minimo">
                 <Input
                   id="producto-stock-minimo"

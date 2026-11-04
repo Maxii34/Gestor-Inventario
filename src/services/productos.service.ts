@@ -11,6 +11,8 @@ export interface BackendProducto {
   descripcion?: string | null;
   codigoBarras: string | null;
   precioCompra: number | string;
+  precioCompraPaquete?: number | string | null;
+  unidadesPorPaquete?: number | null;
   precioVenta: number | string;
   stock: number;
   stockMinimo: number;
@@ -23,7 +25,9 @@ export interface ProductoInput {
   nombre: string;
   descripcion?: string;
   codigoBarras?: string;
-  precioCompra: number;
+  precioCompra?: number;
+  precioCompraPaquete?: number;
+  unidadesPorPaquete?: number;
   precioVenta: number;
   stock: number;
   stockMinimo: number;
