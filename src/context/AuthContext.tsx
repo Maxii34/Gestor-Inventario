@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  cambiarPassword as cambiarPasswordRequest,
   login as loginRequest,
   logout as logoutRequest,
   onSessionExpired,
@@ -24,7 +25,8 @@ interface AuthContextValue {
   status: AuthStatus;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthUser>;
+  cambiarPassword: (passwordActual: string, passwordNueva: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
   hasRole: (role: AuthRole | AuthRole[]) => boolean;
@@ -66,10 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<void> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<AuthUser> => {
     const authenticatedUser = await loginRequest(credentials);
     setUser(authenticatedUser);
+    return authenticatedUser;
   }, []);
+
+  const cambiarPassword = useCallback(
+    async (passwordActual: string, passwordNueva: string): Promise<void> => {
+      await cambiarPasswordRequest(passwordActual, passwordNueva);
+      setUser((currentUser) =>
+        currentUser ? { ...currentUser, debeCambiarPassword: false } : currentUser,
+      );
+    },
+    [],
+  );
 
   const logout = useCallback(async (): Promise<void> => {
     await logoutRequest();
@@ -97,11 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       isLoading,
       login,
+      cambiarPassword,
       logout,
       refreshSession,
       hasRole,
     }),
-    [user, isLoading, login, logout, refreshSession, hasRole],
+    [user, isLoading, login, cambiarPassword, logout, refreshSession, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

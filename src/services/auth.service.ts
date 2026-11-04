@@ -47,6 +47,20 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   return response.data.usuario;
 }
 
+export async function cambiarPassword(
+  passwordActual: string,
+  passwordNueva: string,
+): Promise<void> {
+  const response = await apiRequest<ApiSuccess<AuthTokens>>('/usuarios/cambiar-password', {
+    method: 'POST',
+    body: { passwordActual, passwordNueva },
+    auth: true,
+  });
+  tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
+  const usuario = tokenStorage.getStoredUser();
+  if (usuario) tokenStorage.setStoredUser({ ...usuario, debeCambiarPassword: false });
+}
+
 export async function refreshSession(): Promise<AuthTokens | null> {
   const refreshToken = tokenStorage.getRefreshToken();
   if (!refreshToken) return null;

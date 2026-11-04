@@ -23,6 +23,17 @@ export function PlataformaShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [ready, setReady] = useState(false);
+  const titulo = pathname.startsWith('/plataforma/auditoria')
+    ? 'Auditoría'
+    : pathname.includes('/usuarios')
+      ? 'Usuarios del comercio'
+      : pathname.includes('/categorias')
+        ? 'Carga masiva de categorías'
+        : pathname.includes('/productos')
+          ? 'Carga masiva de productos'
+          : pathname.startsWith('/plataforma/comercios')
+            ? 'Comercios'
+            : 'Resumen de plataforma';
 
   useEffect(() => {
     let active = true;
@@ -118,11 +129,7 @@ export function PlataformaShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/95 px-5 backdrop-blur md:px-8">
           <div>
             <p className="text-sm font-semibold text-zinc-900">
-              {pathname.startsWith('/plataforma/auditoria')
-                ? 'Auditoría'
-                : pathname.startsWith('/plataforma/comercios')
-                  ? 'Comercios'
-                  : 'Resumen de plataforma'}
+              {titulo}
             </p>
             <p className="hidden text-xs text-zinc-500 sm:block">
               Gestión centralizada de comercios y suscripciones

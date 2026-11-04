@@ -51,6 +51,29 @@ export interface PlataformaPago {
   [key: string]: unknown;
 }
 
+export interface PlataformaUsuario {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: 'ADMIN' | 'VENDEDOR';
+  activo: boolean;
+  debeCambiarPassword: boolean;
+  fechaCreacion: string;
+}
+
+export interface ErrorFilaCarga {
+  fila: number;
+  campo?: string;
+  mensaje: string;
+}
+
+export interface ResultadoCargaMasiva {
+  simulacion?: boolean;
+  validas?: number;
+  creados?: number;
+  errores?: ErrorFilaCarga[];
+}
+
 export interface PlataformaAuditoria {
   id: number | string;
   accion?: string;
@@ -100,6 +123,29 @@ export interface RegistrarPagoInput {
   metodo: MetodoPago;
   referencia?: string;
   nota?: string;
+}
+
+export interface EditarUsuarioPlataformaInput {
+  nombre?: string;
+  email?: string;
+  rol?: PlataformaUsuario['rol'];
+  activo?: boolean;
+}
+
+export interface CategoriaMasivaInput {
+  nombre: string;
+  descripcion?: string;
+}
+
+export interface ProductoMasivoInput {
+  nombre: string;
+  descripcion?: string;
+  codigoBarras?: string;
+  precioCompra: number;
+  precioVenta: number;
+  stock: number;
+  stockMinimo?: number;
+  categoria: string;
 }
 
 interface LoginResponse {
@@ -260,6 +306,68 @@ export async function obtenerMetricas(): Promise<Record<string, unknown>> {
   const response = await apiRequest<ApiSuccess<Record<string, unknown>>>(
     '/plataforma/metricas',
     { headers: authHeaders() },
+  );
+  return response.data;
+}
+
+export async function listarUsuariosComercio(
+  comercioId: number,
+  page: number,
+  limit: number,
+  q?: string,
+): Promise<{ usuarios: PlataformaUsuario[]; meta: PlataformaMeta }> {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (q) query.set('q', q);
+  const response = await apiRequest<ApiListResponse<PlataformaUsuario>>(
+    `/plataforma/comercios/${comercioId}/usuarios?${query.toString()}`,
+    { headers: authHeaders() },
+  );
+  return { usuarios: response.data, meta: response.meta };
+}
+
+export async function editarUsuarioComercio(
+  comercioId: number,
+  usuarioId: number,
+  input: EditarUsuarioPlataformaInput,
+): Promise<PlataformaUsuario> {
+  const response = await apiRequest<ApiSuccess<PlataformaUsuario>>(
+    `/plataforma/comercios/${comercioId}/usuarios/${usuarioId}`,
+    { method: 'PUT', body: input, headers: authHeaders() },
+  );
+  return response.data;
+}
+
+export async function resetearPasswordUsuario(
+  comercioId: number,
+  usuarioId: number,
+): Promise<string> {
+  const response = await apiRequest<ApiSuccess<{ passwordTemporal: string }>>(
+    `/plataforma/comercios/${comercioId}/usuarios/${usuarioId}/resetear-password`,
+    { method: 'POST', headers: authHeaders() },
+  );
+  return response.data.passwordTemporal;
+}
+
+export async function cargarCategoriasMasivas(
+  comercioId: number,
+  categorias: CategoriaMasivaInput[],
+  simular: boolean,
+): Promise<ResultadoCargaMasiva> {
+  const response = await apiRequest<ApiSuccess<ResultadoCargaMasiva>>(
+    `/plataforma/comercios/${comercioId}/categorias/masivo`,
+    { method: 'POST', body: { categorias, simular }, headers: authHeaders() },
+  );
+  return response.data;
+}
+
+export async function cargarProductosMasivos(
+  comercioId: number,
+  productos: ProductoMasivoInput[],
+  simular: boolean,
+): Promise<ResultadoCargaMasiva> {
+  const response = await apiRequest<ApiSuccess<ResultadoCargaMasiva>>(
+    `/plataforma/comercios/${comercioId}/productos/masivo`,
+    { method: 'POST', body: { productos, simular }, headers: authHeaders() },
   );
   return response.data;
 }

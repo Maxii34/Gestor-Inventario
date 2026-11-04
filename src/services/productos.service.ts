@@ -71,7 +71,7 @@ export async function crearProducto(input: ProductoInput): Promise<BackendProduc
 
 export async function actualizarProducto(
   id: number,
-  input: Partial<ProductoInput> & { codigoBarras?: string | null },
+  input: Omit<Partial<ProductoInput>, 'codigoBarras'> & { codigoBarras?: string | null },
 ): Promise<BackendProducto> {
   const response = await apiRequest<ApiSuccess<BackendProducto>>(`/productos/${id}`, {
     method: 'PUT',

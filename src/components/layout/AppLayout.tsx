@@ -6,6 +6,7 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { RouteNotice } from "./RouteNotice";
 import { SuscripcionBanner } from "./SuscripcionBanner";
+import { MandatoryPasswordModal } from "@/components/auth/MandatoryPasswordModal";
 
 const SECTION_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -37,6 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-zinc-100 text-zinc-900">
+      <MandatoryPasswordModal />
       <Sidebar
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}

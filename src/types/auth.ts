@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   rol: AuthRole;
   activo: boolean;
+  debeCambiarPassword?: boolean;
   comercioId: number;
   fechaCreacion: string;
 }

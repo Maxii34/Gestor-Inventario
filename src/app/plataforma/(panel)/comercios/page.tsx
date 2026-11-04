@@ -1,13 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import {
   LuEllipsis,
   LuEye,
+  LuCalendarClock,
+  LuCreditCard,
+  LuPackage,
   LuPencil,
   LuPlus,
   LuRefreshCw,
   LuSearch,
+  LuTags,
+  LuUsers,
 } from 'react-icons/lu';
 import {
   Badge,
@@ -578,7 +584,7 @@ export default function PlataformaDashboardPage() {
         open={editingCommerce !== null}
         title="Editar datos del comercio"
         description={editingCommerce?.nombre}
-        size="lg"
+        size="wide"
         onClose={() => setEditingCommerce(null)}
         footer={
           <>
@@ -641,7 +647,7 @@ export default function PlataformaDashboardPage() {
         open={isCreateOpen}
         title="Registrar comercio"
         description="Se creará el comercio y su cuenta de administrador."
-        size="lg"
+        size="xl"
         onClose={() => {
           if (!isCreating) {
             setIsCreateOpen(false);
@@ -734,7 +740,7 @@ export default function PlataformaDashboardPage() {
         {isDetailLoading ? (
           <div className="py-10 text-center text-sm text-zinc-500">Cargando detalle del comercio…</div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {detailError && (
               <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {detailError}
@@ -742,44 +748,94 @@ export default function PlataformaDashboardPage() {
             )}
             {detail && (
               <>
-                <div className="grid gap-3 rounded-xl bg-zinc-50 p-4 sm:grid-cols-2">
-                  <div>
+                <section aria-label="Resumen del comercio" className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
                     <p className="text-xs text-zinc-500">Estado</p>
-                    <Badge className="mt-1" tone={detailStatus.tone}>{detailStatus.label}</Badge>
+                    <Badge className="mt-1.5" tone={detailStatus.tone}>{detailStatus.label}</Badge>
                   </div>
-                  <div>
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
                     <p className="text-xs text-zinc-500">Plan actual</p>
-                    <p className="mt-1 text-sm font-medium">{detail.plan || '—'}</p>
+                    <p className="mt-1.5 text-sm font-semibold text-zinc-900">{detail.plan || '—'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-zinc-500">Administrador</p>
-                    <p className="mt-1 text-sm font-medium">
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
+                    <p className="text-xs text-zinc-500">Usuarios</p>
+                    <p className="mt-1.5 text-sm font-semibold text-zinc-900">
                       {detail.conteos?.usuarios ?? detail._count?.usuarios ?? '—'} usuarios
                     </p>
                   </div>
-                  <div>
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
                     <p className="text-xs text-zinc-500">Vencimiento</p>
-                    <p className="mt-1 text-sm font-medium">
-                      {detail.estado === 'SIN_VENCIMIENTO'
+                    <p className="mt-1.5 text-sm font-semibold text-zinc-900">
+                      {estadoComercio(detail) === 'SIN_VENCIMIENTO'
                         ? 'Sin vencimiento'
                         : mostrarFecha(detail.accesoHasta ?? detail.fechaVencimiento ?? detail.venceEn)}
                     </p>
                   </div>
-                </div>
+                </section>
 
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">Acciones</h3>
-                    <p className="text-xs text-zinc-500">Aplican directamente al comercio</p>
+                <section aria-labelledby="gestion-comercio-titulo">
+                  <div className="mb-2">
+                    <h3 id="gestion-comercio-titulo" className="text-sm font-semibold text-zinc-900">
+                      Gestión del comercio
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <Link
+                      href={`/plataforma/comercios/${detail.id}/usuarios`}
+                      className="group flex items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-700">
+                        <LuUsers aria-hidden="true" size={16} />
+                      </span>
+                      <span>
+                        <span className="block text-[13px] font-semibold text-zinc-900">Usuarios</span>
+                        <span className="block text-[11px] text-zinc-500">Roles y accesos</span>
+                      </span>
+                    </Link>
+                    <Link
+                      href={`/plataforma/comercios/${detail.id}/categorias`}
+                      className="group flex items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-violet-50 text-violet-700">
+                        <LuTags aria-hidden="true" size={16} />
+                      </span>
+                      <span>
+                        <span className="block text-[13px] font-semibold text-zinc-900">Categorías</span>
+                        <span className="block text-[11px] text-zinc-500">Carga masiva</span>
+                      </span>
+                    </Link>
+                    <Link
+                      href={`/plataforma/comercios/${detail.id}/productos`}
+                      className="group flex items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-2 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sky-50 text-sky-700">
+                        <LuPackage aria-hidden="true" size={16} />
+                      </span>
+                      <span>
+                        <span className="block text-[13px] font-semibold text-zinc-900">Productos</span>
+                        <span className="block text-[11px] text-zinc-500">Carga masiva</span>
+                      </span>
+                    </Link>
+                  </div>
+                </section>
+
+                <section aria-labelledby="acciones-comercio-titulo" className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-3">
+                  <div className="mb-2">
+                    <h3 id="acciones-comercio-titulo" className="text-sm font-semibold text-zinc-900">
+                      Suscripción y pagos
+                    </h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" size="sm" variant="outline" onClick={() => openAction('extender')}>
-                      Extender días
+                      <LuCalendarClock aria-hidden="true" size={14} />
+                      Extender
                     </Button>
                     <Button type="button" size="sm" variant="outline" onClick={() => openAction('plan')}>
+                      <LuRefreshCw aria-hidden="true" size={14} />
                       Cambiar plan
                     </Button>
                     <Button type="button" size="sm" variant="outline" onClick={() => openAction('pago')}>
+                      <LuCreditCard aria-hidden="true" size={14} />
                       Registrar pago
                     </Button>
                     {estadoComercio(detail) === 'SUSPENDIDO' ? (
@@ -792,10 +848,15 @@ export default function PlataformaDashboardPage() {
                       </Button>
                     )}
                   </div>
-                </div>
+                </section>
 
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold">Pagos recientes</h3>
+                <section aria-labelledby="pagos-recientes-titulo">
+                  <div className="mb-3">
+                    <h3 id="pagos-recientes-titulo" className="text-sm font-semibold text-zinc-900">
+                      Pagos recientes
+                    </h3>
+                    <p className="mt-1 text-xs text-zinc-500">Últimos movimientos registrados para el comercio.</p>
+                  </div>
                   {payments.length ? (
                     <div className="overflow-x-auto rounded-lg border border-zinc-200">
                       <table className="w-full min-w-130 text-left text-sm">
@@ -824,7 +885,7 @@ export default function PlataformaDashboardPage() {
                       No hay pagos registrados.
                     </p>
                   )}
-                </div>
+                </section>
               </>
             )}
           </div>
