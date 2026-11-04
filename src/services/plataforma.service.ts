@@ -141,7 +141,9 @@ export interface ProductoMasivoInput {
   nombre: string;
   descripcion?: string;
   codigoBarras?: string;
-  precioCompra: number;
+  precioCompra?: number;
+  precioCompraPaquete?: number;
+  unidadesPorPaquete?: number;
   precioVenta: number;
   stock: number;
   stockMinimo?: number;

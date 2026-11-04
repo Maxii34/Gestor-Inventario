@@ -17,6 +17,8 @@ const FILA_VACIA: ProductoMasivoInput = {
   descripcion: '',
   codigoBarras: '',
   precioCompra: 0,
+  precioCompraPaquete: 0,
+  unidadesPorPaquete: 1,
   precioVenta: 0,
   stock: 0,
   stockMinimo: 0,
@@ -83,6 +85,33 @@ export default function CargaMasivaProductosPage() {
       setError('Agregá entre 1 y 50 productos.');
       return;
     }
+    for (let index = 0; index < filas.length; index += 1) {
+      const fila = filas[index];
+      const precioUnidad = Number(fila.precioCompra ?? 0);
+      const precioPaquete = Number(fila.precioCompraPaquete ?? 0);
+      const unidades = Number(fila.unidadesPorPaquete ?? 1);
+      if (precioUnidad > 0 && precioPaquete > 0) {
+        setErrores([
+          {
+            fila: index + 1,
+            campo: 'precioCompra',
+            mensaje: 'Enviá el costo por unidad o el costo del paquete, no ambos',
+          },
+        ]);
+        return;
+      }
+      if (precioPaquete > 0 && (!Number.isInteger(unidades) || unidades < 1)) {
+        setErrores([
+          {
+            fila: index + 1,
+            campo: 'unidadesPorPaquete',
+            mensaje:
+              'Las unidades por paquete deben ser un entero mayor o igual a 1',
+          },
+        ]);
+        return;
+      }
+    }
     if (!simular) {
       const confirmado = await confirmAction(
         'Confirmar carga masiva',
@@ -98,16 +127,24 @@ export default function CargaMasivaProductosPage() {
     try {
       const response = await cargarProductosMasivos(
         comercioId,
-        filas.map((fila) => ({
-          nombre: fila.nombre.trim(),
-          ...(fila.descripcion?.trim() ? { descripcion: fila.descripcion.trim() } : {}),
-          ...(fila.codigoBarras?.trim() ? { codigoBarras: fila.codigoBarras.trim() } : {}),
-          precioCompra: Number(fila.precioCompra),
-          precioVenta: Number(fila.precioVenta),
-          stock: Number(fila.stock),
-          stockMinimo: Number(fila.stockMinimo),
-          categoria: fila.categoria.trim(),
-        })),
+        filas.map((fila) => {
+          const usaPaquete = Number(fila.precioCompraPaquete ?? 0) > 0;
+          return {
+            nombre: fila.nombre.trim(),
+            ...(fila.descripcion?.trim() ? { descripcion: fila.descripcion.trim() } : {}),
+            ...(fila.codigoBarras?.trim() ? { codigoBarras: fila.codigoBarras.trim() } : {}),
+            ...(usaPaquete
+              ? {
+                  precioCompraPaquete: Number(fila.precioCompraPaquete),
+                  unidadesPorPaquete: Number(fila.unidadesPorPaquete ?? 1),
+                }
+              : { precioCompra: Number(fila.precioCompra) }),
+            precioVenta: Number(fila.precioVenta),
+            stock: Number(fila.stock),
+            stockMinimo: Number(fila.stockMinimo),
+            categoria: fila.categoria.trim(),
+          };
+        }),
         simular,
       );
       if (simular) {
@@ -157,8 +194,14 @@ export default function CargaMasivaProductosPage() {
                 <FormField label="Código de barras (opcional)" htmlFor={`producto-codigo-${index}`}>
                   <Input id={`producto-codigo-${index}`} maxLength={64} value={fila.codigoBarras ?? ''} onChange={(event) => actualizarFila(index, { codigoBarras: event.target.value })} />
                 </FormField>
-                <FormField label="Precio de compra" htmlFor={`producto-compra-${index}`}>
-                  <Input id={`producto-compra-${index}`} type="number" min="0.01" step="0.01" value={fila.precioCompra} onChange={(event) => actualizarFila(index, { precioCompra: Number(event.target.value) })} />
+                <FormField label="Precio de compra por unidad" htmlFor={`producto-compra-${index}`} hint="Usá este campo o el precio de la caja, nunca ambos.">
+                  <Input id={`producto-compra-${index}`} type="number" min="0" step="0.01" value={fila.precioCompra ?? 0} onChange={(event) => actualizarFila(index, { precioCompra: Number(event.target.value) })} />
+                </FormField>
+                <FormField label="Unidades por paquete (opcional)" htmlFor={`producto-unidades-${index}`}>
+                  <Input id={`producto-unidades-${index}`} type="number" min="1" step="1" value={fila.unidadesPorPaquete ?? 1} onChange={(event) => actualizarFila(index, { unidadesPorPaquete: Number(event.target.value) })} />
+                </FormField>
+                <FormField label="Precio de la caja (opcional)" htmlFor={`producto-paquete-${index}`} hint="Si lo completás, dejá el precio por unidad en 0.">
+                  <Input id={`producto-paquete-${index}`} type="number" min="0" step="0.01" value={fila.precioCompraPaquete ?? 0} onChange={(event) => actualizarFila(index, { precioCompraPaquete: Number(event.target.value) })} />
                 </FormField>
                 <FormField label="Precio de venta" htmlFor={`producto-venta-${index}`}>
                   <Input id={`producto-venta-${index}`} type="number" min="0.01" step="0.01" value={fila.precioVenta} onChange={(event) => actualizarFila(index, { precioVenta: Number(event.target.value) })} />
@@ -199,14 +242,16 @@ export default function CargaMasivaProductosPage() {
         <Card title="Vista previa" subtitle="Se enviarán estas filas al comercio seleccionado.">
           <div className="overflow-x-auto">
             <table className="w-full min-w-180 text-left text-sm">
-              <thead className="text-xs text-zinc-500"><tr>{['Nombre', 'Descripción', 'Categoría', 'Código', 'Compra', 'Venta', 'Stock', 'Stock mínimo'].map((titulo) => <th key={titulo} className="px-2 py-2">{titulo}</th>)}</tr></thead>
+              <thead className="text-xs text-zinc-500"><tr>{['Nombre', 'Descripción', 'Categoría', 'Código', 'Compra unit.', 'Unidades/paquete', 'Precio caja', 'Venta', 'Stock', 'Stock mínimo'].map((titulo) => <th key={titulo} className="px-2 py-2">{titulo}</th>)}</tr></thead>
               <tbody className="divide-y divide-zinc-100">
                 {filas.map((fila, index) => <tr key={index}>
                   <td className="px-2 py-2">{fila.nombre || '—'}</td>
                   <td className="px-2 py-2">{fila.descripcion || '—'}</td>
                   <td className="px-2 py-2">{fila.categoria || '—'}</td>
                   <td className="px-2 py-2">{fila.codigoBarras || '—'}</td>
-                  <td className="px-2 py-2">{fila.precioCompra}</td>
+                  <td className="px-2 py-2">{fila.precioCompra ?? 0}</td>
+                  <td className="px-2 py-2">{fila.unidadesPorPaquete ?? 1}</td>
+                  <td className="px-2 py-2">{fila.precioCompraPaquete ?? 0}</td>
                   <td className="px-2 py-2">{fila.precioVenta}</td>
                   <td className="px-2 py-2">{fila.stock}</td>
                   <td className="px-2 py-2">{fila.stockMinimo ?? 0}</td>
