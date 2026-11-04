@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import {
   LuEllipsis,
   LuEye,
+  LuPencil,
   LuPlus,
   LuRefreshCw,
   LuSearch,
@@ -80,6 +81,14 @@ const FORMULARIO_PAGO_INICIAL: RegistrarPagoInput = {
 
 type AccionComercio = 'suspender' | 'extender' | 'plan' | 'pago';
 
+interface EditarComercioForm {
+  nombre: string;
+  slug: string;
+  adminNombre: string;
+  adminEmail: string;
+  adminPassword: string;
+}
+
 function mostrarFecha(value?: string | null): string {
   if (!value) return '—';
   const date = new Date(value);
@@ -134,6 +143,15 @@ export default function PlataformaDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const [editingCommerce, setEditingCommerce] = useState<PlataformaComercio | null>(null);
+  const [editForm, setEditForm] = useState<EditarComercioForm>({
+    nombre: '',
+    slug: '',
+    adminNombre: '',
+    adminEmail: '',
+    adminPassword: '',
+  });
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CrearComercioInput>(FORMULARIO_INICIAL);
@@ -223,6 +241,19 @@ export default function PlataformaDashboardPage() {
   function changePage(nextPage: number): void {
     setIsLoading(true);
     setPage(nextPage);
+  }
+
+  function openEditCommerce(commerce: PlataformaComercio): void {
+    const admin = commerce.administrador ?? commerce.admin;
+    const adminUsuario = commerce.usuarios?.find((usuario) => usuario.rol === 'ADMIN');
+    setEditForm({
+      nombre: commerce.nombre,
+      slug: commerce.slug ?? '',
+      adminNombre: commerce.adminNombre ?? admin?.nombre ?? adminUsuario?.nombre ?? '',
+      adminEmail: commerce.adminEmail ?? admin?.email ?? adminUsuario?.email ?? commerce.email ?? '',
+      adminPassword: '',
+    });
+    setEditingCommerce(commerce);
   }
 
   async function submitCreate(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -412,22 +443,34 @@ export default function PlataformaDashboardPage() {
       header: '',
       align: 'right',
       render: (commerce) => (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label={`Ver ${commerce.nombre}`}
-          onClick={() => {
-            setDetail(null);
-            setPayments([]);
-            setIsDetailLoading(true);
-            setDetailError(null);
-            setSelected(commerce);
-          }}
-        >
-          <LuEye aria-hidden="true" size={16} />
-          Ver
-        </Button>
+        <div className="flex justify-end gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Ver ${commerce.nombre}`}
+            onClick={() => {
+              setDetail(null);
+              setPayments([]);
+              setIsDetailLoading(true);
+              setDetailError(null);
+              setSelected(commerce);
+            }}
+          >
+            <LuEye aria-hidden="true" size={16} />
+            Ver
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Editar ${commerce.nombre}`}
+            onClick={() => openEditCommerce(commerce)}
+          >
+            <LuPencil aria-hidden="true" size={15} />
+            Editar
+          </Button>
+        </div>
       ),
     },
   ];
@@ -530,6 +573,69 @@ export default function PlataformaDashboardPage() {
           )}
         </Card>
       </section>
+
+      <Modal
+        open={editingCommerce !== null}
+        title="Editar datos del comercio"
+        description={editingCommerce?.nombre}
+        size="lg"
+        onClose={() => setEditingCommerce(null)}
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={() => setEditingCommerce(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" disabled title="El guardado estará disponible al conectar el endpoint de plataforma.">
+              Guardar cambios
+            </Button>
+          </>
+        }
+      >
+        <form className="space-y-4" onSubmit={(event) => event.preventDefault()}>
+          <div className="rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-xs leading-5 text-indigo-900">
+            Esta vista está preparada. El guardado se habilitará cuando esté disponible el endpoint de edición de plataforma.
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Nombre del local"
+              required
+              value={editForm.nombre}
+              onChange={(event) => setEditForm({ ...editForm, nombre: event.target.value })}
+              placeholder="Ej. Almacén Central"
+            />
+            <Input
+              label="Identificador (slug)"
+              value={editForm.slug}
+              onChange={(event) => setEditForm({ ...editForm, slug: event.target.value })}
+              placeholder="almacen-central"
+            />
+            <Input
+              label="Nombre del administrador"
+              required
+              value={editForm.adminNombre}
+              onChange={(event) => setEditForm({ ...editForm, adminNombre: event.target.value })}
+              placeholder="Nombre y apellido"
+            />
+            <Input
+              label="Correo del administrador"
+              type="email"
+              required
+              value={editForm.adminEmail}
+              onChange={(event) => setEditForm({ ...editForm, adminEmail: event.target.value })}
+              placeholder="admin@comercio.com"
+            />
+            <Input
+              label="Nueva contraseña"
+              type="password"
+              minLength={6}
+              maxLength={72}
+              value={editForm.adminPassword}
+              onChange={(event) => setEditForm({ ...editForm, adminPassword: event.target.value })}
+              hint="Opcional. Dejala vacía si no querés cambiarla."
+            />
+          </div>
+        </form>
+      </Modal>
 
       <Modal
         open={isCreateOpen}
