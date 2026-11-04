@@ -199,6 +199,7 @@ export default function MovimientosPage() {
   const [productoId, setProductoId] = useState('');
   const [tipo, setTipo] = useState<TipoMovimientoBackend>('ENTRADA');
   const [cantidad, setCantidad] = useState('');
+  const [unidadCantidad, setUnidadCantidad] = useState<'unidad' | 'caja'>('unidad');
   const [motivo, setMotivo] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,7 +207,13 @@ export default function MovimientosPage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [productosOpciones, setProductosOpciones] = useState<
-    { value: string; label: string; stock: number; stockMinimo: number }[]
+    {
+      value: string;
+      label: string;
+      stock: number;
+      stockMinimo: number;
+      unidadesPorPaquete: number;
+    }[]
   >([]);
   const [productosError, setProductosError] = useState<string | null>(null);
 
@@ -251,6 +258,11 @@ export default function MovimientosPage() {
           label: producto.nombre,
           stock: producto.stock,
           stockMinimo: producto.stockMinimo,
+          unidadesPorPaquete:
+            Number.isInteger(Number(producto.unidadesPorPaquete)) &&
+            Number(producto.unidadesPorPaquete) > 1
+              ? Number(producto.unidadesPorPaquete)
+              : 1,
         })),
       );
     } catch (err) {
@@ -307,6 +319,7 @@ export default function MovimientosPage() {
       setProductoId(parametros.get('productoId') ?? '');
       setTipo('ENTRADA');
       setCantidad('');
+      setUnidadCantidad('unidad');
       setMotivo('');
       setFormError(null);
       setIsFormOpen(true);
@@ -324,6 +337,7 @@ export default function MovimientosPage() {
     setProductoId('');
     setTipo('ENTRADA');
     setCantidad('');
+    setUnidadCantidad('unidad');
     setMotivo('');
     setFormError(null);
   }
@@ -338,6 +352,9 @@ export default function MovimientosPage() {
     if (isSubmitting) return;
     const productoIdNumero = Number(productoId);
     const cantidadNumero = Number(cantidad);
+    const producto = productosOpciones.find((opcion) => opcion.value === productoId);
+    const unidadesPaquete = producto?.unidadesPorPaquete ?? 1;
+    const usarCajas = tipo === 'ENTRADA' && unidadesPaquete > 1 && unidadCantidad === 'caja';
     if (!Number.isInteger(productoIdNumero) || productoIdNumero <= 0) {
       setFormError('El producto es obligatorio.');
       return;
@@ -346,15 +363,21 @@ export default function MovimientosPage() {
       setFormError('La cantidad debe ser un número entero mayor a 0.');
       return;
     }
+    const cantidadUnidades = usarCajas
+      ? cantidadNumero * unidadesPaquete
+      : cantidadNumero;
+    const detalleCajas = usarCajas
+      ? `${cantidadNumero} cajas × ${unidadesPaquete}`
+      : null;
+    const motivoFinal = [motivo.trim(), detalleCajas].filter(Boolean).join(' · ');
     setFormError(null);
     setIsSubmitting(true);
     try {
-      const producto = productosOpciones.find((opcion) => opcion.value === productoId);
       const movimiento = await registrarMovimiento({
         tipo,
-        cantidad: cantidadNumero,
+        cantidad: cantidadUnidades,
         productoId: productoIdNumero,
-        ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
+        ...(motivoFinal ? { motivo: motivoFinal } : {}),
       });
       setProductosOpciones((opciones) =>
         opciones.map((opcion) =>
@@ -422,6 +445,14 @@ export default function MovimientosPage() {
   const ajustesEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'AJUSTE').length;
   const productosSinStock = productosOpciones.filter((producto) => producto.stock <= 0);
   const productoSeleccionado = productosOpciones.find((producto) => producto.value === productoId);
+  const unidadesPaqueteSeleccionado = productoSeleccionado?.unidadesPorPaquete ?? 1;
+  const mostrarSelectorCajas =
+    tipo === 'ENTRADA' && unidadesPaqueteSeleccionado > 1;
+  const cantidadUnidadesVista =
+    Number(cantidad) *
+    (mostrarSelectorCajas && unidadCantidad === 'caja'
+      ? unidadesPaqueteSeleccionado
+      : 1);
   const opcionesProducto = productosOpciones.map((producto) => ({
     value: producto.value,
     label: `${producto.label} · Stock ${producto.stock}${
@@ -743,7 +774,10 @@ export default function MovimientosPage() {
               <Select
                 id="movimiento-producto"
                 value={productoId}
-                onChange={(event) => setProductoId(event.target.value)}
+                onChange={(event) => {
+                  setProductoId(event.target.value);
+                  setUnidadCantidad('unidad');
+                }}
                 required
                 disabled={isLoadingProducts}
                 placeholder={isLoadingProducts ? 'Cargando productos…' : 'Seleccionar producto'}
@@ -773,7 +807,11 @@ export default function MovimientosPage() {
               <Select
                 id="movimiento-tipo"
                 value={tipo}
-                onChange={(event) => setTipo(event.target.value as TipoMovimientoBackend)}
+                onChange={(event) => {
+                  const nuevoTipo = event.target.value as TipoMovimientoBackend;
+                  setTipo(nuevoTipo);
+                  if (nuevoTipo !== 'ENTRADA') setUnidadCantidad('unidad');
+                }}
                 required
                 options={[
                   { value: 'ENTRADA', label: 'Entrada' },
@@ -787,11 +825,13 @@ export default function MovimientosPage() {
               htmlFor="movimiento-cantidad"
               required
               hint={
-                tipo === 'AJUSTE'
-                ? 'Indicá el stock final que debería quedar para el producto.'
-                : tipo === 'ENTRADA'
-                  ? 'La cantidad se sumará al stock actual.'
-                  : 'La cantidad se descontará del stock actual.'
+                mostrarSelectorCajas && unidadCantidad === 'caja'
+                  ? `= ${Number.isFinite(cantidadUnidadesVista) ? cantidadUnidadesVista : 0} unidades`
+                  : tipo === 'AJUSTE'
+                    ? 'Indicá el stock final que debería quedar para el producto.'
+                    : tipo === 'ENTRADA'
+                      ? 'La cantidad se sumará al stock actual.'
+                      : 'La cantidad se descontará del stock actual.'
               }
             >
               <Input
@@ -805,6 +845,23 @@ export default function MovimientosPage() {
                 onChange={(event) => setCantidad(event.target.value)}
               />
             </FormField>
+            {mostrarSelectorCajas && (
+              <FormField label="Cargar cantidad en" htmlFor="movimiento-unidad">
+                <Select
+                  id="movimiento-unidad"
+                  value={unidadCantidad}
+                  onChange={(event) =>
+                    setUnidadCantidad(
+                      event.target.value as 'unidad' | 'caja',
+                    )
+                  }
+                  options={[
+                    { value: 'unidad', label: 'Unidades' },
+                    { value: 'caja', label: 'Cajas' },
+                  ]}
+                />
+              </FormField>
+            )}
             <FormField label="Proveedor" htmlFor="movimiento-proveedor">
               <Input
                 id="movimiento-proveedor"
