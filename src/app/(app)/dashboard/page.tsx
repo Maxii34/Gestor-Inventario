@@ -536,10 +536,10 @@ export default function DashboardPage() {
                     />
                     <div className="mt-3 flex justify-end">
                       <Link
-                        href="/productos"
+                        href="/movimientos?reponer=1"
                         className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-700 hover:text-zinc-950 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
                       >
-                        Revisar inventario
+                        Reponer stock
                         <LuArrowUpRight aria-hidden="true" size={14} />
                       </Link>
                     </div>

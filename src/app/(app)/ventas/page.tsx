@@ -847,7 +847,7 @@ export default function VentasPage() {
               aria-labelledby="carrito-venta-titulo"
               className={`flex min-w-0 flex-col gap-3 ${
                 ventaModalAncho
-                  ? `rounded-2xl border border-zinc-200 bg-linear-to-b from-zinc-50 to-white p-4 shadow-sm ring-1 ring-zinc-950/[0.03] lg:col-start-2 ${
+                  ? `rounded-2xl border border-zinc-200 bg-linear-to-b from-zinc-50 to-white p-4 shadow-sm ring-1 ring-zinc-950/3 lg:col-start-2 ${
                       MODULO_CLIENTES ? 'lg:row-start-3' : 'lg:row-start-2'
                     }`
                   : ''

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LuArrowDownToLine,
   LuArrowUpDown,
@@ -188,6 +189,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
 
 export default function MovimientosPage() {
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const router = useRouter();
   const [movimientos, setMovimientos] = useState<BackendMovimiento[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -204,7 +206,7 @@ export default function MovimientosPage() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [productosOpciones, setProductosOpciones] = useState<
-    { value: string; label: string }[]
+    { value: string; label: string; stock: number; stockMinimo: number }[]
   >([]);
   const [productosError, setProductosError] = useState<string | null>(null);
 
@@ -247,6 +249,8 @@ export default function MovimientosPage() {
         resultado.productos.map((producto) => ({
           value: String(producto.id),
           label: producto.nombre,
+          stock: producto.stock,
+          stockMinimo: producto.stockMinimo,
         })),
       );
     } catch (err) {
@@ -295,6 +299,26 @@ export default function MovimientosPage() {
     void cargarTodo();
   }, [hayFiltros, cargarTodoParaFiltrar]);
 
+  useEffect(() => {
+    const parametros = new URLSearchParams(window.location.search);
+    if (parametros.get('reponer') !== '1') return;
+
+    startTransition(() => {
+      setProductoId(parametros.get('productoId') ?? '');
+      setTipo('ENTRADA');
+      setCantidad('');
+      setMotivo('');
+      setFormError(null);
+      setIsFormOpen(true);
+    });
+    if (productosOpciones.length === 0 && !isLoadingProducts) {
+      queueMicrotask(() => {
+        void cargarProductos();
+      });
+    }
+    router.replace('/movimientos', { scroll: false });
+  }, [cargarProductos, isLoadingProducts, productosOpciones.length, router]);
+
   function limpiarFormulario(): void {
     setIsFormOpen(false);
     setProductoId('');
@@ -326,12 +350,19 @@ export default function MovimientosPage() {
     setIsSubmitting(true);
     try {
       const producto = productosOpciones.find((opcion) => opcion.value === productoId);
-      await registrarMovimiento({
+      const movimiento = await registrarMovimiento({
         tipo,
         cantidad: cantidadNumero,
         productoId: productoIdNumero,
         ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
       });
+      setProductosOpciones((opciones) =>
+        opciones.map((opcion) =>
+          opcion.value === productoId
+            ? { ...opcion, stock: movimiento.stockNuevo }
+            : opcion,
+        ),
+      );
       notifySuccess(
         tipo === 'ENTRADA'
           ? 'Stock repuesto'
@@ -389,6 +420,7 @@ export default function MovimientosPage() {
   const entradasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'ENTRADA').length;
   const salidasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'SALIDA').length;
   const ajustesEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'AJUSTE').length;
+  const productosSinStock = productosOpciones.filter((producto) => producto.stock <= 0);
 
   return (
     <>
@@ -647,6 +679,46 @@ export default function MovimientosPage() {
           </>
         }
       >
+        {productosSinStock.length > 0 && (
+          <section
+            aria-labelledby="productos-sin-stock-titulo"
+            className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3"
+          >
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <h3 id="productos-sin-stock-titulo" className="text-sm font-semibold text-amber-950">
+                  Productos sin stock
+                </h3>
+                <p className="text-xs text-amber-800">
+                  Seleccioná uno para cargarlo en la reposición.
+                </p>
+              </div>
+              <Badge tone="warning">{productosSinStock.length}</Badge>
+            </div>
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+              {productosSinStock.map((producto) => (
+                <button
+                  key={producto.value}
+                  type="button"
+                  aria-pressed={productoId === producto.value}
+                  onClick={() => {
+                    setProductoId(producto.value);
+                    setTipo('ENTRADA');
+                    setFormError(null);
+                  }}
+                  className={`max-w-full truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    productoId === producto.value
+                      ? 'border-amber-400 bg-amber-100 text-amber-950 ring-2 ring-amber-200'
+                      : 'border-amber-200 bg-white text-zinc-700 hover:border-amber-400 hover:bg-amber-100/70'
+                  }`}
+                  title={`${producto.label} · stock mínimo ${producto.stockMinimo}`}
+                >
+                  {producto.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
         <form
           id="movimiento-formulario"
           onSubmit={(event) => {
@@ -702,10 +774,10 @@ export default function MovimientosPage() {
                 onChange={(event) => setCantidad(event.target.value)}
               />
             </FormField>
-            <FormField label="Motivo" htmlFor="movimiento-motivo">
+            <FormField label="Proveedor" htmlFor="movimiento-proveedor">
               <Input
-                id="movimiento-motivo"
-                placeholder="Ej: Compra a proveedor (opcional)"
+                id="movimiento-proveedor"
+                placeholder="Nombre del proveedor (opcional)"
                 value={motivo}
                 onChange={(event) => setMotivo(event.target.value)}
               />

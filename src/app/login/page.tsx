@@ -3,7 +3,15 @@
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { LuBoxes, LuChartColumn, LuCircleHelp, LuLockKeyhole, LuShieldCheck } from 'react-icons/lu';
+import {
+  LuBoxes,
+  LuChartColumn,
+  LuCircleHelp,
+  LuEye,
+  LuEyeOff,
+  LuLockKeyhole,
+  LuShieldCheck,
+} from 'react-icons/lu';
 import { BrandLockup, Button, Input } from '@/components';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api/client';
@@ -33,6 +41,7 @@ export default function LoginPage() {
   const [slug, setSlug] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorEsSuspension, setErrorEsSuspension] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,15 +202,33 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
-            <Input
-              label="Contraseña"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-zinc-700">Contraseña</span>
+              <span className="relative">
+                <input
+                  type={mostrarPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-3 pr-10 text-sm font-normal text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-zinc-900 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400"
+                />
+                <button
+                  type="button"
+                  aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  title={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  onClick={() => setMostrarPassword((mostrar) => !mostrar)}
+                  className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center rounded-r-lg text-zinc-400 transition-colors hover:text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-indigo-600"
+                >
+                  {mostrarPassword ? (
+                    <LuEyeOff aria-hidden="true" size={17} />
+                  ) : (
+                    <LuEye aria-hidden="true" size={17} />
+                  )}
+                </button>
+              </span>
+            </label>
             <a
               href="#recuperar-clave"
               onClick={(event) => event.preventDefault()}
