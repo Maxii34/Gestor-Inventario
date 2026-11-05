@@ -549,7 +549,7 @@ export default function ProductosPage() {
   const columnas: TableColumn<BackendProducto>[] = [
     {
       key: 'nombre',
-      header: 'Producto',
+      header: '# Producto',
       render: (row) => (
         <div className="min-w-40">
           <p className="font-semibold text-zinc-900">{row.nombre}</p>
@@ -568,7 +568,7 @@ export default function ProductosPage() {
     },
     {
       key: 'categoria',
-      header: 'Categoría',
+      header: '# Categoría',
       render: (row) => (
         <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
           {row.categoria?.nombre ?? 'Sin categoría'}
@@ -577,7 +577,7 @@ export default function ProductosPage() {
     },
     {
       key: 'costo',
-      header: 'Costo unitario',
+      header: '# Costo unitario',
       align: 'right',
       render: (row) => {
         const tienePaquete =
@@ -600,7 +600,7 @@ export default function ProductosPage() {
     },
     {
       key: 'precioVenta',
-      header: 'Precio venta',
+      header: '# Precio venta',
       align: 'right',
       render: (row) => (
         <div className="text-right">
@@ -620,7 +620,7 @@ export default function ProductosPage() {
     },
     {
       key: 'stock',
-      header: 'Stock',
+      header: '# Stock',
       align: 'center',
       render: (row) => {
         const visual = estadoStock(row);
@@ -634,13 +634,13 @@ export default function ProductosPage() {
     },
     {
       key: 'stockMinimo',
-      header: 'Mínimo',
+      header: '# Mínimo',
       align: 'center',
       render: (row) => <span className="text-zinc-600 tabular-nums">{row.stockMinimo}</span>,
     },
     {
       key: 'activo',
-      header: 'Estado',
+      header: '# Estado',
       render: (row) => (
         <Badge tone={row.activo ? 'success' : 'neutral'}>
           {row.activo ? 'Activo' : 'Inactivo'}

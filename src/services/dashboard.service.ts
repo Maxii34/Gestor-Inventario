@@ -23,18 +23,16 @@ interface BackendProducto {
   categoria?: BackendCategoria | null;
 }
 
-interface BackendCliente {
-  id: number;
-  nombre: string;
-  apellido: string;
-}
-
 interface BackendVenta {
   id: number;
   total: number | string;
   metodoPago: string;
   estado: string;
-  cliente?: BackendCliente | null;
+  detalles?: {
+    cantidad: number;
+    productoId: number;
+    producto?: { nombre: string } | null;
+  }[];
   fecha: string;
 }
 
@@ -65,6 +63,9 @@ function formatoFecha(iso: string): string {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
   }).format(fecha);
 }
 
@@ -100,12 +101,15 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
     estado: mapEstadoStock(producto.stock),
   }));
 
+  const nombresProductos = new Map(productos.data.map((producto) => [producto.id, producto.nombre]));
   const ventasRecientes: VentaReciente[] = ventas.data.map((venta) => ({
     id: String(venta.id),
     venta: `#${venta.id}`,
-    cliente: venta.cliente
-      ? `${venta.cliente.nombre} ${venta.cliente.apellido}`.trim()
-      : 'Consumidor final',
+    producto: venta.detalles?.length
+      ? venta.detalles
+          .map((detalle) => detalle.producto?.nombre ?? nombresProductos.get(detalle.productoId) ?? '—')
+          .join(', ')
+      : '—',
     fecha: formatoFecha(venta.fecha),
     total: formatoMoneda(venta.total),
     estado: ESTADO_VENTA[venta.estado] ?? 'Pendiente',

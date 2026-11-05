@@ -109,25 +109,25 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
   { key: 'id', header: 'Venta', render: (row) => `#${row.id}` },
   {
     key: 'unidades',
-    header: 'Unidades',
+    header: '# Unidades',
     align: 'center',
     render: (row) => row.detalles?.reduce((total, detalle) => total + detalle.cantidad, 0) ?? '—',
   },
-  { key: 'fecha', header: 'Fecha', render: (row) => formatoFecha(row.fecha) },
+  { key: 'fecha', header: '# Fecha', render: (row) => formatoFecha(row.fecha) },
   {
     key: 'total',
-    header: 'Total',
+    header: '# Total',
     align: 'right',
     render: (row) => formatoMoneda(row.total),
   },
   {
     key: 'metodoPago',
-    header: 'Medio de pago',
+    header: '# Medio de pago',
     render: (row) => METODO_PAGO_ETIQUETA[row.metodoPago] ?? row.metodoPago,
   },
   {
     key: 'estado',
-    header: 'Estado',
+    header: '# Estado',
     render: (row) => {
       const visual = ESTADO_VISUAL[row.estado];
       return <Badge tone={visual.tono}>{visual.etiqueta}</Badge>;
@@ -135,7 +135,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
   },
   {
     key: 'acciones',
-    header: 'Acciones',
+    header: '# Acciones',
     align: 'right',
     render: (row) => (
       <span className="inline-flex gap-1">

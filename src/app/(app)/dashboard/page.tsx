@@ -65,30 +65,30 @@ const STOCK_BADGE_BORDE: Record<EstadoStockBajo, string> = {
 const VENTAS_COLUMNAS: TableColumn<VentaReciente>[] = [
   {
     key: 'venta',
-    header: 'Venta',
+    header: '# Venta',
     render: (row) => (
       <span className="font-semibold whitespace-nowrap text-zinc-900">{row.venta}</span>
     ),
   },
   {
-    key: 'cliente',
-    header: 'Cliente',
+    key: 'producto',
+    header: '# Producto',
     render: (row) => (
-      <span className="block max-w-55 truncate font-medium text-zinc-900" title={row.cliente}>
-        {row.cliente}
+      <span className="block max-w-55 truncate font-medium text-zinc-900" title={row.producto}>
+        {row.producto}
       </span>
     ),
   },
   {
     key: 'fecha',
-    header: 'Fecha',
+    header: '# Fecha y hora',
     render: (row) => (
       <span className="whitespace-nowrap text-zinc-600 tabular-nums">{row.fecha}</span>
     ),
   },
   {
     key: 'total',
-    header: 'Total',
+    header: '# Total',
     align: 'right',
     render: (row) => (
       <span className="font-semibold whitespace-nowrap text-zinc-900 tabular-nums">
@@ -98,7 +98,7 @@ const VENTAS_COLUMNAS: TableColumn<VentaReciente>[] = [
   },
   {
     key: 'estado',
-    header: 'Estado',
+    header: '# Estado',
     render: (row) => (
       <Badge tone={VENTA_TONO[row.estado]} className={`border ${VENTA_BADGE_BORDE[row.estado]}`}>
         {row.estado}
@@ -110,7 +110,7 @@ const VENTAS_COLUMNAS: TableColumn<VentaReciente>[] = [
 const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
   {
     key: 'producto',
-    header: 'Producto',
+    header: '# Producto',
     render: (row) => (
       <span className="block max-w-55 truncate font-medium text-zinc-900" title={row.producto}>
         {row.producto}
@@ -119,12 +119,12 @@ const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
   },
   {
     key: 'categoria',
-    header: 'Categoría',
+    header: '# Categoría',
     render: (row) => <span className="whitespace-nowrap text-zinc-600">{row.categoria}</span>,
   },
   {
     key: 'stockActual',
-    header: 'Stock actual',
+    header: '# Stock actual',
     align: 'center',
     render: (row) => (
       <span
@@ -138,7 +138,7 @@ const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
   },
   {
     key: 'stockMinimo',
-    header: 'Stock mínimo',
+    header: '# Stock mínimo',
     align: 'center',
     render: (row) => (
       <span className="text-zinc-600 tabular-nums">{row.stockMinimo}</span>
@@ -146,7 +146,7 @@ const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
   },
   {
     key: 'estado',
-    header: 'Estado',
+    header: '# Estado',
     render: (row) => (
       <Badge tone={STOCK_TONO[row.estado]} className={`border ${STOCK_BADGE_BORDE[row.estado]}`}>
         {row.estado}

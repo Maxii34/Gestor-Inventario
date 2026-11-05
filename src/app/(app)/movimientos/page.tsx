@@ -102,7 +102,7 @@ const TIPO_BADGE_BORDE: Record<TipoMovimientoBackend, string> = {
 const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   {
     key: 'fecha',
-    header: 'Fecha',
+    header: '# Fecha y Hora',
     render: (row) => (
       <span className="whitespace-nowrap text-[13px] text-zinc-600 tabular-nums">
         {formatoFechaHora(row.fecha)}
@@ -111,7 +111,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'producto',
-    header: 'Producto',
+    header: '# Producto Vendido',
     render: (row) => {
       const nombre = row.producto?.nombre ?? '—';
       return (
@@ -126,7 +126,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'tipo',
-    header: 'Tipo',
+    header: '# Tipo',
     render: (row) => {
       const visual = TIPO_VISUAL[row.tipo];
       return (
@@ -138,7 +138,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'cantidad',
-    header: 'Cantidad',
+    header: '# Cantidad',
     align: 'right',
     render: (row) => (
       <span
@@ -156,7 +156,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'stockAnterior',
-    header: 'Stock anterior',
+    header: '# Stock anterior',
     align: 'center',
     render: (row) => (
       <span className="text-zinc-600 tabular-nums">{row.stockAnterior}</span>
@@ -164,7 +164,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'stockNuevo',
-    header: 'Stock nuevo',
+    header: '# Stock nuevo',
     align: 'center',
     render: (row) => (
       <span className="font-semibold text-zinc-900 tabular-nums">{row.stockNuevo}</span>
@@ -172,7 +172,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'motivo',
-    header: 'Motivo',
+    header: '# Motivo',
     render: (row) =>
       row.motivo?.trim() ? (
         <span

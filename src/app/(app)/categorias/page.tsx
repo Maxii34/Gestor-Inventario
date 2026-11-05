@@ -236,7 +236,7 @@ export default function CategoriasPage() {
   const columnas: TableColumn<BackendCategoria>[] = [
     {
       key: 'nombre',
-      header: 'Categoría',
+      header: '# Categoría',
       render: (row) => (
         <span className="block max-w-55 truncate font-semibold text-zinc-900" title={row.nombre}>
           {row.nombre}
@@ -245,7 +245,7 @@ export default function CategoriasPage() {
     },
     {
       key: 'descripcion',
-      header: 'Descripción',
+      header: '# Descripción',
       render: (row) =>
         row.descripcion?.trim() ? (
           <span
@@ -260,7 +260,7 @@ export default function CategoriasPage() {
     },
     {
       key: 'activo',
-      header: 'Estado',
+      header: '# Estado',
       render: (row) => (
         <Badge
           tone={row.activo ? 'success' : 'neutral'}
@@ -275,7 +275,7 @@ export default function CategoriasPage() {
   if (isAdmin) {
     columnas.push({
       key: 'acciones',
-      header: 'Acciones',
+      header: '# Acciones',
       align: 'right',
       render: (row) => (
         <span className="inline-flex gap-1 whitespace-nowrap">
