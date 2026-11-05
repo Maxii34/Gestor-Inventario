@@ -452,7 +452,7 @@ export default function PlataformaDashboardPage() {
         <div className="flex justify-end gap-1">
           <Button
             type="button"
-            variant="ghost"
+            variant="action"
             size="sm"
             aria-label={`Ver ${commerce.nombre}`}
             onClick={() => {
@@ -468,7 +468,7 @@ export default function PlataformaDashboardPage() {
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="action"
             size="sm"
             aria-label={`Editar ${commerce.nombre}`}
             onClick={() => openEditCommerce(commerce)}

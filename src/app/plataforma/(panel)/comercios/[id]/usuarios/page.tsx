@@ -207,16 +207,16 @@ export default function UsuariosComercioPage() {
       align: 'right',
       render: (usuario) => (
         <div className="flex flex-wrap justify-end gap-1">
-          <Button type="button" size="sm" variant="ghost" onClick={usuario.onEdit}>
+          <Button type="button" size="sm" variant="action" onClick={usuario.onEdit}>
             <LuPencil aria-hidden="true" size={14} /> Editar
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={usuario.onToggle}>
+          <Button type="button" size="sm" variant="action" onClick={usuario.onToggle}>
             {usuario.activo ? 'Desactivar' : 'Activar'}
           </Button>
           <Button
             type="button"
             size="sm"
-            variant="ghost"
+            variant="action"
             disabled={isResetting === usuario.id}
             onClick={usuario.onReset}
           >

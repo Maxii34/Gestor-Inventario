@@ -281,20 +281,19 @@ export default function CategoriasPage() {
         <span className="inline-flex gap-1 whitespace-nowrap">
           <Button
             type="button"
-            variant="ghost"
+            variant="action"
             size="sm"
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
             disabled={soloLectura}
             title={soloLectura ? motivoSoloLectura : undefined}
-            className="hover:border-zinc-200 hover:bg-zinc-100"
           >
             <LuPencil aria-hidden="true" size={14} />
             Editar
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="actionDanger"
             size="sm"
             aria-label={`Eliminar ${row.nombre}`}
             onClick={() => {
@@ -303,7 +302,6 @@ export default function CategoriasPage() {
             }}
             disabled={soloLectura}
             title={soloLectura ? motivoSoloLectura : undefined}
-            className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
           >
             <LuTrash2 aria-hidden="true" size={14} />
             Eliminar

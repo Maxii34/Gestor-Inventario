@@ -1,6 +1,13 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'danger'
+  | 'ghost'
+  | 'action'
+  | 'actionDanger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,6 +28,10 @@ const VARIANTS: Record<ButtonVariant, string> = {
   outline: 'border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50',
   danger: 'bg-red-600 text-white hover:bg-red-500',
   ghost: 'text-zinc-700 hover:bg-zinc-100',
+  action:
+    'border border-zinc-200 bg-white text-zinc-700 shadow-[0_1px_2px_rgba(24,24,27,0.08)] hover:-translate-y-px hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-950 hover:shadow-[0_3px_8px_rgba(24,24,27,0.12)] active:translate-y-0 focus-visible:outline-zinc-700',
+  actionDanger:
+    'border border-zinc-200 bg-white text-zinc-600 shadow-[0_1px_2px_rgba(24,24,27,0.08)] hover:-translate-y-px hover:border-red-200 hover:bg-red-50 hover:text-red-700 hover:shadow-[0_3px_8px_rgba(127,29,29,0.12)] active:translate-y-0 focus-visible:outline-red-700',
 };
 
 export function Button({
@@ -32,7 +43,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 ${SIZES[size]} ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 ${SIZES[size]} ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     />
   );

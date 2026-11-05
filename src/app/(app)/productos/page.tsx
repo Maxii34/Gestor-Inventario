@@ -658,7 +658,7 @@ export default function ProductosPage() {
         <span className="inline-flex gap-1">
           <Button
             type="button"
-            variant="ghost"
+            variant="action"
             size="sm"
             aria-label={`Editar ${row.nombre}`}
             onClick={() => comenzarEdicion(row)}
@@ -670,7 +670,7 @@ export default function ProductosPage() {
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="actionDanger"
             size="sm"
             aria-label={`Eliminar ${row.nombre}`}
             onClick={() => {

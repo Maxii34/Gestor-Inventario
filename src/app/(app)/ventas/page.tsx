@@ -141,7 +141,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
       <span className="inline-flex gap-1">
         <Button
           type="button"
-          variant="ghost"
+          variant="action"
           size="sm"
           aria-label={`Ver detalle de la venta #${row.id}`}
           onClick={row.onVerDetalle}
@@ -152,7 +152,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
         {row.estado === 'COMPLETADA' && row.puedeAnular && (
           <Button
             type="button"
-            variant="ghost"
+            variant="actionDanger"
             size="sm"
             aria-label={`Anular la venta #${row.id}`}
             onClick={row.onAnular}

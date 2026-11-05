@@ -127,7 +127,7 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
       <span className="inline-flex gap-1">
         <Button
           type="button"
-          variant="ghost"
+          variant="action"
           size="sm"
           aria-label={`Editar ${row.nombre}`}
           onClick={row.onEdit}
@@ -139,7 +139,7 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
         </Button>
         <Button
           type="button"
-          variant="ghost"
+          variant="action"
           size="sm"
           aria-label={`${row.activo ? 'Desactivar' : 'Activar'} ${row.nombre}`}
           onClick={row.onToggleActive}

@@ -140,26 +140,24 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
       <span className="inline-flex gap-1 whitespace-nowrap">
         <Button
           type="button"
-          variant="ghost"
+          variant="action"
           size="sm"
           aria-label={`Editar ${row.nombre} ${row.apellido}`}
           onClick={row.onEdit}
           disabled={row.soloLectura}
           title={row.soloLectura ? row.motivoSoloLectura : undefined}
-          className="hover:border-zinc-200 hover:bg-zinc-100"
         >
           <LuPencil aria-hidden="true" size={14} />
           Editar
         </Button>
         <Button
           type="button"
-          variant="ghost"
+          variant="actionDanger"
           size="sm"
           aria-label={`Eliminar ${row.nombre} ${row.apellido}`}
           onClick={row.onDelete}
           disabled={row.soloLectura}
           title={row.soloLectura ? row.motivoSoloLectura : undefined}
-          className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
         >
           <LuTrash2 aria-hidden="true" size={14} />
           Eliminar
