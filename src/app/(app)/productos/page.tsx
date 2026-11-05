@@ -75,13 +75,34 @@ function unidadesDePaquete(producto: BackendProducto): number {
   return Number.isInteger(unidades) && unidades > 0 ? unidades : 1;
 }
 
+function calcularMargenBrutoPorcentaje(
+  precioVenta: number,
+  costoUnitario: number,
+): number {
+  if (
+    !Number.isFinite(precioVenta) ||
+    precioVenta <= 0 ||
+    !Number.isFinite(costoUnitario)
+  )
+    return Number.NaN;
+  return ((precioVenta - costoUnitario) / precioVenta) * 100;
+}
+
 function calcularCostoUnitario(form: FormularioProducto): number {
   if (!form.compraPorPaquete) return Number(form.precioCompra);
   const precioPaquete = Number(form.precioCompraPaquete);
   const unidades = Number(form.unidadesPorPaquete);
-  if (!Number.isFinite(precioPaquete) || !Number.isInteger(unidades) || unidades < 1)
+  if (
+    !Number.isFinite(precioPaquete) ||
+    !Number.isInteger(unidades) ||
+    unidades < 1
+  )
     return Number.NaN;
-  return precioPaquete / unidades;
+  const precioPaqueteEnCentavos = Math.round(precioPaquete * 100);
+  const costoEnDiezMiles = Math.floor(
+    (precioPaqueteEnCentavos * 100) / unidades + 0.5,
+  );
+  return costoEnDiezMiles / 10000;
 }
 
 function estadoStock(producto: BackendProducto): {
@@ -143,8 +164,8 @@ function validarFormulario(form: FormularioProducto): string | null {
     const unidades = Number(form.unidadesPorPaquete);
     if (!Number.isFinite(precioPaquete) || precioPaquete <= 0)
       return 'El precio de la caja debe ser mayor a 0.';
-    if (!Number.isInteger(unidades) || unidades < 1)
-      return 'Las unidades por caja deben ser un entero mayor o igual a 1.';
+    if (!Number.isInteger(unidades) || unidades < 1 || unidades > 100000)
+      return 'Las unidades por caja deben ser un entero entre 1 y 100.000.';
   } else {
     const precioCompra = Number(form.precioCompra);
     if (!Number.isFinite(precioCompra) || precioCompra <= 0)
@@ -301,8 +322,7 @@ export default function ProductosPage() {
   function comenzarEdicion(producto: BackendProducto): void {
     const tienePaquete =
       producto.precioCompraPaquete !== null &&
-      producto.precioCompraPaquete !== undefined &&
-      unidadesDePaquete(producto) > 1;
+      producto.precioCompraPaquete !== undefined;
     setEditingId(producto.id);
     setFormError(null);
     setCodigoBarrasError(null);
@@ -500,11 +520,7 @@ export default function ProductosPage() {
       ? precioVentaNumero - costoUnitarioFormulario
       : Number.NaN;
   const margenPorcentaje =
-    Number.isFinite(margenMonto) &&
-    Number.isFinite(costoUnitarioFormulario) &&
-    costoUnitarioFormulario > 0
-      ? (margenMonto / costoUnitarioFormulario) * 100
-      : Number.NaN;
+    calcularMargenBrutoPorcentaje(precioVentaNumero, costoUnitarioFormulario);
   const unidadesPaqueteFormulario = form.compraPorPaquete
     ? Number(form.unidadesPorPaquete)
     : 1;
@@ -592,9 +608,10 @@ export default function ProductosPage() {
           {isAdmin && Number(row.precioVenta) > 0 && (
             <p className="mt-0.5 text-xs text-zinc-500">
               Margen bruto{' '}
-              {(((Number(row.precioVenta) - Number(row.precioCompra)) / Number(row.precioVenta)) * 100).toLocaleString('es-AR', {
-                maximumFractionDigits: 1,
-              })}
+              {calcularMargenBrutoPorcentaje(
+                Number(row.precioVenta),
+                Number(row.precioCompra),
+              ).toLocaleString('es-AR', { maximumFractionDigits: 1 })}
               %
             </p>
           )}
@@ -1031,6 +1048,7 @@ export default function ProductosPage() {
                       id="producto-unidades-paquete"
                       type="number"
                       min={1}
+                      max={100000}
                       step={1}
                       required
                       placeholder="1"

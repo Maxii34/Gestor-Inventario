@@ -100,13 +100,16 @@ export default function CargaMasivaProductosPage() {
         ]);
         return;
       }
-      if (precioPaquete > 0 && (!Number.isInteger(unidades) || unidades < 1)) {
+      if (
+        precioPaquete > 0 &&
+        (!Number.isInteger(unidades) || unidades < 1 || unidades > 100000)
+      ) {
         setErrores([
           {
             fila: index + 1,
             campo: 'unidadesPorPaquete',
             mensaje:
-              'Las unidades por paquete deben ser un entero mayor o igual a 1',
+              'Las unidades por paquete deben ser un entero entre 1 y 100.000',
           },
         ]);
         return;
@@ -198,7 +201,7 @@ export default function CargaMasivaProductosPage() {
                   <Input id={`producto-compra-${index}`} type="number" min="0" step="0.01" value={fila.precioCompra ?? 0} onChange={(event) => actualizarFila(index, { precioCompra: Number(event.target.value) })} />
                 </FormField>
                 <FormField label="Unidades por paquete (opcional)" htmlFor={`producto-unidades-${index}`}>
-                  <Input id={`producto-unidades-${index}`} type="number" min="1" step="1" value={fila.unidadesPorPaquete ?? 1} onChange={(event) => actualizarFila(index, { unidadesPorPaquete: Number(event.target.value) })} />
+                  <Input id={`producto-unidades-${index}`} type="number" min="1" max="100000" step="1" value={fila.unidadesPorPaquete ?? 1} onChange={(event) => actualizarFila(index, { unidadesPorPaquete: Number(event.target.value) })} />
                 </FormField>
                 <FormField label="Precio de la caja (opcional)" htmlFor={`producto-paquete-${index}`} hint="Si lo completás, dejá el precio por unidad en 0.">
                   <Input id={`producto-paquete-${index}`} type="number" min="0" step="0.01" value={fila.precioCompraPaquete ?? 0} onChange={(event) => actualizarFila(index, { precioCompraPaquete: Number(event.target.value) })} />
