@@ -190,11 +190,11 @@ function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6" aria-hidden="true">
       <div className="h-52 animate-pulse rounded-2xl bg-zinc-200 motion-reduce:animate-none" />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
         {[0, 1, 2].map((item) => (
           <div
             key={item}
-            className="h-28 animate-pulse rounded-xl border border-zinc-200 bg-white motion-reduce:animate-none"
+            className="h-24 animate-pulse rounded-xl border border-zinc-200 bg-white motion-reduce:animate-none sm:h-28"
           >
           </div>
         ))}
@@ -413,7 +413,7 @@ export default function DashboardPage() {
 
           <section
             aria-label="Indicadores del negocio"
-            className={`grid grid-cols-1 gap-3 sm:grid-cols-2 ${
+            className={`grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 ${
               MODULO_CLIENTES ? 'xl:grid-cols-3' : 'xl:grid-cols-2'
             }`}
           >
@@ -450,16 +450,16 @@ export default function DashboardPage() {
                   {...animacionHover()}
                 >
                   <Card className="h-full border-zinc-200/80 shadow-sm">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
                       <div>
-                        <p className="text-sm font-medium text-zinc-600">{item.titulo}</p>
-                        <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950 tabular-nums">
+                        <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">{item.titulo}</p>
+                        <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 tabular-nums sm:mt-2 sm:text-3xl">
                           {new Intl.NumberFormat('es-AR').format(item.valor)}
                         </p>
                         <p className="mt-1 text-xs text-zinc-500">{item.detalle}</p>
                       </div>
-                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${item.tono}`}>
-                        <Icon aria-hidden="true" size={20} />
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${item.tono}`}>
+                        <Icon aria-hidden="true" size={18} />
                       </span>
                     </div>
                   </Card>

@@ -499,6 +499,7 @@ export default function ClientesPage() {
                   page={paginaVisible}
                   totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                  compactOnMobile
                 />
               </div>
             </>

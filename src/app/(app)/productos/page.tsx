@@ -712,44 +712,44 @@ export default function ProductosPage() {
       <div className="flex flex-col gap-5">
         <section
           aria-label="Resumen del catálogo"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3"
         >
           <Card className="border-zinc-200/80 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 sm:h-10 sm:w-10">
                 <LuPackage aria-hidden="true" size={19} />
               </span>
               <div>
-                <p className="text-xs font-medium text-zinc-500">Productos</p>
-                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Productos</p>
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {meta.total.toLocaleString('es-AR')}
                 </p>
               </div>
             </div>
           </Card>
           <Card className="border-zinc-200/80 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700 sm:h-10 sm:w-10">
                 <LuFilter aria-hidden="true" size={18} />
               </span>
               <div>
-                <p className="text-xs font-medium text-zinc-500">Categorías</p>
-                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {categorias.length.toLocaleString('es-AR')}
                 </p>
               </div>
             </div>
           </Card>
           <Card className="border-zinc-200/80 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 sm:h-10 sm:w-10">
                 <LuTriangleAlert aria-hidden="true" size={19} />
               </span>
               <div>
-                <p className="text-xs font-medium text-zinc-500">
+                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
                   Stock bajo
                 </p>
-                <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {isLoading || isFiltering
                     ? '—'
                     : filasTabla.filter((producto) => estadoStock(producto).etiqueta === 'Stock bajo').length}
@@ -884,6 +884,7 @@ export default function ProductosPage() {
                   page={paginaVisible}
                   totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                  compactOnMobile
                 />
               </div>
             </>

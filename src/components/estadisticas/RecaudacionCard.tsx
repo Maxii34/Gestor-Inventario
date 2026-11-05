@@ -97,7 +97,7 @@ export function RecaudacionTotalCard({
           </p>
         ) : datos ? (
           <>
-            <p className="text-2xl font-semibold text-zinc-900 tabular-nums">
+            <p className="break-words text-lg font-semibold leading-tight text-zinc-900 tabular-nums sm:text-2xl">
               {formatoMoneda(Number(datos.totalRecaudado) || 0)}
             </p>
             <p className="mt-1 text-xs text-zinc-500">

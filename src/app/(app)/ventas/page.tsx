@@ -651,10 +651,8 @@ export default function VentasPage() {
   ) : (
     <ul
       aria-label="Productos disponibles para agregar a la venta"
-      className={`grid grid-cols-1 gap-2 overflow-y-auto pr-1 ${
-        ventaModalAncho
-          ? 'min-h-0 flex-1 xl:grid-cols-2'
-          : 'max-h-80 sm:grid-cols-2'
+      className={`grid max-h-64 grid-cols-1 gap-2 overflow-y-auto overscroll-contain pr-1 sm:max-h-80 ${
+        ventaModalAncho ? 'xl:grid-cols-2' : 'sm:grid-cols-2'
       }`}
     >
       {productosFiltrados.map((opcion) => {
@@ -731,20 +729,20 @@ export default function VentasPage() {
       <div className="flex flex-col gap-5">
         <section
           aria-label="Resumen de ventas"
-          className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2"
+          className="grid grid-cols-2 items-stretch gap-2 sm:gap-3"
         >
           <Reveal delay={0}>
             <Card className="h-full border-zinc-200/80 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-zinc-600">Ventas registradas</p>
-                  <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950 tabular-nums">
+                  <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">Ventas registradas</p>
+                  <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 tabular-nums sm:mt-2 sm:text-3xl">
                     {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
                   </p>
                   <p className="mt-1 text-xs text-zinc-500">Operaciones en todo el historial</p>
                 </div>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                  <LuReceipt aria-hidden="true" size={20} />
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 sm:h-11 sm:w-11">
+                  <LuReceipt aria-hidden="true" size={18} />
                 </span>
               </div>
             </Card>
@@ -814,6 +812,7 @@ export default function VentasPage() {
                     page={meta.page}
                     totalPages={meta.totalPaginas}
                     onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                    compactOnMobile
                   />
                 </div>
               </>

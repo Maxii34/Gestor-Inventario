@@ -323,17 +323,17 @@ export default function CategoriasPage() {
       <div className="flex flex-col gap-5">
         <section
           aria-label="Resumen de categorías"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3"
         >
           <Reveal delay={0}>
             <Card className="border-zinc-200/80 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 sm:h-10 sm:w-10">
                   <LuFolder aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">Categorías</p>
-                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
                 </div>
@@ -342,15 +342,15 @@ export default function CategoriasPage() {
           </Reveal>
           <Reveal delay={0.05}>
             <Card className="border-zinc-200/80 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
                   <LuCircleCheck aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
                     Activas
                   </p>
-                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : activas.toLocaleString('es-AR')}
                   </p>
                 </div>
@@ -359,15 +359,15 @@ export default function CategoriasPage() {
           </Reveal>
           <Reveal delay={0.1}>
             <Card className="border-zinc-200/80 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-600 sm:h-10 sm:w-10">
                   <LuCircleOff aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-xs font-medium text-zinc-500">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
                     Inactivas
                   </p>
-                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-950">
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering
                       ? '—'
                       : (categoriasResumen.length - activas).toLocaleString('es-AR')}
@@ -505,6 +505,7 @@ export default function CategoriasPage() {
                   page={paginaVisible}
                   totalPages={totalPaginasVisibles}
                   onPageChange={setPage}
+                  compactOnMobile
                 />
               </div>
             </>
