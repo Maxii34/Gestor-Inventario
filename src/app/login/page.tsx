@@ -229,13 +229,6 @@ export default function LoginPage() {
                 </button>
               </span>
             </label>
-            <a
-              href="#recuperar-clave"
-              onClick={(event) => event.preventDefault()}
-              className="-mt-2 self-end text-xs font-medium text-indigo-700 underline-offset-4 transition hover:text-indigo-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
             <Suspense fallback={null}>
               <LoginNotice />
             </Suspense>
@@ -251,9 +244,16 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
-            <p className="text-xs leading-5 text-zinc-500">
-              El alta de comercios está a cargo del superadministrador de la plataforma.
-            </p>
+            <div className="flex items-start gap-2.5 rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-indigo-950">
+              <LuCircleHelp
+                aria-hidden="true"
+                size={16}
+                className="mt-0.5 shrink-0 text-indigo-600"
+              />
+              <p className="text-xs leading-5">
+                El alta de comercios está a cargo del superadministrador de la plataforma.
+              </p>
+            </div>
             <Button type="submit" size="lg" fullWidth disabled={isSubmitting}>
               {isSubmitting ? 'Ingresando…' : 'Iniciar sesión'}
             </Button>
@@ -265,20 +265,17 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-zinc-200" />
           </div>
 
-          <ul className="mt-4 flex flex-col gap-2.5">
-            <li className="flex items-center gap-2 text-xs text-zinc-500">
-              <LuLockKeyhole aria-hidden="true" size={14} className="shrink-0 text-zinc-400" />
+          <ul className="mt-4 flex flex-col gap-2.5 rounded-lg border border-sky-100 bg-sky-50/60 p-3">
+            <li className="flex items-center gap-2 text-xs leading-5 text-sky-950">
+              <LuLockKeyhole aria-hidden="true" size={14} className="shrink-0 text-sky-700" />
               Tu sesión está protegida. No compartas tu contraseña.
             </li>
-            <li className="flex items-center gap-2 text-xs text-zinc-500">
-              <LuCircleHelp aria-hidden="true" size={14} className="shrink-0 text-zinc-400" />
+            <li className="flex items-center gap-2 text-xs leading-5 text-sky-950">
+              <LuCircleHelp aria-hidden="true" size={14} className="shrink-0 text-sky-700" />
               ¿Problemas para ingresar? Contacta a un administrador.
             </li>
           </ul>
 
-          <p className="mt-8 text-center text-xs text-zinc-400">
-            © {new Date().getFullYear()} StockNext · v0.1.0
-          </p>
           <nav aria-label="Información legal" className="mt-3 flex justify-center gap-4">
             <a
               href="#politica-de-privacidad"
