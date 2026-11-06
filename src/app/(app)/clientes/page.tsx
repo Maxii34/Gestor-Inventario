@@ -17,7 +17,10 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   actualizarCliente,
   crearCliente,
@@ -60,6 +63,8 @@ function validarFormulario(form: FormularioCliente): string | null {
 interface FilaCliente extends BackendCliente {
   onEdit: () => void;
   onDelete: () => void;
+  soloLectura: boolean;
+  motivoSoloLectura: string;
 }
 
 const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
@@ -135,22 +140,24 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
       <span className="inline-flex gap-1 whitespace-nowrap">
         <Button
           type="button"
-          variant="ghost"
+          variant="action"
           size="sm"
           aria-label={`Editar ${row.nombre} ${row.apellido}`}
           onClick={row.onEdit}
-          className="hover:border-zinc-200 hover:bg-zinc-100"
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
         >
           <LuPencil aria-hidden="true" size={14} />
           Editar
         </Button>
         <Button
           type="button"
-          variant="ghost"
+          variant="actionDanger"
           size="sm"
           aria-label={`Eliminar ${row.nombre} ${row.apellido}`}
           onClick={row.onDelete}
-          className="text-zinc-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+          disabled={row.soloLectura}
+          title={row.soloLectura ? row.motivoSoloLectura : undefined}
         >
           <LuTrash2 aria-hidden="true" size={14} />
           Eliminar
@@ -161,6 +168,7 @@ const CLIENTE_COLUMNAS: TableColumn<FilaCliente>[] = [
 ];
 
 export default function ClientesPage() {
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const [clientes, setClientes] = useState<BackendCliente[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -207,13 +215,8 @@ export default function ClientesPage() {
     setIsFiltering(true);
     setFilterError(null);
     try {
-      const primera = await listarClientes(1, 1);
-      if (primera.meta.total === 0) {
-        setTodosClientes([]);
-        return;
-      }
-      const completa = await listarClientes(1, primera.meta.total);
-      setTodosClientes(completa.clientes);
+      const clientes = await cargarTodasLasPaginas<BackendCliente>('/clientes');
+      setTodosClientes(clientes);
     } catch (err) {
       setTodosClientes([]);
       setFilterError(
@@ -287,11 +290,16 @@ export default function ClientesPage() {
         ...(form.telefono.trim() ? { telefono: form.telefono.trim() } : {}),
         ...(form.email.trim() ? { email: form.email.trim() } : {}),
       };
-      if (editingId === null) {
+      const esEdicion = editingId !== null;
+      if (!esEdicion) {
         await crearCliente(input);
       } else {
         await actualizarCliente(editingId, input);
       }
+      notifySuccess(
+        esEdicion ? 'Cliente actualizado' : 'Cliente agregado',
+        `${input.nombre} ${input.apellido} ya está en tu listado.`,
+      );
       cancelarEdicion();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
@@ -314,7 +322,9 @@ export default function ClientesPage() {
     setDeleteError(null);
     setIsDeleting(true);
     try {
+      const nombreCliente = `${deleteTarget.nombre} ${deleteTarget.apellido}`.trim();
       await eliminarCliente(deleteTarget.id);
+      notifySuccess('Cliente eliminado', `${nombreCliente} se quitó de tu listado.`);
       setDeleteTarget(null);
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
@@ -365,6 +375,8 @@ export default function ClientesPage() {
       setDeleteError(null);
       setDeleteTarget(cliente);
     },
+    soloLectura,
+    motivoSoloLectura,
   }));
 
   return (
@@ -373,7 +385,13 @@ export default function ClientesPage() {
         title="Clientes"
         description="Administra la información de los clientes registrados."
         actions={
-          <Button type="button" className="w-full sm:w-auto" onClick={nuevoCliente}>
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={nuevoCliente}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
+          >
             <LuPlus aria-hidden="true" size={16} />
             Nuevo cliente
           </Button>
@@ -479,6 +497,7 @@ export default function ClientesPage() {
                   page={paginaVisible}
                   totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                  compactOnMobile
                 />
               </div>
             </>
@@ -548,7 +567,12 @@ export default function ClientesPage() {
             <Button type="button" variant="outline" onClick={cancelarEdicion}>
               Cancelar
             </Button>
-            <Button type="button" onClick={() => void guardarCliente()} disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={() => void guardarCliente()}
+              disabled={isSubmitting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
               <LuSave aria-hidden="true" size={16} />
               {isSubmitting
                 ? 'Guardando…'
@@ -585,7 +609,8 @@ export default function ClientesPage() {
             <Button
               type="button"
               variant="danger"
-              disabled={isDeleting}
+              disabled={isDeleting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
               onClick={() => void confirmarEliminacion()}
             >
               {isDeleting ? 'Eliminando…' : 'Eliminar'}

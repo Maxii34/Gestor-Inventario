@@ -21,8 +21,8 @@ export function Card({ title, subtitle, actions, footer, children, padding = 'md
       {(title || actions) && (
         <div className="flex items-start justify-between gap-4 p-4 pb-0">
           <div>
-            {title && <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>}
-            {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
+            {title && <h3 className="text-base font-semibold text-zinc-900">{title}</h3>}
+            {subtitle && <p className="mt-0.5 text-sm font-medium text-zinc-500">{subtitle}</p>}
           </div>
           {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
         </div>

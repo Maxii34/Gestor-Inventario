@@ -7,3 +7,4 @@ export * from './Badge';
 export * from './Modal';
 export * from './PageHeader';
 export * from './EmptyState';
+export * from './BrandLockup';

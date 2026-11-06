@@ -1,13 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuFilter, LuPlus, LuSave } from 'react-icons/lu';
+import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  LuArrowDownToLine,
+  LuArrowUpDown,
+  LuArrowUpFromLine,
+  LuClipboardList,
+  LuFilter,
+  LuPlus,
+  LuSave,
+  LuX,
+} from 'react-icons/lu';
 import {
   Badge,
   Button,
   Card,
   FormField,
   Input,
+  Modal,
   PageHeader,
   Pagination,
   SearchInput,
@@ -16,7 +27,10 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import { notifySuccess } from '@/lib/notifications/toast';
 import {
   listarMovimientos,
   registrarMovimiento,
@@ -88,7 +102,7 @@ const TIPO_BADGE_BORDE: Record<TipoMovimientoBackend, string> = {
 const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   {
     key: 'fecha',
-    header: 'Fecha',
+    header: '# Fecha y Hora',
     render: (row) => (
       <span className="whitespace-nowrap text-[13px] text-zinc-600 tabular-nums">
         {formatoFechaHora(row.fecha)}
@@ -97,7 +111,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'producto',
-    header: 'Producto',
+    header: '# Producto Vendido',
     render: (row) => {
       const nombre = row.producto?.nombre ?? '—';
       return (
@@ -112,7 +126,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'tipo',
-    header: 'Tipo',
+    header: '# Tipo',
     render: (row) => {
       const visual = TIPO_VISUAL[row.tipo];
       return (
@@ -124,7 +138,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'cantidad',
-    header: 'Cantidad',
+    header: '# Cantidad',
     align: 'right',
     render: (row) => (
       <span
@@ -142,7 +156,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'stockAnterior',
-    header: 'Stock anterior',
+    header: '# Stock anterior',
     align: 'center',
     render: (row) => (
       <span className="text-zinc-600 tabular-nums">{row.stockAnterior}</span>
@@ -150,7 +164,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'stockNuevo',
-    header: 'Stock nuevo',
+    header: '# Stock nuevo',
     align: 'center',
     render: (row) => (
       <span className="font-semibold text-zinc-900 tabular-nums">{row.stockNuevo}</span>
@@ -158,7 +172,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
   },
   {
     key: 'motivo',
-    header: 'Motivo',
+    header: '# Motivo',
     render: (row) =>
       row.motivo?.trim() ? (
         <span
@@ -174,6 +188,8 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
 ];
 
 export default function MovimientosPage() {
+  const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const router = useRouter();
   const [movimientos, setMovimientos] = useState<BackendMovimiento[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
   const [page, setPage] = useState(1);
@@ -183,12 +199,21 @@ export default function MovimientosPage() {
   const [productoId, setProductoId] = useState('');
   const [tipo, setTipo] = useState<TipoMovimientoBackend>('ENTRADA');
   const [cantidad, setCantidad] = useState('');
+  const [unidadCantidad, setUnidadCantidad] = useState<'unidad' | 'caja'>('unidad');
   const [motivo, setMotivo] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const [productosOpciones, setProductosOpciones] = useState<
-    { value: string; label: string }[]
+    {
+      value: string;
+      label: string;
+      stock: number;
+      stockMinimo: number;
+      unidadesPorPaquete: number;
+    }[]
   >([]);
   const [productosError, setProductosError] = useState<string | null>(null);
 
@@ -223,6 +248,7 @@ export default function MovimientosPage() {
   }, []);
 
   const cargarProductos = useCallback(async (): Promise<void> => {
+    setIsLoadingProducts(true);
     setProductosError(null);
     try {
       const resultado = await listarProductos(1, PRODUCTOS_PAGE_SIZE);
@@ -230,6 +256,13 @@ export default function MovimientosPage() {
         resultado.productos.map((producto) => ({
           value: String(producto.id),
           label: producto.nombre,
+          stock: producto.stock,
+          stockMinimo: producto.stockMinimo,
+          unidadesPorPaquete:
+            Number.isInteger(Number(producto.unidadesPorPaquete)) &&
+            Number(producto.unidadesPorPaquete) > 1
+              ? Number(producto.unidadesPorPaquete)
+              : 1,
         })),
       );
     } catch (err) {
@@ -239,6 +272,8 @@ export default function MovimientosPage() {
           ? err.message
           : 'No pudimos cargar los productos.',
       );
+    } finally {
+      setIsLoadingProducts(false);
     }
   }, []);
 
@@ -246,13 +281,8 @@ export default function MovimientosPage() {
     setIsFiltering(true);
     setFilterError(null);
     try {
-      const primera = await listarMovimientos(1, 1);
-      if (primera.meta.total === 0) {
-        setTodosMovimientos([]);
-        return;
-      }
-      const completa = await listarMovimientos(1, primera.meta.total);
-      setTodosMovimientos(completa.movimientos);
+      const movimientos = await cargarTodasLasPaginas<BackendMovimiento>('/movimientos');
+      setTodosMovimientos(movimientos);
     } catch (err) {
       setTodosMovimientos([]);
       setFilterError(
@@ -269,10 +299,9 @@ export default function MovimientosPage() {
     if (hayFiltros) return;
     async function cargarInicial(): Promise<void> {
       await cargarPagina(page);
-      await cargarProductos();
     }
     void cargarInicial();
-  }, [page, hayFiltros, cargarPagina, cargarProductos]);
+  }, [page, hayFiltros, cargarPagina]);
 
   useEffect(() => {
     if (!hayFiltros) return;
@@ -282,18 +311,50 @@ export default function MovimientosPage() {
     void cargarTodo();
   }, [hayFiltros, cargarTodoParaFiltrar]);
 
+  useEffect(() => {
+    const parametros = new URLSearchParams(window.location.search);
+    if (parametros.get('reponer') !== '1') return;
+
+    startTransition(() => {
+      setProductoId(parametros.get('productoId') ?? '');
+      setTipo('ENTRADA');
+      setCantidad('');
+      setUnidadCantidad('unidad');
+      setMotivo('');
+      setFormError(null);
+      setIsFormOpen(true);
+    });
+    if (productosOpciones.length === 0 && !isLoadingProducts) {
+      queueMicrotask(() => {
+        void cargarProductos();
+      });
+    }
+    router.replace('/movimientos', { scroll: false });
+  }, [cargarProductos, isLoadingProducts, productosOpciones.length, router]);
+
   function limpiarFormulario(): void {
+    setIsFormOpen(false);
     setProductoId('');
     setTipo('ENTRADA');
     setCantidad('');
+    setUnidadCantidad('unidad');
     setMotivo('');
     setFormError(null);
+  }
+
+  function abrirFormulario(): void {
+    limpiarFormulario();
+    if (productosOpciones.length === 0 && !isLoadingProducts) void cargarProductos();
+    setIsFormOpen(true);
   }
 
   async function guardarMovimiento(): Promise<void> {
     if (isSubmitting) return;
     const productoIdNumero = Number(productoId);
     const cantidadNumero = Number(cantidad);
+    const producto = productosOpciones.find((opcion) => opcion.value === productoId);
+    const unidadesPaquete = producto?.unidadesPorPaquete ?? 1;
+    const usarCajas = tipo === 'ENTRADA' && unidadesPaquete > 1 && unidadCantidad === 'caja';
     if (!Number.isInteger(productoIdNumero) || productoIdNumero <= 0) {
       setFormError('El producto es obligatorio.');
       return;
@@ -302,15 +363,37 @@ export default function MovimientosPage() {
       setFormError('La cantidad debe ser un número entero mayor a 0.');
       return;
     }
+    const cantidadUnidades = usarCajas
+      ? cantidadNumero * unidadesPaquete
+      : cantidadNumero;
+    const detalleCajas = usarCajas
+      ? `${cantidadNumero} cajas × ${unidadesPaquete}`
+      : null;
+    const motivoFinal = [motivo.trim(), detalleCajas].filter(Boolean).join(' · ');
     setFormError(null);
     setIsSubmitting(true);
     try {
-      await registrarMovimiento({
+      const movimiento = await registrarMovimiento({
         tipo,
-        cantidad: cantidadNumero,
+        cantidad: cantidadUnidades,
         productoId: productoIdNumero,
-        ...(motivo.trim() ? { motivo: motivo.trim() } : {}),
+        ...(motivoFinal ? { motivo: motivoFinal } : {}),
       });
+      setProductosOpciones((opciones) =>
+        opciones.map((opcion) =>
+          opcion.value === productoId
+            ? { ...opcion, stock: movimiento.stockNuevo }
+            : opcion,
+        ),
+      );
+      notifySuccess(
+        tipo === 'ENTRADA'
+          ? 'Stock repuesto'
+          : tipo === 'SALIDA'
+            ? 'Salida de stock registrada'
+            : 'Ajuste de stock registrado',
+        producto ? `Inventario actualizado para "${producto.label}".` : 'El inventario fue actualizado.',
+      );
       limpiarFormulario();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
@@ -357,47 +440,124 @@ export default function MovimientosPage() {
   const filasTabla = hayFiltros
     ? movimientosFiltrados.slice((paginaVisible - 1) * PAGE_SIZE, paginaVisible * PAGE_SIZE)
     : movimientos;
+  const entradasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'ENTRADA').length;
+  const salidasEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'SALIDA').length;
+  const ajustesEnPagina = filasTabla.filter((movimiento) => movimiento.tipo === 'AJUSTE').length;
+  const productosSinStock = productosOpciones.filter((producto) => producto.stock <= 0);
+  const productoSeleccionado = productosOpciones.find((producto) => producto.value === productoId);
+  const unidadesPaqueteSeleccionado = productoSeleccionado?.unidadesPorPaquete ?? 1;
+  const mostrarSelectorCajas =
+    tipo === 'ENTRADA' && unidadesPaqueteSeleccionado > 1;
+  const cantidadUnidadesVista =
+    Number(cantidad) *
+    (mostrarSelectorCajas && unidadCantidad === 'caja'
+      ? unidadesPaqueteSeleccionado
+      : 1);
+  const opcionesProducto = productosOpciones.map((producto) => ({
+    value: producto.value,
+    label: `${producto.label} · Stock ${producto.stock}${
+      producto.stock <= producto.stockMinimo ? ' · STOCK BAJO' : ''
+    }`,
+  }));
 
   return (
     <>
       <PageHeader
-        title="Movimientos de stock"
-        description="Consulta y registra los movimientos de inventario."
+        title="Control de stock"
+        description="Reponé stock, registrá salidas por ventas u otros motivos y ajustá existencias. Consultá el historial de cambios del inventario."
         actions={
           <Button
             type="button"
             className="w-full sm:w-auto"
-            onClick={() =>
-              document.getElementById('movimiento-formulario')?.scrollIntoView({ behavior: 'smooth' })
-            }
+            onClick={abrirFormulario}
+            disabled={soloLectura}
+            title={soloLectura ? motivoSoloLectura : undefined}
           >
             <LuPlus aria-hidden="true" size={16} />
-            Registrar movimiento
+            Reponer stock
           </Button>
         }
       />
 
-      <div className="flex flex-col gap-4 md:gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="flex flex-col gap-5">
+        <section
+          aria-label="Resumen del control de stock"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4"
+        >
           <Reveal delay={0}>
-            <Card title="Movimientos totales" subtitle="Movimientos en el sistema">
-              <p className="text-2xl font-bold text-zinc-900 tabular-nums">{meta.total}</p>
-              <p className="mt-1 text-xs text-zinc-500">registrados en el sistema</p>
+            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 sm:h-10 sm:w-10">
+                  <LuClipboardList aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Movimientos registrados</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
+                    {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
             </Card>
           </Reveal>
-        </div>
+          <Reveal delay={0.05}>
+            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
+                  <LuArrowDownToLine aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Reposiciones mostradas.</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
+                    {isLoading || isFiltering ? '—' : entradasEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700 sm:h-10 sm:w-10">
+                  <LuArrowUpFromLine aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Salidas mostradas.</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
+                    {isLoading || isFiltering ? '—' : salidasEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700 sm:h-10 sm:w-10">
+                  <LuArrowUpDown aria-hidden="true" size={19} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Ajustes de stock.</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
+                    {isLoading || isFiltering ? '—' : ajustesEnPagina}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+        </section>
 
         <Reveal delay={0.05}>
           <Card
-            title="Filtros"
-            subtitle="Filtros aplicados sobre los datos cargados"
+            title="Buscar en el historial"
+            subtitle="Filtrá por producto, motivo, tipo de movimiento o período."
             actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+            className="border-zinc-200/80 shadow-sm"
           >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <SearchInput
               id="buscar-movimiento"
-              label="Buscar"
-              placeholder="Buscar producto o motivo..."
+              label="Producto o motivo"
+              placeholder="Ej. Leche, compra a proveedor…"
               value={busqueda}
               onChange={(valor) => {
                 setBusqueda(valor);
@@ -424,17 +584,47 @@ export default function MovimientosPage() {
             options={PERIODO_OPCIONES}
           />
           </div>
+          {hayFiltros && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-3">
+              <p className="text-xs text-zinc-500">
+                {movimientosFiltrados.length.toLocaleString('es-AR')}{' '}
+                {movimientosFiltrados.length === 1 ? 'resultado' : 'resultados'}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setBusqueda('');
+                  setFiltroTipo('todos');
+                  setFiltroPeriodo('todos');
+                  setDesdePeriodo(null);
+                  setPage(1);
+                }}
+              >
+                <LuX aria-hidden="true" size={14} />
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
           </Card>
         </Reveal>
 
         <Reveal delay={0.1}>
           <Card
-            title="Historial de movimientos"
+            title="Historial de stock"
             subtitle={
               hayFiltros
-                ? `${movimientosFiltrados.length} movimientos encontrados`
-                : `${meta.total} movimientos registrados`
+                ? `${movimientosFiltrados.length.toLocaleString('es-AR')} resultados`
+                : `${meta.total.toLocaleString('es-AR')} movimientos registrados.`
             }
+            actions={
+              <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:inline-flex">
+                <LuClipboardList aria-hidden="true" size={15} />
+                {hayFiltros ? 'Vista filtrada' : 'Todos los registros'}
+              </span>
+            }
+            className="border-zinc-200/80 shadow-sm"
           >
           {isLoading || isFiltering ? (
             <div className="flex flex-col gap-2" aria-hidden="true">
@@ -480,12 +670,15 @@ export default function MovimientosPage() {
               />
               <div className="mt-4 flex flex-col items-center justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row">
                 <p className="text-xs text-zinc-500 tabular-nums">
-                  Página {paginaVisible} de {totalPaginasVisibles}
+                  {hayFiltros
+                    ? `${movimientosFiltrados.length === 0 ? 0 : (paginaVisible - 1) * PAGE_SIZE + 1}–${Math.min(paginaVisible * PAGE_SIZE, movimientosFiltrados.length)} de ${movimientosFiltrados.length}`
+                    : `Página ${paginaVisible} de ${totalPaginasVisibles} · ${meta.total} registros`}
                 </p>
                 <Pagination
                   page={paginaVisible}
                   totalPages={totalPaginasVisibles}
                   onPageChange={(nuevaPagina) => setPage(nuevaPagina)}
+                  compactOnMobile
                 />
               </div>
             </>
@@ -493,23 +686,134 @@ export default function MovimientosPage() {
           </Card>
         </Reveal>
 
-        <Reveal delay={0.15}>
-          <Card title="Registrar movimiento" subtitle="Formulario conectado al backend">
-          <div id="movimiento-formulario" className="grid scroll-mt-20 grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField label="Producto" htmlFor="movimiento-producto" required>
+      </div>
+
+      <Modal
+        open={isFormOpen}
+        title="Reponer stock"
+        description="Elegí el producto y la cantidad que querés agregar. También podés registrar una salida o ajustar las existencias."
+        size="lg"
+        onClose={() => {
+          if (!isSubmitting) limpiarFormulario();
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={limpiarFormulario}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="movimiento-formulario"
+              disabled={isSubmitting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
+              <LuSave aria-hidden="true" size={16} />
+              {isSubmitting ? 'Registrando…' : 'Guardar movimiento'}
+            </Button>
+          </>
+        }
+      >
+        {productosSinStock.length > 0 && (
+          <section
+            aria-labelledby="productos-sin-stock-titulo"
+            className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3"
+          >
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <h3 id="productos-sin-stock-titulo" className="text-sm font-semibold text-amber-950">
+                  Productos sin stock
+                </h3>
+                <p className="text-xs text-amber-800">
+                  Seleccioná uno para cargarlo en la reposición.
+                </p>
+              </div>
+              <Badge tone="warning">{productosSinStock.length}</Badge>
+            </div>
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+              {productosSinStock.map((producto) => (
+                <button
+                  key={producto.value}
+                  type="button"
+                  aria-pressed={productoId === producto.value}
+                  onClick={() => {
+                    setProductoId(producto.value);
+                    setTipo('ENTRADA');
+                    setFormError(null);
+                  }}
+                  className={`max-w-full truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    productoId === producto.value
+                      ? 'border-amber-400 bg-amber-100 text-amber-950 ring-2 ring-amber-200'
+                      : 'border-amber-200 bg-white text-zinc-700 hover:border-amber-400 hover:bg-amber-100/70'
+                  }`}
+                  title={`${producto.label} · stock mínimo ${producto.stockMinimo}`}
+                >
+                  {producto.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        <form
+          id="movimiento-formulario"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void guardarMovimiento();
+          }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
+            <FormField
+              label="Producto"
+              htmlFor="movimiento-producto"
+              required
+              hint="Las opciones con “STOCK BAJO” están en el mínimo o por debajo."
+            >
               <Select
                 id="movimiento-producto"
                 value={productoId}
-                onChange={(event) => setProductoId(event.target.value)}
-                placeholder="Seleccionar producto"
-                options={productosOpciones}
+                onChange={(event) => {
+                  setProductoId(event.target.value);
+                  setUnidadCantidad('unidad');
+                }}
+                required
+                disabled={isLoadingProducts}
+                placeholder={isLoadingProducts ? 'Cargando productos…' : 'Seleccionar producto'}
+                options={opcionesProducto}
               />
             </FormField>
+            {productoSeleccionado && (
+              <div
+                role="status"
+                className={`-mt-2 rounded-lg border px-3 py-2 text-xs sm:col-span-2 ${
+                  productoSeleccionado.stock <= productoSeleccionado.stockMinimo
+                    ? 'border-amber-200 bg-amber-50 text-amber-900'
+                    : 'border-zinc-200 bg-zinc-50 text-zinc-600'
+                }`}
+              >
+                <span className="font-semibold">{productoSeleccionado.label}</span>
+                <span className="mx-1.5" aria-hidden="true">·</span>
+                Stock actual: <strong>{productoSeleccionado.stock}</strong>
+                <span className="mx-1.5" aria-hidden="true">·</span>
+                Mínimo: <strong>{productoSeleccionado.stockMinimo}</strong>
+                {productoSeleccionado.stock <= productoSeleccionado.stockMinimo && (
+                  <span className="ml-2 font-semibold">Stock bajo</span>
+                )}
+              </div>
+            )}
             <FormField label="Tipo de movimiento" htmlFor="movimiento-tipo">
               <Select
                 id="movimiento-tipo"
                 value={tipo}
-                onChange={(event) => setTipo(event.target.value as TipoMovimientoBackend)}
+                onChange={(event) => {
+                  const nuevoTipo = event.target.value as TipoMovimientoBackend;
+                  setTipo(nuevoTipo);
+                  if (nuevoTipo !== 'ENTRADA') setUnidadCantidad('unidad');
+                }}
+                required
                 options={[
                   { value: 'ENTRADA', label: 'Entrada' },
                   { value: 'SALIDA', label: 'Salida' },
@@ -522,9 +826,13 @@ export default function MovimientosPage() {
               htmlFor="movimiento-cantidad"
               required
               hint={
-                tipo === 'AJUSTE'
-                  ? 'En un ajuste, la cantidad será el stock resultante.'
-                  : undefined
+                mostrarSelectorCajas && unidadCantidad === 'caja'
+                  ? `= ${Number.isFinite(cantidadUnidadesVista) ? cantidadUnidadesVista : 0} unidades`
+                  : tipo === 'AJUSTE'
+                    ? 'Indicá el stock final que debería quedar para el producto.'
+                    : tipo === 'ENTRADA'
+                      ? 'La cantidad se sumará al stock actual.'
+                      : 'La cantidad se descontará del stock actual.'
               }
             >
               <Input
@@ -532,45 +840,62 @@ export default function MovimientosPage() {
                 type="number"
                 min={1}
                 step={1}
+                required
                 placeholder="0"
                 value={cantidad}
                 onChange={(event) => setCantidad(event.target.value)}
               />
             </FormField>
-            <FormField label="Motivo" htmlFor="movimiento-motivo">
+            {mostrarSelectorCajas && (
+              <FormField label="Cargar cantidad en" htmlFor="movimiento-unidad">
+                <Select
+                  id="movimiento-unidad"
+                  value={unidadCantidad}
+                  onChange={(event) =>
+                    setUnidadCantidad(
+                      event.target.value as 'unidad' | 'caja',
+                    )
+                  }
+                  options={[
+                    { value: 'unidad', label: 'Unidades' },
+                    { value: 'caja', label: 'Cajas' },
+                  ]}
+                />
+              </FormField>
+            )}
+            <FormField label="Proveedor" htmlFor="movimiento-proveedor">
               <Input
-                id="movimiento-motivo"
-                placeholder="Ej: Compra a proveedor (opcional)"
+                id="movimiento-proveedor"
+                placeholder="Nombre del proveedor (opcional)"
                 value={motivo}
                 onChange={(event) => setMotivo(event.target.value)}
               />
             </FormField>
-          </div>
           {productosError && (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-              {productosError}
-            </p>
+            <div className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <p role="alert" className="text-sm font-medium text-red-700">{productosError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                disabled={isLoadingProducts}
+                onClick={() => void cargarProductos()}
+              >
+                {isLoadingProducts ? 'Cargando…' : 'Reintentar carga de productos'}
+              </Button>
+            </div>
           )}
           {formError && (
             <p
               role="alert"
-              className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+              className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
             >
               {formError}
             </p>
           )}
-          <div className="mt-4 flex flex-col-reverse gap-2 border-t border-zinc-100 pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={limpiarFormulario}>
-              Cancelar
-            </Button>
-            <Button type="button" onClick={() => void guardarMovimiento()} disabled={isSubmitting}>
-              <LuSave aria-hidden="true" size={16} />
-              {isSubmitting ? 'Registrando…' : 'Registrar movimiento'}
-            </Button>
-          </div>
-          </Card>
-        </Reveal>
-      </div>
+        </form>
+      </Modal>
     </>
   );
 }

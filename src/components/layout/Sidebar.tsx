@@ -4,9 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LuArrowUpDown,
+  LuArrowUpRight,
+  LuBoxes,
   LuLayoutDashboard,
+  LuLifeBuoy,
   LuLogOut,
   LuPackage,
+  LuPanelLeftClose,
+  LuPanelLeftOpen,
   LuShoppingCart,
   LuTags,
   LuUserCog,
@@ -14,6 +19,8 @@ import {
   LuX,
 } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
+import { MODULO_CLIENTES } from "@/lib/config";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 
 const NAV_ITEMS = [
   {
@@ -39,7 +46,7 @@ const NAV_ITEMS = [
   },
   {
     href: "/movimientos",
-    label: "Movimientos",
+    label: "Control de stock",
     icon: LuArrowUpDown,
     accent: "border-teal-400 bg-teal-500/10 text-teal-200",
     accentIcon: "text-teal-400",
@@ -71,19 +78,43 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onClose?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  onClose,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  onNavigate?: () => void;
+  onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isAdmin = user?.rol === "ADMIN";
 
   return (
     <div className="flex h-full flex-col bg-zinc-900 text-zinc-300">
-      <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 pb-5 pt-6">
-        <div>
-          <p className="text-base font-semibold tracking-tight text-white">
-            Gestor de Inventario
-          </p>
-          <p className="mt-1 text-xs text-zinc-400">Panel administrativo</p>
-        </div>
+      <div
+        className={`flex items-center border-b border-white/10 ${
+          collapsed ? "flex-col gap-3 px-2 py-4" : "justify-between gap-4 px-5 pb-5 pt-6"
+        }`}
+      >
+        {collapsed ? (
+          <span
+            role="img"
+            aria-label="StockNext"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-cyan-500 text-white shadow-sm shadow-indigo-950/20"
+          >
+            <LuBoxes aria-hidden="true" size={18} strokeWidth={2.2} />
+          </span>
+        ) : (
+          <BrandLockup
+            variant="dark"
+            size="sm"
+            subtitle="Gestión inteligente de tu negocio"
+          />
+        )}
         {onClose && (
           <button
             type="button"
@@ -94,11 +125,33 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
             <LuX aria-hidden="true" size={18} />
           </button>
         )}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Expandir menú" : "Contraer menú"}
+            className={`rounded-lg p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white ${
+              collapsed ? "" : "shrink-0"
+            }`}
+          >
+            {collapsed ? (
+              <LuPanelLeftOpen aria-hidden="true" size={18} />
+            ) : (
+              <LuPanelLeftClose aria-hidden="true" size={18} />
+            )}
+          </button>
+        )}
       </div>
 
       <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(
+            (item) =>
+              (item.href !== "/usuarios" || isAdmin) &&
+              (item.href !== "/clientes" || MODULO_CLIENTES),
+          ).map((item) => {
             const active = isActive(pathname, item.href);
             const Icon = item.icon;
             return (
@@ -107,7 +160,11 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center rounded-lg py-2 text-sm transition-colors ${
+                    collapsed ? "justify-center px-0" : "gap-2.5 px-3"
+                  } ${
                     active
                       ? `border-l-2 font-medium ${item.accent}`
                       : "border-l-2 border-transparent text-zinc-400 hover:bg-white/5 hover:text-white"
@@ -118,7 +175,7 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
                     size={18}
                     className={`shrink-0 ${active ? item.accentIcon : "text-zinc-500"}`}
                   />
-                  {item.label}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             );
@@ -126,18 +183,63 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
         </ul>
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/10 bg-zinc-950/20 p-3">
+        <Link
+          href="/soporte"
+          onClick={onNavigate}
+          aria-current={isActive(pathname, "/soporte") ? "page" : undefined}
+          aria-label={collapsed ? "Soporte" : undefined}
+          title={collapsed ? "Soporte" : undefined}
+          className={`group flex items-center rounded-xl border p-2.5 transition-colors ${
+            collapsed ? "justify-center" : "gap-3"
+          } ${
+            isActive(pathname, "/soporte")
+              ? "border-indigo-400/30 bg-indigo-500/10 text-white"
+              : "border-white/5 bg-white/3 text-zinc-300 hover:border-indigo-400/25 hover:bg-indigo-500/10"
+          }`}
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500/20 to-cyan-500/20 text-indigo-300 ring-1 ring-white/10 transition-colors group-hover:text-cyan-200">
+            <LuLifeBuoy aria-hidden="true" size={18} />
+          </span>
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium leading-5">Centro de ayuda</span>
+                <span className="block text-xs leading-4 text-zinc-500 group-hover:text-zinc-400">
+                  Estamos para ayudarte
+                </span>
+              </span>
+              <LuArrowUpRight
+                aria-hidden="true"
+                size={16}
+                className="shrink-0 text-zinc-500 transition-colors group-hover:text-cyan-300"
+              />
+            </>
+          )}
+        </Link>
         <button
           type="button"
           onClick={() => {
             onNavigate?.();
             void logout();
           }}
-          className="flex w-full items-center gap-2.5 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-red-300/80 transition-colors hover:border-red-400 hover:bg-red-500/10 hover:text-red-200"
+          aria-label={collapsed ? "Cerrar sesión" : undefined}
+          title={collapsed ? "Cerrar sesión" : undefined}
+          className={`mt-2 flex w-full items-center rounded-lg px-2.5 py-2 text-sm text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-200 ${
+            collapsed ? "justify-center" : "gap-3"
+          }`}
         >
-          <LuLogOut aria-hidden="true" size={18} className="shrink-0 text-red-400" />
-          Cerrar sesión
+          <LuLogOut aria-hidden="true" size={18} className="shrink-0 text-zinc-500" />
+          {!collapsed && "Cerrar sesión"}
         </button>
+        {!collapsed && (
+          <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-zinc-600">
+            <span>© {new Date().getFullYear()} StockNext</span>
+            <span className="rounded-full border border-white/5 px-2 py-0.5 text-zinc-500">
+              v1.0.0
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -146,15 +248,29 @@ function SidebarContent({ onNavigate, onClose }: { onNavigate?: () => void; onCl
 interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  desktopCollapsed: boolean;
+  onToggleDesktop: () => void;
 }
 
-export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
+export function Sidebar({
+  mobileOpen,
+  onCloseMobile,
+  desktopCollapsed,
+  onToggleDesktop,
+}: SidebarProps) {
   return (
     <>
       {/* Desktop / tablet horizontal amplia: sidebar fijo */}
-      <aside className="hidden w-64 shrink-0 lg:block">
+      <aside
+        className={`hidden shrink-0 transition-[width] duration-200 lg:block ${
+          desktopCollapsed ? "w-20" : "w-64"
+        }`}
+      >
         <div className="sticky top-0 h-screen">
-          <SidebarContent />
+          <SidebarContent
+            collapsed={desktopCollapsed}
+            onToggleCollapse={onToggleDesktop}
+          />
         </div>
       </aside>
 

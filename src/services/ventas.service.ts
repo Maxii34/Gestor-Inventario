@@ -1,7 +1,7 @@
 import { apiRequest } from '@/lib/api/client';
 import type { ApiListResponse, ApiSuccess, PageMeta } from '@/types/api';
 
-export type MetodoPagoBackend = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'PEDIDO_DISTANCIA';
+export type MetodoPagoBackend = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA';
 
 export type EstadoVentaBackend = 'PENDIENTE' | 'COMPLETADA' | 'ANULADA' | 'RECHAZADA';
 
@@ -43,7 +43,6 @@ export interface VentaInput {
 
 export interface VentaCreada {
   ventaId: number;
-  initPoint?: string;
 }
 
 export interface VentasPaginadas {
@@ -75,10 +74,10 @@ export async function crearVenta(input: VentaInput): Promise<VentaCreada> {
   return response.data;
 }
 
-export async function anularVenta(id: number): Promise<BackendVenta> {
-  const response = await apiRequest<ApiSuccess<BackendVenta>>(`/ventas/${id}`, {
-    method: 'PUT',
-    body: { estado: 'ANULADA' },
+export async function anularVenta(id: number, motivo: string): Promise<BackendVenta> {
+  const response = await apiRequest<ApiSuccess<BackendVenta>>(`/ventas/${id}/anular`, {
+    method: 'POST',
+    body: { motivo },
     auth: true,
   });
   return response.data;
