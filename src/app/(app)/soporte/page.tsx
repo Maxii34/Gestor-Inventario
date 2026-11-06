@@ -27,7 +27,7 @@ import { useSuscripcion } from "@/context/SuscripcionContext";
 import { tokenStorage } from "@/lib/auth/storage";
 
 const TELEFONO_WHATSAPP = "3816870337";
-const EMAIL_SOPORTE = "exemaxi32@gmail.com";
+const EMAIL_SOPORTE = "stocknext.dev@gmail.com";
 const METADATOS_VACIOS = JSON.stringify({ comercioSlug: "", userAgent: "" });
 
 const NOMBRE_PANTALLA: Record<string, string> = {
