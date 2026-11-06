@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import {
   LuCheck,
   LuClock3,
   LuCreditCard,
+  LuCopy,
   LuExternalLink,
   LuLightbulb,
   LuMail,
@@ -371,6 +372,8 @@ function SeccionTitulo({
 }
 
 export default function SoportePage() {
+  const [emailCopiado, setEmailCopiado] = useState(false);
+  const [errorCopiarEmail, setErrorCopiarEmail] = useState<string | null>(null);
   const pathname = usePathname();
   const { user } = useAuth();
   const { suscripcion } = useSuscripcion();
@@ -435,6 +438,17 @@ export default function SoportePage() {
     "Olvidé mi contraseña. Mi email de acceso es [email].",
   ].join("\n");
 
+  async function copiarEmailSoporte(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(EMAIL_SOPORTE);
+      setEmailCopiado(true);
+      setErrorCopiarEmail(null);
+    } catch {
+      setEmailCopiado(false);
+      setErrorCopiarEmail("No se pudo copiar. Intentá nuevamente.");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-10 pb-10">
       <PageHeader
@@ -488,12 +502,25 @@ export default function SoportePage() {
                 />
                 Email
               </div>
-              <a
-                href={`mailto:${EMAIL_SOPORTE}`}
-                className="mt-2 block break-all text-sm font-medium text-indigo-700 hover:text-indigo-900"
+              <button
+                type="button"
+                onClick={() => void copiarEmailSoporte()}
+                aria-label="Copiar email de soporte"
+                className="mt-2 inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                {EMAIL_SOPORTE}
-              </a>
+                <LuCopy aria-hidden="true" size={15} />
+                Copiar email
+              </button>
+              {emailCopiado && (
+                <p role="status" className="mt-2 text-xs text-emerald-700">
+                  Email copiado.
+                </p>
+              )}
+              {errorCopiarEmail && (
+                <p role="alert" className="mt-2 text-xs text-red-700">
+                  {errorCopiarEmail}
+                </p>
+              )}
               <p className="mt-1 text-xs leading-5 text-zinc-500">
                 Para consultas y seguimiento.
               </p>
@@ -885,22 +912,6 @@ export default function SoportePage() {
                 <LuMessageCircle aria-hidden="true" size={16} /> Reportar por
                 WhatsApp
               </a>
-              <a
-                href={crearEnlaceEmail(
-                  "Reporte de problema en StockNext",
-                  mensajeProblema,
-                )}
-                onClick={(event) => {
-                  event.preventDefault();
-                  abrirEmail(
-                    "Reporte de problema en StockNext",
-                    mensajeProblema,
-                  );
-                }}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
-              >
-                <LuMail aria-hidden="true" size={16} /> Reportar por email
-              </a>
             </div>
           </Card>
           <Card
@@ -980,19 +991,6 @@ export default function SoportePage() {
             >
               <LuMessageCircle aria-hidden="true" size={16} /> Sugerir por
               WhatsApp
-            </a>
-            <a
-              href={crearEnlaceEmail(
-                "Sugerencia para StockNext",
-                mensajeMejora,
-              )}
-              onClick={(event) => {
-                event.preventDefault();
-                abrirEmail("Sugerencia para StockNext", mensajeMejora);
-              }}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
-            >
-              <LuMail aria-hidden="true" size={16} /> Sugerir por email
             </a>
           </div>
         </Card>
