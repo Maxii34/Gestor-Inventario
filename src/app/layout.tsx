@@ -1,28 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Gestor de Inventario",
-  description: "Sistema de gestión de inventario, ventas y stock",
+  title: "StockNext | Gestión de inventario",
+  description: "Gestioná inventario, ventas y stock de tu negocio con StockNext.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full font-sans antialiased`}
     >
       <body className="min-h-screen bg-zinc-100 text-zinc-900">
         <AuthProvider>{children}</AuthProvider>

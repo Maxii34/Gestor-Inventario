@@ -1,7 +1,10 @@
 'use client';
 
-import { LuMenu } from 'react-icons/lu';
+import { useState } from 'react';
+import { LuBuilding2, LuMenu } from 'react-icons/lu';
 import { useAuth } from '@/context/AuthContext';
+import { tokenStorage } from '@/lib/auth/storage';
+import type { Comercio } from '@/types/auth';
 import type { AuthRole } from '@/types/auth';
 
 interface HeaderProps {
@@ -23,6 +26,7 @@ function getIniciales(nombre: string): string {
 
 export function Header({ title, onOpenMobileMenu }: HeaderProps) {
   const { user } = useAuth();
+  const [comercio] = useState<Comercio | null>(() => tokenStorage.getStoredComercio());
   const nombre = user?.nombre ?? 'Usuario';
   const rol = user ? ROL_ETIQUETA[user.rol] : '···';
 
@@ -43,22 +47,53 @@ export function Header({ title, onOpenMobileMenu }: HeaderProps) {
             <h1 className="truncate text-base font-semibold text-zinc-900 md:text-lg">
               {title}
             </h1>
-            <p className="hidden text-xs text-zinc-500 sm:block">
-              Gestor de Inventario
+            <p className="hidden text-xs font-medium tracking-wide text-indigo-600 sm:block">
+              StockNext
             </p>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <div className="text-right">
-            <p className="text-sm font-medium leading-tight text-zinc-900">{nombre}</p>
-            <p className="text-xs leading-tight text-zinc-500">{rol}</p>
+        <div className="flex min-w-0 max-w-[55%] shrink items-center gap-2 sm:gap-3 md:max-w-[65%]">
+          {comercio && (
+            <>
+              <div
+                title={`${comercio.nombre} · ${comercio.slug}`}
+                className="hidden min-w-0 max-w-48 items-center gap-2 rounded-xl border border-zinc-200/80 bg-zinc-50 px-2.5 py-1.5 lg:flex"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                  <LuBuilding2 aria-hidden="true" size={15} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] font-medium uppercase leading-3 tracking-wide text-zinc-400">
+                    Comercio
+                  </span>
+                  <span className="block truncate text-xs font-semibold leading-4 text-zinc-700">
+                    {comercio.slug}
+                  </span>
+                </span>
+              </div>
+              <span aria-hidden="true" className="hidden h-8 w-px bg-zinc-200 lg:block" />
+            </>
+          )}
+          <div className="min-w-0 text-right">
+            <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
+              <p className="truncate text-sm font-semibold leading-5 text-zinc-900">{nombre}</p>
+              <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-medium leading-4 text-indigo-700">
+                {rol}
+              </span>
+            </div>
+            {user?.email && (
+              <p className="hidden max-w-56 truncate text-xs leading-4 text-zinc-500 sm:block" title={user.email}>
+                {user.email}
+              </p>
+            )}
           </div>
           <span
             aria-hidden="true"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-xs font-semibold text-white"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-600 to-cyan-500 text-xs font-semibold text-white shadow-sm shadow-indigo-900/15 ring-2 ring-white"
           >
             {getIniciales(nombre)}
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
           </span>
         </div>
       </div>

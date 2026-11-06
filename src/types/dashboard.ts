@@ -5,7 +5,7 @@ export type EstadoStockBajo = 'Crítico' | 'Bajo';
 export interface VentaReciente {
   id: string;
   venta: string;
-  cliente: string;
+  producto: string;
   fecha: string;
   total: string;
   estado: EstadoVentaReciente;

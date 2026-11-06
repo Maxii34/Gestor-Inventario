@@ -11,11 +11,12 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  cambiarPassword as cambiarPasswordRequest,
   login as loginRequest,
   logout as logoutRequest,
   onSessionExpired,
-  refreshSession as refreshSessionRequest,
 } from '@/services/auth.service';
+import { refreshAccessToken } from '@/lib/api/client';
 import { tokenStorage } from '@/lib/auth/storage';
 import type { AuthRole, AuthStatus, AuthUser, LoginCredentials } from '@/types/auth';
 
@@ -24,7 +25,8 @@ interface AuthContextValue {
   status: AuthStatus;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthUser>;
+  cambiarPassword: (passwordActual: string, passwordNueva: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
   hasRole: (role: AuthRole | AuthRole[]) => boolean;
@@ -35,7 +37,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const storedUser = tokenStorage.getStoredUser();
-    return tokenStorage.getAccessToken() ? storedUser : null;
+    const hasComercio = Number.isInteger(storedUser?.comercioId);
+    return tokenStorage.getAccessToken() && storedUser && hasComercio ? storedUser : null;
   });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -46,11 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedUser = tokenStorage.getStoredUser();
       const accessToken = tokenStorage.getAccessToken();
       if (!active) return;
-      if (!storedUser || !accessToken) {
+      if (!storedUser || !accessToken || !Number.isInteger(storedUser.comercioId)) {
+        tokenStorage.clear();
+        setUser(null);
         setIsLoading(false);
         return;
       }
-      await refreshSessionRequest();
+      await refreshAccessToken();
       if (active) setIsLoading(false);
     }
     void initSession();
@@ -63,10 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<void> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<AuthUser> => {
     const authenticatedUser = await loginRequest(credentials);
     setUser(authenticatedUser);
+    return authenticatedUser;
   }, []);
+
+  const cambiarPassword = useCallback(
+    async (passwordActual: string, passwordNueva: string): Promise<void> => {
+      await cambiarPasswordRequest(passwordActual, passwordNueva);
+      setUser((currentUser) =>
+        currentUser ? { ...currentUser, debeCambiarPassword: false } : currentUser,
+      );
+    },
+    [],
+  );
 
   const logout = useCallback(async (): Promise<void> => {
     await logoutRequest();
@@ -75,8 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
-    const tokens = await refreshSessionRequest();
-    return tokens !== null;
+    const accessToken = await refreshAccessToken();
+    return accessToken !== null;
   }, []);
 
   const hasRole = useCallback(
@@ -94,11 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       isLoading,
       login,
+      cambiarPassword,
       logout,
       refreshSession,
       hasRole,
     }),
-    [user, isLoading, login, logout, refreshSession, hasRole],
+    [user, isLoading, login, cambiarPassword, logout, refreshSession, hasRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

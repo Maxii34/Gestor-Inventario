@@ -1,5 +1,10 @@
 import { apiRequest, setRefreshHandler, ApiError } from '@/lib/api/client';
+import { guardarAvisoLogin, limpiarAvisoLogin } from '@/lib/auth/notices';
 import { tokenStorage } from '@/lib/auth/storage';
+import {
+  MENSAJE_CUENTA_SUSPENDIDA,
+  esMensajeCuentaSuspendida,
+} from '@/lib/suscripcion';
 import type { ApiSuccess } from '@/types/api';
 import type {
   AuthTokens,
@@ -37,7 +42,23 @@ export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   });
   tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
   tokenStorage.setStoredUser(response.data.usuario);
+  tokenStorage.setStoredComercio(response.data.comercio);
+  limpiarAvisoLogin();
   return response.data.usuario;
+}
+
+export async function cambiarPassword(
+  passwordActual: string,
+  passwordNueva: string,
+): Promise<void> {
+  const response = await apiRequest<ApiSuccess<AuthTokens>>('/usuarios/cambiar-password', {
+    method: 'POST',
+    body: { passwordActual, passwordNueva },
+    auth: true,
+  });
+  tokenStorage.setTokens(response.data.accessToken, response.data.refreshToken);
+  const usuario = tokenStorage.getStoredUser();
+  if (usuario) tokenStorage.setStoredUser({ ...usuario, debeCambiarPassword: false });
 }
 
 export async function refreshSession(): Promise<AuthTokens | null> {
@@ -55,9 +76,14 @@ export async function refreshSession(): Promise<AuthTokens | null> {
     tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
     return tokens;
   } catch (error) {
-    if (error instanceof ApiError && error.status !== 0) {
-      tokenStorage.clear();
-      emitSessionExpired();
+    if (error instanceof ApiError) {
+      if (esMensajeCuentaSuspendida(error.message)) {
+        guardarAvisoLogin(MENSAJE_CUENTA_SUSPENDIDA);
+      }
+      if (error.status === 401 || error.status === 403) {
+        tokenStorage.clear();
+        emitSessionExpired();
+      }
     }
     return null;
   }

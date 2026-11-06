@@ -24,6 +24,7 @@ export interface PageMeta {
   total: number;
   page: number;
   totalPaginas: number;
+  limit?: number;
 }
 
 export interface PaginatedResponse<T> {

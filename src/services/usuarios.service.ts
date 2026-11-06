@@ -1,5 +1,6 @@
 import { apiRequest } from '@/lib/api/client';
-import type { ApiSuccess } from '@/types/api';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
+import type { ApiListResponse, PageMeta, ApiSuccess } from '@/types/api';
 import type { AuthRole } from '@/types/auth';
 
 export interface BackendUsuario {
@@ -25,11 +26,24 @@ export interface UsuarioUpdateInput {
   activo?: boolean;
 }
 
+export interface UsuariosPaginados {
+  usuarios: BackendUsuario[];
+  meta: PageMeta;
+}
+
 export async function listarUsuarios(): Promise<BackendUsuario[]> {
-  const response = await apiRequest<ApiSuccess<BackendUsuario[]>>('/usuarios', {
-    auth: true,
-  });
-  return response.data;
+  return cargarTodasLasPaginas<BackendUsuario>('/usuarios');
+}
+
+export async function listarUsuariosPaginados(
+  page: number,
+  limit: number,
+): Promise<UsuariosPaginados> {
+  const response = await apiRequest<ApiListResponse<BackendUsuario>>(
+    `/usuarios?page=${page}&limit=${limit}`,
+    { auth: true },
+  );
+  return { usuarios: response.data, meta: response.meta };
 }
 
 export async function crearUsuario(input: UsuarioInput): Promise<BackendUsuario> {
