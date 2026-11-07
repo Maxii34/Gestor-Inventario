@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuBuilding2, LuMenu } from 'react-icons/lu';
 import { useAuth } from '@/context/AuthContext';
 import { tokenStorage } from '@/lib/auth/storage';
@@ -27,8 +27,18 @@ function getIniciales(nombre: string): string {
 export function Header({ title, onOpenMobileMenu }: HeaderProps) {
   const { user } = useAuth();
   const [comercio] = useState<Comercio | null>(() => tokenStorage.getStoredComercio());
+  const [userInfoExpanded, setUserInfoExpanded] = useState(false);
   const nombre = user?.nombre ?? 'Usuario';
   const rol = user ? ROL_ETIQUETA[user.rol] : '···';
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const updateUserInfoVisibility = () => setUserInfoExpanded(desktopQuery.matches);
+
+    updateUserInfoVisibility();
+    desktopQuery.addEventListener('change', updateUserInfoVisibility);
+    return () => desktopQuery.removeEventListener('change', updateUserInfoVisibility);
+  }, []);
 
   return (
     <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white">
@@ -58,24 +68,27 @@ export function Header({ title, onOpenMobileMenu }: HeaderProps) {
             <>
               <div
                 title={`${comercio.nombre} · ${comercio.slug}`}
-                className="hidden min-w-0 max-w-48 items-center gap-2 rounded-xl border border-zinc-200/80 bg-zinc-50 px-2.5 py-1.5 lg:flex"
+                className="flex min-w-0 max-w-[38vw] items-center gap-2 lg:max-w-48 lg:rounded-xl lg:border lg:border-zinc-200/80 lg:bg-zinc-50 lg:px-2.5 lg:py-1.5"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                <span className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 lg:flex">
                   <LuBuilding2 aria-hidden="true" size={15} />
                 </span>
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-medium uppercase leading-3 tracking-wide text-zinc-400">
+                <span className="min-w-0 lg:py-0.5">
+                  <span className="hidden text-[10px] font-medium uppercase leading-3 tracking-wide text-zinc-400 lg:block">
                     Comercio
                   </span>
                   <span className="block truncate text-xs font-semibold leading-4 text-zinc-700">
-                    {comercio.slug}
+                    {comercio.nombre}
                   </span>
                 </span>
               </div>
               <span aria-hidden="true" className="hidden h-8 w-px bg-zinc-200 lg:block" />
             </>
           )}
-          <div className="min-w-0 text-right">
+          <div
+            id="header-user-info"
+            className={`${userInfoExpanded ? 'lg:block' : 'lg:hidden'} hidden min-w-0 text-right`}
+          >
             <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
               <p className="truncate text-sm font-semibold leading-5 text-zinc-900">{nombre}</p>
               <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-medium leading-4 text-indigo-700">
@@ -88,13 +101,17 @@ export function Header({ title, onOpenMobileMenu }: HeaderProps) {
               </p>
             )}
           </div>
-          <span
-            aria-hidden="true"
-            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-600 to-cyan-500 text-xs font-semibold text-white shadow-sm shadow-indigo-900/15 ring-2 ring-white"
+          <button
+            type="button"
+            aria-label={userInfoExpanded ? 'Ocultar información del usuario' : 'Mostrar información del usuario'}
+            aria-expanded={userInfoExpanded}
+            aria-controls="header-user-info"
+            onClick={() => setUserInfoExpanded((expanded) => !expanded)}
+            className="relative hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-600 to-cyan-500 text-xs font-semibold text-white shadow-sm shadow-indigo-900/15 ring-2 ring-white hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 lg:flex"
           >
             {getIniciales(nombre)}
             <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
-          </span>
+          </button>
         </div>
       </div>
     </header>

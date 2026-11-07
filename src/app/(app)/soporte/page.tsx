@@ -425,8 +425,7 @@ export default function SoportePage() {
   ].join("\n");
   const mensajePago = [
     `Hola, soy ${nombreUsuario} del negocio ${identificadorComercio}.`,
-    "Te envío el comprobante del pago de [___ meses].",
-    "Monto: $[**]. Fecha: [**].",
+    "Te envío el comprobante del pago del [___ meses].",
   ].join("\n");
   const mensajeMejora = [
     `Hola, soy ${nombreUsuario} del negocio ${identificadorComercio}.`,
@@ -823,7 +822,7 @@ export default function SoportePage() {
             <p className="text-sm font-semibold text-zinc-800">
               Planes y precios:{" "} <br />
               <span className="font-normal text-zinc-600">
-                Mensual: $25.000 · Trimestral: $60.000 por 3 meses
+                Mensual: $25.000 · Trimestral: $60.000 por 3 meses <br />
                 <span className="text-green-600 font-medium">
                   {" "}
                   (20% de descuento por lanzamiento, por tiempo limitado.).
@@ -835,12 +834,12 @@ export default function SoportePage() {
                 Transferencia bancaria
               </p>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Transferí a [CBU: 0000003100068491274768 / Alias: maxii.ordo35 / <br /> Titular: Maximiliano Ordoñez]. <br /> Después enviá el
-                comprobante por [WhatsApp / email], indicando el{" "}
+                Transferí a Alias: <b>maxii.ordo35</b>  <br /> Titular: <b>Maximiliano Ordoñez</b>. <br /> Después enviá el
+                comprobante por WhatsApp o email, indicando el{" "}
                 <strong className="font-semibold text-zinc-800">
                   nombre de tu negocio
                 </strong>
-                . Acreditamos el pago [en el día / dentro de las 24 hs hábiles]
+                . Acreditamos el pago en el día / dentro de las 24 hs hábiles
                 y se extiende tu vencimiento.
               </p>
             </div>
@@ -926,7 +925,7 @@ export default function SoportePage() {
                   `${identificadorComercio} · ${rolUsuario}`,
                 ],
                 ["Pantalla y fecha/hora", `${pantalla} · se agrega al enviar`],
-                ["Navegador y dispositivo", `${navegador} · ${dispositivo}`],
+                
                 ["Estado de la suscripción", estadoSuscripcion],
               ].map(([label, valor]) => (
                 <li key={label} className="flex items-start gap-2.5">

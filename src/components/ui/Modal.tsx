@@ -52,12 +52,16 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-xl bg-white shadow-lg ${SIZES[size]}`}
+        className={`relative flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-xl bg-white shadow-lg sm:max-h-[calc(100vh-2rem)] ${SIZES[size]}`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-zinc-100 p-4">
-          <div>
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-100 p-4">
+          <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
-            {description && <p className="mt-0.5 text-sm text-zinc-500">{description}</p>}
+            {description && (
+              <p className="mt-0.5 truncate text-sm text-zinc-500 sm:whitespace-normal sm:overflow-visible sm:text-clip">
+                {description}
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {headerActions}
@@ -71,9 +75,9 @@ export function Modal({
             </button>
           </div>
         </div>
-        <div className="p-4">{children}</div>
+        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-zinc-100 p-4">{footer}</div>
+          <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-100 p-4">{footer}</div>
         )}
       </div>
     </div>
