@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LuCircleCheck,
   LuCircleOff,
@@ -19,6 +19,7 @@ import {
   Card,
   Checkbox,
   FormField,
+  HelpTooltip,
   Input,
   Modal,
   PageHeader,
@@ -57,6 +58,7 @@ export default function CategoriasPage() {
   const [todasCategorias, setTodasCategorias] = useState<BackendCategoria[]>([]);
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const resumenCategoriasCargado = useRef(false);
 
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -112,7 +114,7 @@ export default function CategoriasPage() {
     if (hayFiltros) {
       await cargarTodasParaFiltrar();
     } else {
-      await cargarPagina(pagina);
+      await Promise.all([cargarPagina(pagina), cargarTodasParaFiltrar()]);
     }
   }, [cargarPagina, cargarTodasParaFiltrar, hayFiltros, page]);
 
@@ -121,7 +123,12 @@ export default function CategoriasPage() {
       if (hayFiltros) {
         await cargarTodasParaFiltrar();
       } else {
-        await cargarPagina(page);
+        const cargarResumen = !resumenCategoriasCargado.current;
+        resumenCategoriasCargado.current = true;
+        await Promise.all([
+          cargarPagina(page),
+          cargarResumen ? cargarTodasParaFiltrar() : Promise.resolve(),
+        ]);
       }
     }
     void cargarInicial();
@@ -138,8 +145,7 @@ export default function CategoriasPage() {
     );
   }, [categoriasBase, busqueda]);
   const total = hayFiltros ? todasCategorias.length : meta.total;
-  const categoriasResumen = hayFiltros ? categoriasFiltradas : categorias;
-  const activas = categoriasResumen.filter((categoria) => categoria.activo).length;
+  const activas = todasCategorias.filter((categoria) => categoria.activo).length;
   const totalPaginasVisibles = hayFiltros
     ? Math.max(1, Math.ceil(categoriasFiltradas.length / PAGE_SIZE))
     : Math.max(1, meta.totalPaginas);
@@ -330,9 +336,14 @@ export default function CategoriasPage() {
                   <LuFolder aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                    <HelpTooltip text="Cantidad total de categorías registradas, activas e inactivas." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
-                    {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
+                    {isFiltering || filterError
+                      ? '—'
+                      : todasCategorias.length.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -345,11 +356,14 @@ export default function CategoriasPage() {
                   <LuCircleCheck aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                    Activas
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                      Activas
+                    </p>
+                    <HelpTooltip text="Cantidad de categorías marcadas como activas en todo el catálogo." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
-                    {isLoading || isFiltering ? '—' : activas.toLocaleString('es-AR')}
+                    {isFiltering || filterError ? '—' : activas.toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
@@ -362,19 +376,35 @@ export default function CategoriasPage() {
                   <LuCircleOff aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                    Inactivas
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                      Inactivas
+                    </p>
+                    <HelpTooltip text="Cantidad de categorías marcadas como inactivas en todo el catálogo." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
-                    {isLoading || isFiltering
+                    {isFiltering || filterError
                       ? '—'
-                      : (categoriasResumen.length - activas).toLocaleString('es-AR')}
+                      : (todasCategorias.length - activas).toLocaleString('es-AR')}
                   </p>
                 </div>
               </div>
             </Card>
           </Reveal>
         </section>
+
+        {filterError && !hayFiltros && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-800">
+              No pudimos actualizar el resumen de categorías: {filterError}
+            </p>
+            <div className="mt-3">
+              <Button type="button" variant="outline" onClick={() => void cargarTodasParaFiltrar()}>
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className={`grid grid-cols-1 gap-4 ${isAdmin ? 'lg:grid-cols-2' : ''}`}>
           <Reveal delay={0.2}>

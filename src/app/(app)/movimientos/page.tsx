@@ -17,6 +17,7 @@ import {
   Button,
   Card,
   FormField,
+  HelpTooltip,
   Input,
   Modal,
   PageHeader,
@@ -485,13 +486,16 @@ export default function MovimientosPage() {
           className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4"
         >
           <Reveal delay={0}>
-            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+            <Card className="h-24 border-zinc-200/80 shadow-sm">
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700 sm:h-10 sm:w-10">
                   <LuClipboardList aria-hidden="true" size={19} />
                 </span>
-                <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Movimientos registrados</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="min-w-0 text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Movimientos registrados</p>
+                    <HelpTooltip text="Cantidad total de movimientos guardados en el historial." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
                   </p>
@@ -500,13 +504,16 @@ export default function MovimientosPage() {
             </Card>
           </Reveal>
           <Reveal delay={0.05}>
-            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+            <Card className="h-24 border-zinc-200/80 shadow-sm">
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
                   <LuArrowDownToLine aria-hidden="true" size={19} />
                 </span>
-                <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Reposiciones mostradas.</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="min-w-0 text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Reposiciones mostradas.</p>
+                    <HelpTooltip text="Reposiciones que aparecen en esta página, teniendo en cuenta los filtros aplicados." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : entradasEnPagina}
                   </p>
@@ -515,13 +522,16 @@ export default function MovimientosPage() {
             </Card>
           </Reveal>
           <Reveal delay={0.1}>
-            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+            <Card className="h-24 border-zinc-200/80 shadow-sm">
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700 sm:h-10 sm:w-10">
                   <LuArrowUpFromLine aria-hidden="true" size={19} />
                 </span>
-                <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Salidas mostradas.</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="min-w-0 text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Salidas mostradas.</p>
+                    <HelpTooltip text="Salidas que aparecen en esta página, teniendo en cuenta los filtros aplicados." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : salidasEnPagina}
                   </p>
@@ -530,13 +540,16 @@ export default function MovimientosPage() {
             </Card>
           </Reveal>
           <Reveal delay={0.15}>
-            <Card className="h-24 border-zinc-200/80 shadow-sm sm:h-auto">
+            <Card className="h-24 border-zinc-200/80 shadow-sm">
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700 sm:h-10 sm:w-10">
                   <LuArrowUpDown aria-hidden="true" size={19} />
                 </span>
-                <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Ajustes de stock.</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="min-w-0 text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Ajustes de stock.</p>
+                    <HelpTooltip text="Ajustes que aparecen en esta página, teniendo en cuenta los filtros aplicados." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : ajustesEnPagina}
                   </p>

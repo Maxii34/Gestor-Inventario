@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { LuBanknote, LuCalendarDays } from 'react-icons/lu';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, HelpTooltip, Input } from '@/components/ui';
 import { FormField } from '@/components/forms';
 import { ApiError } from '@/lib/api/client';
 import { obtenerRecaudacion, type Recaudacion } from '@/services/estadisticas.service';
@@ -82,7 +82,12 @@ export function RecaudacionTotalCard({
   return (
     <Card
       title="Recaudación total"
-      actions={<LuBanknote aria-hidden="true" size={16} className="text-zinc-400" />}
+      actions={
+        <>
+          <HelpTooltip text="Importe total recaudado durante el período indicado." />
+          <LuBanknote aria-hidden="true" size={16} className="text-zinc-400" />
+        </>
+      }
     >
       <div aria-live="polite">
         {isLoading ? (
@@ -97,7 +102,7 @@ export function RecaudacionTotalCard({
           </p>
         ) : datos ? (
           <>
-            <p className="break-words text-lg font-semibold leading-tight text-zinc-900 tabular-nums sm:text-2xl">
+            <p className="wrap-break-word text-lg font-semibold leading-tight text-zinc-900 tabular-nums sm:text-2xl">
               {formatoMoneda(Number(datos.totalRecaudado) || 0)}
             </p>
             <p className="mt-1 text-xs text-zinc-500">

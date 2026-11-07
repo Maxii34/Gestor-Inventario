@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   FormField,
+  HelpTooltip,
   Input,
   Modal,
   PageHeader,
@@ -429,7 +430,10 @@ export default function UsuariosPage() {
                   <LuUsers aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Personas</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Personas</p>
+                    <HelpTooltip text="Cantidad total de personas registradas en el equipo." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : total.toLocaleString('es-AR')}
                   </p>
@@ -444,9 +448,12 @@ export default function UsuariosPage() {
                   <LuCircleCheck aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                    Activos
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                      Activos
+                    </p>
+                    <HelpTooltip text="Personas activas dentro de los resultados o de la página visible." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : activos.toLocaleString('es-AR')}
                   </p>
@@ -461,9 +468,12 @@ export default function UsuariosPage() {
                   <LuBriefcaseBusiness aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                    Vendedores
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                      Vendedores
+                    </p>
+                    <HelpTooltip text="Vendedores dentro de los resultados o de la página visible." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering ? '—' : vendedores.toLocaleString('es-AR')}
                   </p>
@@ -478,9 +488,12 @@ export default function UsuariosPage() {
                   <LuCircleX aria-hidden="true" size={19} />
                 </span>
                 <div>
-                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                    Sin acceso
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                      Sin acceso
+                    </p>
+                    <HelpTooltip text="Personas inactivas dentro de los resultados o de la página visible." />
+                  </div>
                   <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                     {isLoading || isFiltering
                       ? '—'

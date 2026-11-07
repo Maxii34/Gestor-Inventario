@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api/client';
+import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { MODULO_CLIENTES } from '@/lib/config';
 import type { ApiListResponse } from '@/types/api';
 import type {
@@ -36,7 +37,6 @@ interface BackendVenta {
   fecha: string;
 }
 
-const PRODUCTOS_PAGE_SIZE = 100;
 const VENTAS_RECIENTES_LIMIT = 5;
 const STOCK_BAJO_MAX = 5;
 
@@ -75,10 +75,7 @@ function mapEstadoStock(stockActual: number): EstadoStockBajo {
 
 export async function getDatosDashboard(): Promise<DatosDashboard> {
   const [productos, ventas, clientes] = await Promise.all([
-    apiRequest<ApiListResponse<BackendProducto>>(
-      `/productos?page=1&limit=${PRODUCTOS_PAGE_SIZE}`,
-      { auth: true },
-    ),
+    cargarTodasLasPaginas<BackendProducto>('/productos'),
     apiRequest<ApiListResponse<BackendVenta>>(
       `/ventas?page=1&limit=${VENTAS_RECIENTES_LIMIT}`,
       { auth: true },
@@ -88,7 +85,7 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
       : Promise.resolve(null),
   ]);
 
-  const conStockBajo = productos.data.filter(
+  const conStockBajo = productos.filter(
     (producto) => producto.stock <= producto.stockMinimo,
   );
 
@@ -101,7 +98,7 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
     estado: mapEstadoStock(producto.stock),
   }));
 
-  const nombresProductos = new Map(productos.data.map((producto) => [producto.id, producto.nombre]));
+  const nombresProductos = new Map(productos.map((producto) => [producto.id, producto.nombre]));
   const ventasRecientes: VentaReciente[] = ventas.data.map((venta) => ({
     id: String(venta.id),
     venta: `#${venta.id}`,
@@ -117,8 +114,8 @@ export async function getDatosDashboard(): Promise<DatosDashboard> {
 
   return {
     resumen: {
-      totalProductos: productos.meta.total,
-      productosActivos: productos.data.filter((producto) => producto.activo).length,
+      totalProductos: productos.length,
+      productosActivos: productos.filter((producto) => producto.activo).length,
       stockBajo: conStockBajo.length,
       totalVentas: ventas.meta.total,
       totalClientes: clientes?.meta.total ?? 0,
