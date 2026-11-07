@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   FormField,
+  HelpTooltip,
   Input,
   Modal,
   PageHeader,
@@ -720,7 +721,10 @@ export default function ProductosPage() {
                 <LuPackage aria-hidden="true" size={19} />
               </span>
               <div>
-                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Productos</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Productos</p>
+                  <HelpTooltip text="Cantidad total de productos registrados en el catálogo, incluidos los inactivos." />
+                </div>
                 <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {meta.total.toLocaleString('es-AR')}
                 </p>
@@ -733,7 +737,10 @@ export default function ProductosPage() {
                 <LuFilter aria-hidden="true" size={18} />
               </span>
               <div>
-                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">Categorías</p>
+                  <HelpTooltip text="Cantidad total de categorías disponibles para organizar productos." />
+                </div>
                 <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {categorias.length.toLocaleString('es-AR')}
                 </p>
@@ -746,9 +753,12 @@ export default function ProductosPage() {
                 <LuTriangleAlert aria-hidden="true" size={19} />
               </span>
               <div>
-                <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
-                  Stock bajo
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[11px] font-medium leading-tight text-zinc-500 sm:text-xs">
+                    Stock bajo
+                  </p>
+                  <HelpTooltip text="Productos de esta página que tienen stock igual o menor al mínimo configurado." />
+                </div>
                 <p className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-950 sm:text-xl">
                   {isLoading || isFiltering
                     ? '—'

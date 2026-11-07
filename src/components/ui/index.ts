@@ -8,3 +8,4 @@ export * from './Modal';
 export * from './PageHeader';
 export * from './EmptyState';
 export * from './BrandLockup';
+export * from './HelpTooltip';

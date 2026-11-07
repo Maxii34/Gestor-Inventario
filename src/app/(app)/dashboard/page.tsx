@@ -20,6 +20,7 @@ import {
   Badge,
   Button,
   Card,
+  HelpTooltip,
   PageHeader,
   Table,
   type TableColumn,
@@ -373,6 +374,7 @@ export default function DashboardPage() {
                         <LuCircleDollarSign aria-hidden="true" size={18} />
                       </span>
                       Recaudación del período
+                      <HelpTooltip text="Importe total recaudado en el período seleccionado; el rango se muestra debajo del importe." />
                     </div>
                     <div aria-live="polite" className="mt-5">
                       {recaudacion.isLoading ? (
@@ -422,6 +424,7 @@ export default function DashboardPage() {
                 titulo: 'Ventas registradas',
                 valor: datos.resumen.totalVentas,
                 detalle: 'en todo el período',
+                ayuda: 'Cantidad total de ventas registradas, sin importar su estado.',
                 icono: LuShoppingCart,
                 tono: 'bg-sky-50 text-sky-700',
               },
@@ -429,6 +432,7 @@ export default function DashboardPage() {
                 titulo: 'Productos',
                 valor: datos.resumen.totalProductos,
                 detalle: `${datos.resumen.productosActivos} activos`,
+                ayuda: 'Total de productos del catálogo. Activos indica cuántos están marcados como activos.',
                 icono: LuPackage,
                 tono: 'bg-violet-50 text-violet-700',
               },
@@ -437,6 +441,7 @@ export default function DashboardPage() {
                     titulo: 'Clientes',
                     valor: datos.resumen.totalClientes,
                     detalle: 'en tu cartera',
+                    ayuda: 'Cantidad total de clientes registrados.',
                     icono: LuUsers,
                     tono: 'bg-amber-50 text-amber-700',
                   }]
@@ -452,7 +457,10 @@ export default function DashboardPage() {
                   <Card className="h-full border-zinc-200/80 shadow-sm">
                     <div className="flex items-center justify-between gap-2 sm:gap-4">
                       <div>
-                        <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">{item.titulo}</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">{item.titulo}</p>
+                          <HelpTooltip text={item.ayuda} />
+                        </div>
                         <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 tabular-nums sm:mt-2 sm:text-3xl">
                           {new Intl.NumberFormat('es-AR').format(item.valor)}
                         </p>
@@ -507,12 +515,15 @@ export default function DashboardPage() {
                     : 'El inventario está al día, no hay productos bajo el mínimo.'
                 }
                 actions={
-                  <Badge
-                    tone={datos.resumen.stockBajo > 0 ? 'warning' : 'success'}
-                    className="border border-current/10 tabular-nums"
-                  >
-                    {datos.resumen.stockBajo} {datos.resumen.stockBajo === 1 ? 'producto' : 'productos'}
-                  </Badge>
+                  <>
+                    <HelpTooltip text="Cantidad total de productos cuyo stock está en el mínimo configurado o por debajo." />
+                    <Badge
+                      tone={datos.resumen.stockBajo > 0 ? 'warning' : 'success'}
+                      className="border border-current/10 tabular-nums"
+                    >
+                      {datos.resumen.stockBajo} {datos.resumen.stockBajo === 1 ? 'producto' : 'productos'}
+                    </Badge>
+                  </>
                 }
                 className={`h-full shadow-sm ${
                   datos.resumen.stockBajo > 0

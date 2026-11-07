@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   FormField,
+  HelpTooltip,
   Input,
   Modal,
   PageHeader,
@@ -735,7 +736,10 @@ export default function VentasPage() {
             <Card className="h-full border-zinc-200/80 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">Ventas registradas</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-xs font-medium leading-tight text-zinc-600 sm:text-sm">Ventas registradas</p>
+                    <HelpTooltip text="Cantidad total de ventas registradas en todo el historial." />
+                  </div>
                   <p className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 tabular-nums sm:mt-2 sm:text-3xl">
                     {isLoading ? '—' : meta.total.toLocaleString('es-AR')}
                   </p>
