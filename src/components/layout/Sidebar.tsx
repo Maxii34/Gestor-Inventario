@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   LuArrowUpDown,
   LuArrowUpRight,
   LuBoxes,
+  LuChevronDown,
   LuLayoutDashboard,
   LuLifeBuoy,
   LuLogOut,
@@ -21,6 +23,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { MODULO_CLIENTES } from "@/lib/config";
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import type { AuthRole } from "@/types/auth";
 
 const NAV_ITEMS = [
   {
@@ -78,19 +81,34 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+const ROLE_LABELS: Record<AuthRole, string> = {
+  ADMIN: "Administrador",
+  VENDEDOR: "Vendedor",
+};
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "··";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
 function SidebarContent({
   onNavigate,
   onClose,
   collapsed = false,
   onToggleCollapse,
+  mobileOnly = false,
 }: {
   onNavigate?: () => void;
   onClose?: () => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  mobileOnly?: boolean;
 }) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const [userInfoExpanded, setUserInfoExpanded] = useState(false);
   const isAdmin = user?.rol === "ADMIN";
 
   return (
@@ -184,6 +202,40 @@ function SidebarContent({
       </nav>
 
       <div className="border-t border-white/10 bg-zinc-950/20 p-3">
+        {mobileOnly && user && (
+          <div className="mb-3 border-b border-white/10 pb-3">
+            <button
+              type="button"
+              aria-expanded={userInfoExpanded}
+              aria-controls="mobile-sidebar-user-info"
+              onClick={() => setUserInfoExpanded((expanded) => !expanded)}
+              className="flex w-full items-center gap-3 rounded-xl px-1 py-1 text-left hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-cyan-500 text-xs font-semibold text-white ring-2 ring-white/10">
+                {getInitials(user.nombre)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-zinc-200">Mi cuenta</span>
+                <span className="block text-xs text-zinc-500">
+                  {userInfoExpanded ? "Ocultar información" : "Ver información"}
+                </span>
+              </span>
+              <LuChevronDown
+                aria-hidden="true"
+                size={18}
+                className={`shrink-0 text-zinc-500 transition-transform ${userInfoExpanded ? "rotate-180" : ""}`}
+              />
+            </button>
+            <div
+              id="mobile-sidebar-user-info"
+              className={`${userInfoExpanded ? "block" : "hidden"} mt-2 rounded-lg bg-white/5 px-3 py-2`}
+            >
+              <p className="truncate text-sm font-semibold text-white">{user.nombre}</p>
+              <p className="mt-0.5 text-xs text-zinc-400">{ROLE_LABELS[user.rol]}</p>
+              <p className="mt-1 break-all text-xs text-zinc-500">{user.email}</p>
+            </div>
+          </div>
+        )}
         <Link
           href="/soporte"
           onClick={onNavigate}
@@ -287,7 +339,7 @@ export function Sidebar({
             onClick={onCloseMobile}
           />
           <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw]">
-            <SidebarContent onNavigate={onCloseMobile} onClose={onCloseMobile} />
+            <SidebarContent onNavigate={onCloseMobile} onClose={onCloseMobile} mobileOnly />
           </aside>
         </div>
       )}

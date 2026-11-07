@@ -71,18 +71,18 @@ export function MandatoryPasswordModal() {
         aria-modal="true"
         aria-labelledby="cambio-password-titulo"
         onKeyDown={mantenerModal}
-        className="my-auto w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+        className="my-auto max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white p-5 shadow-2xl sm:max-h-[calc(100vh-2rem)] sm:p-6"
       >
         <div className="mb-5 flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
             <LuKeyRound aria-hidden="true" size={19} />
           </span>
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 id="cambio-password-titulo" className="text-lg font-semibold text-zinc-950">
               Actualizá tu contraseña
             </h2>
-            <p className="mt-1 text-sm leading-5 text-zinc-600">
-              Para continuar usando StockNext, cambiá la contraseña temporal por una propia.
+            <p className="mt-1 truncate text-sm leading-5 text-zinc-600 sm:whitespace-normal sm:overflow-visible sm:text-clip">
+              Cambiá tu contraseña para continuar.
             </p>
           </div>
         </div>
