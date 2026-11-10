@@ -15,6 +15,7 @@ const SECTION_TITLES: Record<string, string> = {
   "/movimientos": "Control de stock",
   "/clientes": "Clientes",
   "/ventas": "Ventas",
+  "/ventas/nueva": "Nueva venta",
   "/usuarios": "Usuarios",
   "/soporte": "Centro de ayuda",
 };

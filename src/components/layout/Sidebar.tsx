@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   LuArrowUpDown,
   LuArrowUpRight,
+  LuBanknote,
   LuBoxes,
   LuChevronDown,
   LuLayoutDashboard,
@@ -69,6 +70,13 @@ const NAV_ITEMS = [
     accentIcon: "text-emerald-400",
   },
   {
+    href: "/ventas/nueva",
+    label: "Nueva venta",
+    icon: LuBanknote,
+    accent: "border-emerald-400 bg-emerald-500/10 text-emerald-200",
+    accentIcon: "text-emerald-400",
+  },
+  {
     href: "/usuarios",
     label: "Usuarios",
     icon: LuUserCog,
@@ -77,7 +85,8 @@ const NAV_ITEMS = [
   },
 ];
 
-function isActive(pathname: string, href: string) {
+function isActive(pathname: string, href: string, exact = false) {
+  if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -170,7 +179,7 @@ function SidebarContent({
               (item.href !== "/usuarios" || isAdmin) &&
               (item.href !== "/clientes" || MODULO_CLIENTES),
           ).map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = isActive(pathname, item.href, item.href === "/ventas");
             const Icon = item.icon;
             return (
               <li key={item.href}>

@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import {
   LuArrowUpRight,
   LuArrowUpDown,
+  LuBanknote,
   LuCalendarDays,
   LuCircleDollarSign,
   LuPackage,
@@ -161,7 +162,7 @@ const ACCIONES_RAPIDAS = [
     etiqueta: 'Nueva venta',
     descripcion: 'Registrar una operación',
     icono: LuShoppingCart,
-    href: '/ventas',
+    href: '/ventas/nueva',
     tono: 'bg-emerald-50 text-emerald-700',
   },
   {
@@ -316,11 +317,11 @@ export default function DashboardPage() {
             </Button>
             <Button
               type="button"
-              onClick={() => router.push('/ventas')}
+              onClick={() => router.push('/ventas/nueva')}
               disabled={soloLectura}
               title={soloLectura ? motivoSoloLectura : undefined}
             >
-              <LuPlus aria-hidden="true" size={16} />
+              <LuBanknote aria-hidden="true" size={16} />
               Nueva venta
             </Button>
           </>
