@@ -668,8 +668,8 @@ export default function SoportePage() {
                 titulo: "Registrá tu primera venta",
                 descripcion:
                   "Elegí los productos, el método de pago (efectivo, transferencia o tarjeta) y confirmá. El stock se descuenta solo.",
-                href: "/ventas",
-                accion: "Ir a Ventas",
+                href: "/ventas/nueva",
+                accion: "Ir a Nueva venta",
                 icon: LuShoppingCart,
               },
               {

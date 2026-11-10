@@ -4,4 +4,5 @@ export * from './forms';
 export * from './layout';
 export * from './auth';
 export * from './estadisticas';
+export * from './ventas';
 export * from './motion';
