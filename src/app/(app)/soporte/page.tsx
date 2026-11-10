@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import {
   LuArrowDownRight,
   LuArrowRight,
+  LuBanknote,
   LuBookOpen,
   LuBug,
+  LuCalendarDays,
   LuCheck,
   LuClock3,
   LuCreditCard,
@@ -51,6 +53,13 @@ const ETIQUETA_ESTADO: Record<string, string> = {
   SIN_VENCIMIENTO: "Sin vencimiento",
   EN_GRACIA: "En gracia",
   VENCIDA: "Vencida",
+};
+
+const ESTADO_ESTILO: Record<string, string> = {
+  VIGENTE: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  SIN_VENCIMIENTO: "border-sky-200 bg-sky-50 text-sky-800",
+  EN_GRACIA: "border-amber-200 bg-amber-50 text-amber-800",
+  VENCIDA: "border-red-200 bg-red-50 text-red-800",
 };
 
 const PREGUNTAS_FRECUENTES = [
@@ -401,6 +410,28 @@ export default function SoportePage() {
   const estadoSuscripcion = suscripcion
     ? (ETIQUETA_ESTADO[suscripcion.estado] ?? suscripcion.estado)
     : "[estado de la suscripción]";
+  const planActual = suscripcion
+    ? (ETIQUETA_PLAN[suscripcion.plan] ?? suscripcion.plan)
+    : "—";
+  const vencimiento = suscripcion
+    ? suscripcion.accesoHasta
+      ? formatearFecha(suscripcion.accesoHasta)
+      : suscripcion.estado === "SIN_VENCIMIENTO"
+        ? "Sin vencimiento"
+        : "—"
+    : "—";
+  const diasRestantesTexto = suscripcion
+    ? suscripcion.estado === "SIN_VENCIMIENTO"
+      ? "Sin límite"
+      : suscripcion.diasRestantes === null
+        ? "—"
+        : `${suscripcion.diasRestantes} ${
+            suscripcion.diasRestantes === 1 ? "día" : "días"
+          }`
+    : "—";
+  const estadoEstilo =
+    ESTADO_ESTILO[suscripcion?.estado ?? ""] ??
+    "border-zinc-200 bg-zinc-50 text-zinc-700";
   const pantalla =
     NOMBRE_PANTALLA[pathname] ??
     (pathname.replaceAll("/", " ").trim() || "[pantalla]");
@@ -767,103 +798,188 @@ export default function SoportePage() {
           titulo="Suscripción y pagos"
           descripcion="Consultá el estado de tu plan y encontrá los datos para renovar."
         />
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
           <Card
             title="Tu suscripción"
             subtitle="Información actual de tu cuenta."
-            className="border-zinc-200/80 shadow-sm"
+            className="flex h-full flex-col border-zinc-200/80 shadow-sm"
+            bodyClassName="flex flex-1 flex-col"
           >
-            <dl className="divide-y divide-zinc-100">
-              <div className="flex items-center justify-between gap-4 py-3 first:pt-0">
-                <dt className="text-sm text-zinc-500">Plan</dt>
-                <dd className="text-right text-sm font-semibold text-zinc-800">
-                  {suscripcion
-                    ? (ETIQUETA_PLAN[suscripcion.plan] ?? suscripcion.plan)
-                    : "[Prueba / Mensual / Trimestral]"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 py-3">
-                <dt className="text-sm text-zinc-500">Vigente hasta</dt>
-                <dd className="text-right text-sm font-semibold text-zinc-800">
-                  {suscripcion
-                    ? suscripcion.accesoHasta
-                      ? formatearFecha(suscripcion.accesoHasta)
-                      : suscripcion.estado === "SIN_VENCIMIENTO"
-                        ? "Sin vencimiento"
-                        : "[fecha]"
-                    : "[fecha]"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between gap-4 py-3 last:pb-0">
-                <dt className="text-sm text-zinc-500">Estado</dt>
-                <dd>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-zinc-700">
-                    {suscripcion ? (
-                      <LuCheck aria-hidden="true" size={13} />
-                    ) : null}
+            <div className="flex flex-1 flex-col gap-4">
+              <div className="rounded-xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm shadow-indigo-900/15">
+                      <LuCreditCard aria-hidden="true" size={20} />
+                    </span>
+                    <div>
+                      <p className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">
+                        Plan actual
+                      </p>
+                      <p className="text-lg font-bold tracking-tight text-zinc-950">
+                        {planActual}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${estadoEstilo}`}
+                  >
+                    {suscripcion ? <LuCheck aria-hidden="true" size={13} /> : null}
                     {estadoSuscripcion}
                   </span>
-                </dd>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-zinc-600">
+                  {suscripcion
+                    ? suscripcion.soloLectura
+                      ? "Tu cuenta está en modo solo lectura. Contactá a soporte para renovar."
+                      : "Tu cuenta está habilitada para registrar ventas y administrar tu negocio."
+                    : "No pudimos cargar la información de tu suscripción."}
+                </p>
               </div>
-            </dl>
-            {suscripcion?.plan === "PRUEBA" &&
-              suscripcion.diasRestantes !== null && (
-                <p className="mt-4 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-800">
-                  Te quedan {suscripcion.diasRestantes} días de prueba.
+
+              <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-3">
+                  <dt className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                    <LuCalendarDays aria-hidden="true" size={14} />
+                    Vigente hasta
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold text-zinc-900">
+                    {vencimiento}
+                  </dd>
+                </div>
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-3">
+                  <dt className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                    <LuClock3 aria-hidden="true" size={14} />
+                    Días restantes
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold text-zinc-900">
+                    {diasRestantesTexto}
+                  </dd>
+                </div>
+              </dl>
+
+              {suscripcion?.plan === "PRUEBA" &&
+                suscripcion.diasRestantes !== null && (
+                  <p className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-800">
+                    Te quedan {suscripcion.diasRestantes} días de prueba.
+                  </p>
+                )}
+
+              {suscripcion?.estado === "EN_GRACIA" && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+                  Tu plan está en período de gracia. Te quedan{" "}
+                  {suscripcion.diasRestantes ?? 0} días para renovar antes de
+                  pasar a solo lectura.
                 </p>
               )}
+
+              {suscripcion?.soloLectura && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800">
+                  Modo solo lectura activo: podés consultar tus datos, pero no
+                  modificar ni registrar ventas.
+                </p>
+              )}
+
+              <div className="mt-auto rounded-lg border border-indigo-100 bg-indigo-50/50 px-3 py-2.5">
+                <p className="text-xs font-semibold text-indigo-900">
+                  ¿Querés renovar?
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-indigo-800">
+                  Elegí un plan, transferí el importe y enviá el comprobante.
+                  Acreditamos el pago en el día o dentro de las 24 hs hábiles.
+                </p>
+              </div>
+            </div>
           </Card>
 
           <Card
             title="Planes y cómo pagar"
-            subtitle="Renová por transferencia y envianos el comprobante."
-            className="border-zinc-200/80 shadow-sm"
+            subtitle="Elegí el plan y renová por transferencia."
+            className="flex h-full flex-col border-zinc-200/80 shadow-sm"
+            bodyClassName="flex flex-1 flex-col"
           >
-            <p className="text-sm font-semibold text-zinc-800">
-              Planes y precios:{" "} <br />
-              <span className="font-normal text-zinc-600">
-                Mensual: $25.000 · Trimestral: $60.000 por 3 meses <br />
-                <span className="text-green-600 font-medium">
-                  {" "}
-                  (20% de descuento por lanzamiento, por tiempo limitado.).
-                </span>
-              </span>
-            </p>
-            <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-              <p className="text-sm font-semibold text-zinc-800">
-                Transferencia bancaria
+            <div className="flex flex-1 flex-col gap-4">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-zinc-200 bg-white p-4">
+                  <p className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">
+                    Mensual
+                  </p>
+                  <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    $25.000
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">por 1 mes</p>
+                </div>
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4">
+                  <p className="text-[11px] font-semibold tracking-wide text-indigo-700 uppercase">
+                    Trimestral
+                  </p>
+                  <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-950 tabular-nums">
+                    $60.000
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">por 3 meses</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-zinc-800">
+                  <LuBanknote
+                    aria-hidden="true"
+                    size={16}
+                    className="text-zinc-500"
+                  />
+                  Transferencia bancaria
+                </p>
+                <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-medium text-zinc-500">Alias</dt>
+                    <dd className="mt-0.5 font-semibold text-zinc-900">
+                      maxii.ordo35
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-zinc-500">
+                      Titular
+                    </dt>
+                    <dd className="mt-0.5 font-semibold text-zinc-900">
+                      Maximiliano Ordoñez
+                    </dd>
+                  </div>
+                </dl>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">
+                  Después enviá el comprobante por WhatsApp o email, indicando el{" "}
+                  <strong className="font-semibold text-zinc-800">
+                    nombre de tu negocio
+                  </strong>
+                  . Acreditamos el pago en el día / dentro de las 24 hs hábiles
+                  y se extiende tu vencimiento.
+                </p>
+              </div>
+
+              <p className="flex items-start gap-2 text-sm leading-6 text-zinc-600">
+                <LuCheck
+                  aria-hidden="true"
+                  size={16}
+                  className="mt-1 shrink-0 text-emerald-700"
+                />
+                Podés pagar varios meses juntos: se suman a tu vencimiento actual.
               </p>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Transferí a Alias: <b>maxii.ordo35</b>  <br /> Titular: <b>Maximiliano Ordoñez</b>. <br /> Después enviá el
-                comprobante por WhatsApp o email, indicando el{" "}
-                <strong className="font-semibold text-zinc-800">
-                  nombre de tu negocio
-                </strong>
-                . Acreditamos el pago en el día / dentro de las 24 hs hábiles
-                y se extiende tu vencimiento.
-              </p>
+
+              <div className="mt-auto">
+                <a
+                  href={crearEnlaceWhatsApp(mensajePago)}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    abrirWhatsApp(mensajePago);
+                  }}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+                >
+                  <LuMessageCircle aria-hidden="true" size={16} /> Enviar
+                  comprobante
+                </a>
+              </div>
             </div>
-            <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-zinc-600">
-              <LuCheck
-                aria-hidden="true"
-                size={16}
-                className="mt-1 shrink-0 text-emerald-700"
-              />
-              Podés pagar varios meses juntos: se suman a tu vencimiento actual.
-            </p>
-            <a
-              href={crearEnlaceWhatsApp(mensajePago)}
-              onClick={(event) => {
-                event.preventDefault();
-                abrirWhatsApp(mensajePago);
-              }}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
-            >
-              <LuMessageCircle aria-hidden="true" size={16} /> Enviar
-              comprobante
-            </a>
           </Card>
         </div>
       </section>
