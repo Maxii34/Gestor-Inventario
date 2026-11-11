@@ -145,6 +145,7 @@ export function NuevaVentaForm() {
   }, [cargarSelectores]);
 
   useEffect(() => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     const frame = requestAnimationFrame(() => {
       const input = document.getElementById('venta-escaner');
       if (input instanceof HTMLInputElement) input.focus();
@@ -164,6 +165,7 @@ export function NuevaVentaForm() {
   }
 
   function enfocarEscaner(): void {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     requestAnimationFrame(() => {
       const input = document.getElementById('venta-escaner');
       if (input instanceof HTMLInputElement) input.focus();
@@ -420,7 +422,6 @@ export function NuevaVentaForm() {
                 id="venta-escaner"
                 placeholder="Escaneá un producto o escribí el código"
                 autoComplete="off"
-                autoFocus
                 disabled={isRegistrando}
                 value={codigoEscaneo}
                 onChange={(event) => setCodigoEscaneo(event.target.value)}
@@ -512,7 +513,7 @@ export function NuevaVentaForm() {
                 </div>
                 <ul
                   aria-label="Productos disponibles para agregar a la venta"
-                  className="grid max-h-[24rem] grid-cols-1 gap-2 overflow-y-auto overscroll-contain pr-1 sm:grid-cols-2 xl:grid-cols-2"
+                  className="grid max-h-96 grid-cols-1 gap-2 overflow-y-auto overscroll-contain pr-1 sm:grid-cols-2 xl:grid-cols-2"
                 >
                   {productosFiltrados.map((opcion) => {
                     const cantidadEnCarrito =
