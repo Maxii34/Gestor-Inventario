@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LuBanknote, LuEye, LuReceipt, LuX } from 'react-icons/lu';
+import { LuBanknote, LuEye, LuFilter, LuReceipt, LuX } from 'react-icons/lu';
 import {
   Badge,
   Button,
@@ -13,6 +13,7 @@ import {
   Modal,
   PageHeader,
   Pagination,
+  Select,
   Table,
   type TableColumn,
 } from '@/components';
@@ -32,9 +33,11 @@ import {
   obtenerVenta,
   type BackendVenta,
   type BackendVentaDetalle,
+  type BackendVentaUsuario,
   type EstadoVentaBackend,
   type MetodoPagoBackend,
 } from '@/services/ventas.service';
+import { listarUsuarios } from '@/services/usuarios.service';
 import type { PageMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
@@ -52,6 +55,26 @@ const METODO_PAGO_ETIQUETA: Record<MetodoPagoBackend, string> = {
   TARJETA: 'Tarjeta',
 };
 
+const ROL_ETIQUETA: Record<BackendVentaUsuario['rol'], string> = {
+  ADMIN: 'Administrador',
+  VENDEDOR: 'Vendedor',
+};
+
+const ESTADO_FILTRO_OPCIONES = [
+  { value: '', label: 'Todos' },
+  { value: 'PENDIENTE', label: 'Pendiente' },
+  { value: 'COMPLETADA', label: 'Pagada' },
+  { value: 'ANULADA', label: 'Cancelada' },
+  { value: 'RECHAZADA', label: 'Rechazada' },
+];
+
+const METODO_PAGO_FILTRO_OPCIONES = [
+  { value: '', label: 'Todos' },
+  { value: 'EFECTIVO', label: 'Efectivo' },
+  { value: 'TRANSFERENCIA', label: 'Transferencia' },
+  { value: 'TARJETA', label: 'Tarjeta' },
+];
+
 function toNumber(valor: number | string): number {
   const numero = typeof valor === 'string' ? Number(valor) : valor;
   return Number.isFinite(numero) ? numero : 0;
@@ -64,11 +87,21 @@ function formatoMoneda(valor: number | string): string {
 function formatoFecha(iso: string): string {
   const fecha = new Date(iso);
   if (Number.isNaN(fecha.getTime())) return iso;
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(fecha);
+  return fecha.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+}
+
+function etiquetaRol(rol: BackendVentaUsuario['rol']): string {
+  return ROL_ETIQUETA[rol] ?? rol;
+}
+
+function UsuarioVenta({ usuario }: { usuario: BackendVentaUsuario | null | undefined }) {
+  if (!usuario) return <span className="text-zinc-400">—</span>;
+  return (
+    <span className="flex flex-col">
+      <span className="font-medium text-zinc-900">{usuario.nombre}</span>
+      <span className="text-xs text-zinc-500">{etiquetaRol(usuario.rol)}</span>
+    </span>
+  );
 }
 
 interface FilaVenta extends BackendVenta {
@@ -88,6 +121,11 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
     render: (row) => row.detalles?.reduce((total, detalle) => total + detalle.cantidad, 0) ?? '—',
   },
   { key: 'fecha', header: '# Fecha', render: (row) => formatoFecha(row.fecha) },
+  {
+    key: 'vendedor',
+    header: '# Vendedor',
+    render: (row) => <UsuarioVenta usuario={row.vendedor} />,
+  },
   {
     key: 'total',
     header: '# Total',
@@ -175,6 +213,15 @@ export default function VentasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
+  const [filtroVendedor, setFiltroVendedor] = useState('');
+  const [filtroDesde, setFiltroDesde] = useState('');
+  const [filtroHasta, setFiltroHasta] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroMetodoPago, setFiltroMetodoPago] = useState('');
+  const [vendedoresOpciones, setVendedoresOpciones] = useState<
+    { value: string; label: string }[]
+  >([]);
+
   const [detalleId, setDetalleId] = useState<number | null>(null);
   const [detalle, setDetalle] = useState<BackendVenta | null>(null);
   const [detalleLoading, setDetalleLoading] = useState(false);
@@ -187,11 +234,28 @@ export default function VentasPage() {
 
   const recaudacion = useRecaudacion();
 
+  const hayFiltros =
+    filtroVendedor !== '' ||
+    filtroDesde !== '' ||
+    filtroHasta !== '' ||
+    filtroEstado !== '' ||
+    filtroMetodoPago !== '';
+
   const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
     setIsLoading(true);
     setListError(null);
     try {
-      const resultado = await listarVentas(pagina, PAGE_SIZE);
+      const resultado = await listarVentas({
+        page: pagina,
+        limit: PAGE_SIZE,
+        ...(isAdmin && filtroVendedor ? { vendedorId: Number(filtroVendedor) } : {}),
+        ...(filtroDesde ? { desde: filtroDesde } : {}),
+        ...(filtroHasta ? { hasta: filtroHasta } : {}),
+        ...(filtroEstado ? { estado: filtroEstado as EstadoVentaBackend } : {}),
+        ...(filtroMetodoPago
+          ? { metodoPago: filtroMetodoPago as MetodoPagoBackend }
+          : {}),
+      });
       setVentas(resultado.ventas);
       setMeta(resultado.meta);
     } catch (err) {
@@ -204,22 +268,44 @@ export default function VentasPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [
+    isAdmin,
+    filtroVendedor,
+    filtroDesde,
+    filtroHasta,
+    filtroEstado,
+    filtroMetodoPago,
+  ]);
 
   useEffect(() => {
-    async function cargarInicial(): Promise<void> {
-      await cargarPagina(1);
-    }
-    void cargarInicial();
-  }, [cargarPagina]);
-
-  useEffect(() => {
-    if (page === 1) return;
     async function cargarPaginaActual(): Promise<void> {
       await cargarPagina(page);
     }
     void cargarPaginaActual();
   }, [page, cargarPagina]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let active = true;
+    async function cargarVendedores(): Promise<void> {
+      try {
+        const usuarios = await listarUsuarios();
+        if (!active) return;
+        setVendedoresOpciones(
+          usuarios.map((usuario) => ({
+            value: String(usuario.id),
+            label: usuario.nombre,
+          })),
+        );
+      } catch {
+        if (active) setVendedoresOpciones([]);
+      }
+    }
+    void cargarVendedores();
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
 
   async function verDetalle(id: number): Promise<void> {
     setDetalleId(id);
@@ -267,6 +353,15 @@ export default function VentasPage() {
     } finally {
       setIsAnulando(false);
     }
+  }
+
+  function limpiarFiltros(): void {
+    setFiltroVendedor('');
+    setFiltroDesde('');
+    setFiltroHasta('');
+    setFiltroEstado('');
+    setFiltroMetodoPago('');
+    setPage(1);
   }
 
   const filas: FilaVenta[] = ventas.map((venta) => ({
@@ -344,6 +439,78 @@ export default function VentasPage() {
             consultar={recaudacion.consultar}
             aplicarRango={recaudacion.aplicarRango}
           />
+        </Reveal>
+
+        <Reveal delay={0.12}>
+          <Card
+            title="Filtrar ventas"
+            subtitle="Los filtros se aplican sobre el historial del servidor."
+            actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
+            className="border-zinc-200/80 shadow-sm"
+          >
+            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {isAdmin && (
+                <Select
+                  label="Vendedor"
+                  value={filtroVendedor}
+                  onChange={(event) => {
+                    setFiltroVendedor(event.target.value);
+                    setPage(1);
+                  }}
+                  options={[
+                    { value: '', label: 'Todos' },
+                    ...vendedoresOpciones,
+                  ]}
+                />
+              )}
+              <Input
+                label="Desde"
+                type="date"
+                value={filtroDesde}
+                max={filtroHasta || undefined}
+                onChange={(event) => {
+                  setFiltroDesde(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <Input
+                label="Hasta"
+                type="date"
+                value={filtroHasta}
+                min={filtroDesde || undefined}
+                onChange={(event) => {
+                  setFiltroHasta(event.target.value);
+                  setPage(1);
+                }}
+              />
+              <Select
+                label="Estado"
+                value={filtroEstado}
+                onChange={(event) => {
+                  setFiltroEstado(event.target.value);
+                  setPage(1);
+                }}
+                options={ESTADO_FILTRO_OPCIONES}
+              />
+              <Select
+                label="Método de pago"
+                value={filtroMetodoPago}
+                onChange={(event) => {
+                  setFiltroMetodoPago(event.target.value);
+                  setPage(1);
+                }}
+                options={METODO_PAGO_FILTRO_OPCIONES}
+              />
+            </div>
+            {hayFiltros && (
+              <div className="mt-4 flex justify-end border-t border-zinc-100 pt-3">
+                <Button type="button" variant="ghost" size="sm" onClick={limpiarFiltros}>
+                  <LuX aria-hidden="true" size={14} />
+                  Limpiar
+                </Button>
+              </div>
+            )}
+          </Card>
         </Reveal>
 
         <Reveal delay={0.15}>
@@ -440,7 +607,29 @@ export default function VentasPage() {
                 <dt className="text-zinc-500">Total</dt>
                 <dd className="font-medium text-zinc-900">{formatoMoneda(detalle.total)}</dd>
               </div>
+              <div className="col-span-2">
+                <dt className="text-zinc-500">Vendedor</dt>
+                <dd className="font-medium text-zinc-900">
+                  <UsuarioVenta usuario={detalle.vendedor} />
+                </dd>
+              </div>
             </dl>
+            {detalle.estado === 'ANULADA' && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm">
+                <p className="font-semibold text-red-800">Anulada por</p>
+                <div className="mt-1 text-red-900">
+                  <UsuarioVenta usuario={detalle.anuladoPor} />
+                </div>
+                <p className="mt-2 text-red-800">
+                  <span className="font-medium">Motivo:</span>{' '}
+                  {detalle.motivoAnulacion?.trim() || '—'}
+                </p>
+                <p className="text-red-800">
+                  <span className="font-medium">Fecha:</span>{' '}
+                  {detalle.fechaAnulacion ? formatoFecha(detalle.fechaAnulacion) : '—'}
+                </p>
+              </div>
+            )}
             <Table
               columns={DETALLE_VENTA_COLUMNAS}
               data={detalle.detalles ?? []}
