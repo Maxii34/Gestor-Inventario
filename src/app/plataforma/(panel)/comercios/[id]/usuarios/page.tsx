@@ -83,7 +83,13 @@ export default function UsuariosComercioPage() {
   }, [busquedaAplicada, comercioId, page]);
 
   useEffect(() => {
-    void cargarUsuarios();
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void cargarUsuarios();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [cargarUsuarios]);
 
   function buscar(event: FormEvent<HTMLFormElement>): void {

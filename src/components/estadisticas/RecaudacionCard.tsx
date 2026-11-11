@@ -60,7 +60,13 @@ export function useRecaudacion() {
   }, []);
 
   useEffect(() => {
-    void consultar(rangoInicial.desde, rangoInicial.hasta);
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void consultar(rangoInicial.desde, rangoInicial.hasta);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [consultar, rangoInicial]);
 
   function aplicarRango(rango: { desde: string; hasta: string }): void {

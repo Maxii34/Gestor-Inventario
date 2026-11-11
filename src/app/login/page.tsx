@@ -53,16 +53,23 @@ export default function LoginPage() {
   }, [isSessionLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    const slugFromQuery = new URLSearchParams(window.location.search).get('slug');
-    if (slugFromQuery) {
-      setSlug(slugFromQuery);
-      return;
-    }
-    const pendingSlug = window.sessionStorage.getItem('gestor.pendingSlug');
-    if (pendingSlug) {
-      setSlug(pendingSlug);
-      window.sessionStorage.removeItem('gestor.pendingSlug');
-    }
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      const slugFromQuery = new URLSearchParams(window.location.search).get('slug');
+      if (slugFromQuery) {
+        setSlug(slugFromQuery);
+        return;
+      }
+      const pendingSlug = window.sessionStorage.getItem('gestor.pendingSlug');
+      if (pendingSlug) {
+        setSlug(pendingSlug);
+        window.sessionStorage.removeItem('gestor.pendingSlug');
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
