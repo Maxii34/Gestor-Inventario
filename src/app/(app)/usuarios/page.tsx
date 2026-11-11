@@ -11,6 +11,7 @@ import {
   LuPower,
   LuPowerOff,
   LuSave,
+  LuTrash2,
   LuUsers,
 } from 'react-icons/lu';
 import {
@@ -37,6 +38,7 @@ import type { PageMeta } from '@/types/api';
 import {
   actualizarUsuario,
   crearUsuario,
+  eliminarUsuario,
   listarUsuarios,
   listarUsuariosPaginados,
   type BackendUsuario,
@@ -70,6 +72,8 @@ const ROL_VISUAL: Record<AuthRole, { etiqueta: string; tono: 'info' | 'neutral' 
 interface FilaUsuario extends BackendUsuario {
   onEdit: () => void;
   onToggleActive: () => void;
+  onDelete: () => void;
+  puedeEliminar: boolean;
   soloLectura: boolean;
   motivoSoloLectura: string;
 }
@@ -159,6 +163,20 @@ const USUARIO_COLUMNAS: TableColumn<FilaUsuario>[] = [
             </>
           )}
         </Button>
+        {row.puedeEliminar && (
+          <Button
+            type="button"
+            variant="actionDanger"
+            size="sm"
+            aria-label={`Eliminar ${row.nombre}`}
+            onClick={row.onDelete}
+            disabled={row.soloLectura}
+            title={row.soloLectura ? row.motivoSoloLectura : undefined}
+          >
+            <LuTrash2 aria-hidden="true" size={14} />
+            Eliminar
+          </Button>
+        )}
       </span>
     ),
   },
@@ -190,6 +208,11 @@ export default function UsuariosPage() {
   const [toggleTarget, setToggleTarget] = useState<BackendUsuario | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<BackendUsuario | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('todos');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -349,6 +372,37 @@ export default function UsuariosPage() {
     }
   }
 
+  async function confirmarEliminacion(): Promise<void> {
+    if (!deleteTarget || isDeleting) return;
+    setDeleteError(null);
+    setIsDeleting(true);
+    try {
+      const usuario = deleteTarget;
+      const resultado = await eliminarUsuario(usuario.id);
+      if (resultado.modo === 'ELIMINADO') {
+        notifySuccess(
+          'Empleado eliminado',
+          `${usuario.nombre} se eliminó por completo.`,
+        );
+      } else {
+        notifySuccess(
+          'Empleado dado de baja',
+          `${usuario.nombre} dejó de aparecer y no puede ingresar; su nombre queda en el historial.`,
+        );
+      }
+      setDeleteTarget(null);
+      await cargarListado();
+    } catch (err) {
+      setDeleteError(
+        err instanceof ApiError
+          ? err.message
+          : 'No pudimos eliminar al empleado. Inténtalo nuevamente.',
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   const usuariosBase = hayFiltros ? todosUsuarios : usuarios;
   const usuariosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLocaleLowerCase('es-AR');
@@ -383,6 +437,11 @@ export default function UsuariosPage() {
       setToggleError(null);
       setToggleTarget(usuario);
     },
+    onDelete: () => {
+      setDeleteError(null);
+      setDeleteTarget(usuario);
+    },
+    puedeEliminar: usuario.id !== user?.id && usuario.rol !== 'ADMIN',
     soloLectura,
     motivoSoloLectura,
   }));
@@ -786,6 +845,51 @@ export default function UsuariosPage() {
             El cambio se aplica de inmediato en el sistema.
           </p>
         )}
+      </Modal>
+
+      <Modal
+        open={deleteTarget !== null}
+        title="Eliminar empleado"
+        description={
+          deleteTarget ? `¿Eliminar a "${deleteTarget.nombre}"?` : undefined
+        }
+        onClose={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              disabled={isDeleting || soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+              onClick={() => void confirmarEliminacion()}
+            >
+              {isDeleting ? 'Eliminando…' : 'Eliminar empleado'}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-zinc-600">
+            Si tiene ventas registradas, se da de baja: deja de aparecer y no puede
+            entrar, pero su nombre queda en el historial. Si no tiene ventas, se
+            elimina por completo.
+          </p>
+          {deleteError && (
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {deleteError}
+            </p>
+          )}
+        </div>
       </Modal>
     </>
   );
