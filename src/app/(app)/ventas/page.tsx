@@ -90,6 +90,17 @@ function formatoFecha(iso: string): string {
   return fecha.toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
 }
 
+function esFechaISOValida(valor: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
+  const [anio, mes, dia] = valor.split('-').map(Number);
+  const fecha = new Date(anio, mes - 1, dia);
+  return (
+    fecha.getFullYear() === anio &&
+    fecha.getMonth() === mes - 1 &&
+    fecha.getDate() === dia
+  );
+}
+
 function etiquetaRol(rol: BackendVentaUsuario['rol']): string {
   return ROL_ETIQUETA[rol] ?? rol;
 }
@@ -218,6 +229,7 @@ export default function VentasPage() {
   const [filtroHasta, setFiltroHasta] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroMetodoPago, setFiltroMetodoPago] = useState('');
+  const [filtrosInicializados, setFiltrosInicializados] = useState(false);
   const [vendedoresOpciones, setVendedoresOpciones] = useState<
     { value: string; label: string }[]
   >([]);
@@ -278,11 +290,40 @@ export default function VentasPage() {
   ]);
 
   useEffect(() => {
+    if (!user || filtrosInicializados) return;
+
+    const parametros = new URLSearchParams(window.location.search);
+    const vendedorParam = parametros.get('vendedorId') ?? '';
+    const desdeParam = parametros.get('desde') ?? '';
+    const hastaParam = parametros.get('hasta') ?? '';
+    const estadoParam = parametros.get('estado') ?? '';
+    const metodoPagoParam = parametros.get('metodoPago') ?? '';
+
+    if (isAdmin && /^\d+$/.test(vendedorParam) && Number(vendedorParam) > 0) {
+      setFiltroVendedor(vendedorParam);
+    }
+    if (esFechaISOValida(desdeParam)) setFiltroDesde(desdeParam);
+    if (esFechaISOValida(hastaParam)) setFiltroHasta(hastaParam);
+    if (ESTADO_FILTRO_OPCIONES.some((opcion) => opcion.value === estadoParam && opcion.value)) {
+      setFiltroEstado(estadoParam);
+    }
+    if (
+      METODO_PAGO_FILTRO_OPCIONES.some(
+        (opcion) => opcion.value === metodoPagoParam && opcion.value,
+      )
+    ) {
+      setFiltroMetodoPago(metodoPagoParam);
+    }
+    setFiltrosInicializados(true);
+  }, [user, isAdmin, filtrosInicializados]);
+
+  useEffect(() => {
+    if (!filtrosInicializados) return;
     async function cargarPaginaActual(): Promise<void> {
       await cargarPagina(page);
     }
     void cargarPaginaActual();
-  }, [page, cargarPagina]);
+  }, [page, cargarPagina, filtrosInicializados]);
 
   useEffect(() => {
     if (!isAdmin) return;
