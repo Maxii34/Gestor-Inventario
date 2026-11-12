@@ -170,7 +170,7 @@ const VENTA_COLUMNAS: TableColumn<FilaVenta>[] = [
           onClick={row.onVerDetalle}
         >
           <LuEye aria-hidden="true" size={14} />
-          Ver detalle
+          Ver
         </Button>
         {row.estado === 'COMPLETADA' && row.puedeAnular && (
           <Button
