@@ -4,8 +4,6 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 
 > Frontend en **Next.js (App Router)** que consume el backend REST del proyecto. No expone secretos: solo usa la URL pública del API.
 
-> 🚀 **Demo en vivo:** <!-- TODO: reemplazar cuando se despliegue --> [https://gestor-front-TU-USUARIO.vercel.app](https://gestor-front-TU-USUARIO.vercel.app)
-
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -91,13 +89,11 @@ Este frontend **no funciona solo**: necesita el backend REST.
 
 | Recurso | Link |
 |---------|------|
-| 🌐 **Frontend en producción (este proyecto)** | <!-- TODO: reemplazar cuando se despliegue --> [[[https://gestor-front-TU-USUARIO.vercel.app](https://sistema-inventario-woad.vercel.app/login)](https://sistema-inventario-woad.vercel.app/login)](https://gestor-front-TU-USUARIO.vercel.app) |
+| 🌐 **Frontend en producción (este proyecto)** | URL pendiente de confirmar |
 | 🚀 **Backend en producción (deploy)** | [https://gestor-inventario-back.vercel.app](https://gestor-inventario-back.vercel.app) |
-| 💻 **GitHub del backend** | <!-- TODO: reemplazar con la URL real --> `https://github.com/Maxii34/Gestor-Inventario-back` |
+| 💻 **GitHub del backend** | [Maxii34/Gestor-Inventario-back](https://github.com/Maxii34/Gestor-Inventario-back) |
 
 > El backend expone sus rutas en la raíz, **sin prefijo `/api`**. El frontend solo configura la URL base pública vía `NEXT_PUBLIC_API_URL`.
-
-Si ya tienes la URL del repo del backend, reemplaza el placeholder de arriba.
 
 ---
 
@@ -140,7 +136,7 @@ Edita `.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-Para producción (` .env.production` + variable en Vercel):
+Para producción (`.env.production` + variable en Vercel):
 
 ```env
 NEXT_PUBLIC_API_URL=https://gestor-inventario-back.vercel.app
@@ -154,7 +150,7 @@ NEXT_PUBLIC_API_URL=https://gestor-inventario-back.vercel.app
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) → redirige a `/dashboard` (requiere login).
+Abre [http://localhost:3000](http://localhost:3000) para ver la landing pública. El acceso de los comercios está en `/login`.
 
 ### 4. Producción
 

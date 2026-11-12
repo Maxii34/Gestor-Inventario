@@ -22,6 +22,7 @@ import {
   Button,
   Card,
   HelpTooltip,
+  Input,
   PageHeader,
   Table,
   type TableColumn,
@@ -32,6 +33,11 @@ import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
 import { getDatosDashboard } from '@/services/dashboard.service';
+import {
+  obtenerVentasPorVendedor,
+  type VentaPorVendedorFila,
+  type VentasPorVendedor,
+} from '@/services/estadisticas.service';
 import type {
   DatosDashboard,
   EstadoStockBajo,
@@ -232,11 +238,300 @@ function formatRevenuePeriod(date: string): string {
   return new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(parsedDate);
 }
 
+const ROL_VENDEDOR_ETIQUETA: Record<'ADMIN' | 'VENDEDOR', string> = {
+  ADMIN: 'Administrador',
+  VENDEDOR: 'Vendedor',
+};
+
+function fechaLocalISO(fecha: Date): string {
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+function rangoHoy(): { desde: string; hasta: string } {
+  const hoy = fechaLocalISO(new Date());
+  return { desde: hoy, hasta: hoy };
+}
+
+function rangoSemanaActual(): { desde: string; hasta: string } {
+  const hoy = new Date();
+  const diaSemana = hoy.getDay();
+  const diasDesdeLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+  const lunes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diasDesdeLunes);
+  return { desde: fechaLocalISO(lunes), hasta: fechaLocalISO(hoy) };
+}
+
+function rangoMesActual(): { desde: string; hasta: string } {
+  const hoy = new Date();
+  const desde = fechaLocalISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  return { desde, hasta: fechaLocalISO(hoy) };
+}
+
+function VentasPorVendedorSection() {
+  const router = useRouter();
+  const [rangoInicial] = useState(rangoMesActual);
+  const [desde, setDesde] = useState(rangoInicial.desde);
+  const [hasta, setHasta] = useState(rangoInicial.hasta);
+  const [datos, setDatos] = useState<VentasPorVendedor | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const consultar = useCallback(
+    async (desdeParam: string, hastaParam: string): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const resultado = await obtenerVentasPorVendedor(desdeParam, hastaParam);
+        setDatos(resultado);
+      } catch (err) {
+        setDatos(null);
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar las ventas por vendedor. Inténtalo nuevamente.',
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (!cancelled) void consultar(rangoInicial.desde, rangoInicial.hasta);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [consultar, rangoInicial]);
+
+  function aplicarRango(rango: { desde: string; hasta: string }): void {
+    setDesde(rango.desde);
+    setHasta(rango.hasta);
+    void consultar(rango.desde, rango.hasta);
+  }
+
+  function irAVentas(fila: VentaPorVendedorFila): void {
+    const params = new URLSearchParams({ desde, hasta });
+    if (fila.vendedor) params.set('vendedorId', String(fila.vendedor.id));
+    router.push(`/ventas?${params.toString()}`);
+  }
+
+  const filas = datos?.filas ?? [];
+  const totales = datos?.totales;
+
+  return (
+    <Card
+      title="Ventas por vendedor"
+      subtitle="Rendimiento del equipo en el período seleccionado."
+      actions={<LuUsers aria-hidden="true" size={16} className="text-zinc-400" />}
+      className="border-zinc-200/80 shadow-sm"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => aplicarRango(rangoHoy())}
+            >
+              <LuCalendarDays aria-hidden="true" size={14} />
+              Hoy
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => aplicarRango(rangoSemanaActual())}
+            >
+              <LuCalendarDays aria-hidden="true" size={14} />
+              Esta semana
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => aplicarRango(rangoMesActual())}
+            >
+              <LuCalendarDays aria-hidden="true" size={14} />
+              Este mes
+            </Button>
+          </div>
+
+          <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input
+              label="Desde"
+              type="date"
+              value={desde}
+              max={hasta || undefined}
+              disabled={isLoading}
+              onChange={(event) => setDesde(event.target.value)}
+            />
+            <Input
+              label="Hasta"
+              type="date"
+              value={hasta}
+              min={desde || undefined}
+              disabled={isLoading}
+              onChange={(event) => setHasta(event.target.value)}
+            />
+          </div>
+
+          <Button
+            type="button"
+            disabled={isLoading || !desde || !hasta}
+            onClick={() => void consultar(desde, hasta)}
+            className="w-full lg:w-auto"
+          >
+            {isLoading ? 'Consultando…' : 'Consultar'}
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col gap-2" aria-hidden="true">
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className="h-12 animate-pulse rounded-lg bg-zinc-100" />
+            ))}
+            <span className="sr-only">Cargando ventas por vendedor…</span>
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void consultar(desde, hasta)}
+              >
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        ) : filas.length === 0 ? (
+          <div className="flex min-h-32 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-5 text-center">
+            <p className="text-sm font-semibold text-zinc-800">
+              No hay ventas en el período seleccionado
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Probá con otro rango de fechas para ver el rendimiento del equipo.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 bg-zinc-50">
+                  <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Vendedor
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Ventas
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Total vendido
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Ticket promedio
+                  </th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Anuladas
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200/70">
+                {filas.map((fila) => (
+                  <tr
+                    key={fila.vendedor?.id ?? 'sin-vendedor'}
+                    tabIndex={0}
+                    aria-label={
+                      fila.vendedor
+                        ? `Ver ventas de ${fila.vendedor.nombre} entre ${desde} y ${hasta}`
+                        : `Ver ventas sin vendedor asignado entre ${desde} y ${hasta}`
+                    }
+                    onClick={() => irAVentas(fila)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        irAVentas(fila);
+                      }
+                    }}
+                    className="cursor-pointer transition-colors hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-zinc-900"
+                  >
+                    <td className="px-4 py-3">
+                      {fila.vendedor ? (
+                        <span className="flex flex-col">
+                          <span className="font-medium text-zinc-900">{fila.vendedor.nombre}</span>
+                          <span className="text-xs text-zinc-500">
+                            {ROL_VENDEDOR_ETIQUETA[fila.vendedor.rol] ?? fila.vendedor.rol}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-zinc-500">Sin vendedor asignado</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-zinc-700">
+                      {fila.cantidadVentas.toLocaleString('es-AR')}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums text-zinc-900">
+                      {formatCurrency(fila.totalVendido)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-zinc-700">
+                      {formatCurrency(fila.ticketPromedio)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-zinc-700">
+                      <span className="block">{fila.anuladas.cantidad.toLocaleString('es-AR')}</span>
+                      <span className="block text-xs text-zinc-500">
+                        {formatCurrency(fila.anuladas.total)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              {totales && (
+                <tfoot>
+                  <tr className="border-t-2 border-zinc-200 bg-zinc-50 font-semibold text-zinc-900">
+                    <td className="px-4 py-3">Totales</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {totales.cantidadVentas.toLocaleString('es-AR')}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatCurrency(totales.totalVendido)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {formatCurrency(totales.ticketPromedio)}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      <span className="block">{totales.anuladas.cantidad.toLocaleString('es-AR')}</span>
+                      <span className="block text-xs text-zinc-500">
+                        {formatCurrency(totales.anuladas.total)}
+                      </span>
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const isAdmin = user?.rol === 'ADMIN';
   const recaudacion = useRecaudacion();
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -476,6 +771,14 @@ export default function DashboardPage() {
               );
             })}
           </section>
+
+          {isAdmin && (
+            <section aria-label="Ventas por vendedor">
+              <motion.div {...animacionEntrada(0.12)} className="min-w-0">
+                <VentasPorVendedorSection />
+              </motion.div>
+            </section>
+          )}
 
           <section aria-label="Ventas recientes">
             <motion.div {...animacionEntrada(0.15)} className="min-w-0">

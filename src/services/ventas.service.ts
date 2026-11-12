@@ -20,6 +20,12 @@ export interface BackendVentaDetalle {
   producto?: { id: number; nombre: string } | null;
 }
 
+export interface BackendVentaUsuario {
+  id: number;
+  nombre: string;
+  rol: 'ADMIN' | 'VENDEDOR';
+}
+
 export interface BackendVenta {
   id: number;
   total: number | string;
@@ -28,6 +34,20 @@ export interface BackendVenta {
   cliente?: BackendVentaCliente | null;
   detalles?: BackendVentaDetalle[];
   fecha: string;
+  vendedor?: BackendVentaUsuario | null;
+  anuladoPor?: BackendVentaUsuario | null;
+  motivoAnulacion?: string | null;
+  fechaAnulacion?: string | null;
+}
+
+export interface VentasFiltros {
+  page: number;
+  limit: number;
+  vendedorId?: number;
+  desde?: string;
+  hasta?: string;
+  estado?: EstadoVentaBackend;
+  metodoPago?: MetodoPagoBackend;
 }
 
 export interface DetalleVentaInput {
@@ -50,9 +70,21 @@ export interface VentasPaginadas {
   meta: PageMeta;
 }
 
-export async function listarVentas(page: number, limit: number): Promise<VentasPaginadas> {
+export async function listarVentas(filtros: VentasFiltros): Promise<VentasPaginadas> {
+  const params = new URLSearchParams({
+    page: String(filtros.page),
+    limit: String(filtros.limit),
+  });
+  if (filtros.vendedorId !== undefined) {
+    params.set('vendedorId', String(filtros.vendedorId));
+  }
+  if (filtros.desde) params.set('desde', filtros.desde);
+  if (filtros.hasta) params.set('hasta', filtros.hasta);
+  if (filtros.estado) params.set('estado', filtros.estado);
+  if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
+
   const response = await apiRequest<ApiListResponse<BackendVenta>>(
-    `/ventas?page=${page}&limit=${limit}`,
+    `/ventas?${params.toString()}`,
     { auth: true },
   );
   return { ventas: response.data, meta: response.meta };

@@ -8,6 +8,12 @@ export interface BackendMovimientoProducto {
   nombre: string;
 }
 
+export interface BackendMovimientoResponsable {
+  id: number;
+  nombre: string;
+  rol: 'ADMIN' | 'VENDEDOR';
+}
+
 export interface BackendMovimiento {
   id: number;
   tipo: TipoMovimientoBackend;
@@ -16,6 +22,7 @@ export interface BackendMovimiento {
   stockNuevo: number;
   motivo?: string | null;
   producto?: BackendMovimientoProducto | null;
+  responsable?: BackendMovimientoResponsable | null;
   fecha: string;
 }
 

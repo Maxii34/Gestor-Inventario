@@ -5,15 +5,21 @@
       <stop offset="1" stop-color="#06b6d4" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#background)" />
-  <text
-    x="32"
-    y="43"
-    fill="#fff"
-    font-family="Arial, Helvetica, sans-serif"
-    font-size="29"
-    font-weight="700"
-    letter-spacing="-2"
-    text-anchor="middle"
-  >NT</text>
+  <rect width="64" height="64" rx="16" fill="#09090b" />
+  <path
+    d="m32 10 19 11v22L32 54 13 43V21l19-11Z"
+    fill="url(#background)"
+    stroke="#fff"
+    stroke-linejoin="round"
+    stroke-width="2.5"
+  />
+  <path
+    d="M32 32v22M13 21l19 11 19-11M22 15.8l19 11"
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="2.5"
+  />
+  <path d="m41 27 10-6" fill="none" stroke="#a3e635" stroke-linecap="round" stroke-width="4" />
 </svg>

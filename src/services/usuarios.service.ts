@@ -31,6 +31,12 @@ export interface UsuariosPaginados {
   meta: PageMeta;
 }
 
+export type ModoEliminacionUsuario = 'ELIMINADO' | 'BAJA';
+
+export interface UsuarioEliminado {
+  modo: ModoEliminacionUsuario;
+}
+
 export async function listarUsuarios(): Promise<BackendUsuario[]> {
   return cargarTodasLasPaginas<BackendUsuario>('/usuarios');
 }
@@ -62,6 +68,14 @@ export async function actualizarUsuario(
   const response = await apiRequest<ApiSuccess<BackendUsuario>>(`/usuarios/${id}`, {
     method: 'PUT',
     body: input,
+    auth: true,
+  });
+  return response.data;
+}
+
+export async function eliminarUsuario(id: number): Promise<UsuarioEliminado> {
+  const response = await apiRequest<ApiSuccess<UsuarioEliminado>>(`/usuarios/${id}`, {
+    method: 'DELETE',
     auth: true,
   });
   return response.data;

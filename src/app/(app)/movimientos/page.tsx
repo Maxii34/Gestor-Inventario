@@ -64,6 +64,11 @@ const TIPO_VISUAL: Record<TipoMovimientoBackend, { etiqueta: string; tono: 'succ
   AJUSTE: { etiqueta: 'Ajuste', tono: 'info' },
 };
 
+const ROL_ETIQUETA: Record<'ADMIN' | 'VENDEDOR', string> = {
+  ADMIN: 'Administrador',
+  VENDEDOR: 'Vendedor',
+};
+
 function formatoFechaHora(iso: string): string {
 
   const fecha = new Date(iso);
@@ -109,6 +114,21 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
         {formatoFechaHora(row.fecha)}
       </span>
     ),
+  },
+  {
+    key: 'responsable',
+    header: '# Responsable',
+    render: (row) =>
+      row.responsable ? (
+        <span className="flex flex-col">
+          <span className="font-medium text-zinc-900">{row.responsable.nombre}</span>
+          <span className="text-xs text-zinc-500">
+            {ROL_ETIQUETA[row.responsable.rol] ?? row.responsable.rol}
+          </span>
+        </span>
+      ) : (
+        <span className="text-zinc-400">—</span>
+      ),
   },
   {
     key: 'producto',
