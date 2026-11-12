@@ -292,29 +292,37 @@ export default function VentasPage() {
   useEffect(() => {
     if (!user || filtrosInicializados) return;
 
-    const parametros = new URLSearchParams(window.location.search);
-    const vendedorParam = parametros.get('vendedorId') ?? '';
-    const desdeParam = parametros.get('desde') ?? '';
-    const hastaParam = parametros.get('hasta') ?? '';
-    const estadoParam = parametros.get('estado') ?? '';
-    const metodoPagoParam = parametros.get('metodoPago') ?? '';
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
 
-    if (isAdmin && /^\d+$/.test(vendedorParam) && Number(vendedorParam) > 0) {
-      setFiltroVendedor(vendedorParam);
-    }
-    if (esFechaISOValida(desdeParam)) setFiltroDesde(desdeParam);
-    if (esFechaISOValida(hastaParam)) setFiltroHasta(hastaParam);
-    if (ESTADO_FILTRO_OPCIONES.some((opcion) => opcion.value === estadoParam && opcion.value)) {
-      setFiltroEstado(estadoParam);
-    }
-    if (
-      METODO_PAGO_FILTRO_OPCIONES.some(
-        (opcion) => opcion.value === metodoPagoParam && opcion.value,
-      )
-    ) {
-      setFiltroMetodoPago(metodoPagoParam);
-    }
-    setFiltrosInicializados(true);
+      const parametros = new URLSearchParams(window.location.search);
+      const vendedorParam = parametros.get('vendedorId') ?? '';
+      const desdeParam = parametros.get('desde') ?? '';
+      const hastaParam = parametros.get('hasta') ?? '';
+      const estadoParam = parametros.get('estado') ?? '';
+      const metodoPagoParam = parametros.get('metodoPago') ?? '';
+
+      if (isAdmin && /^\d+$/.test(vendedorParam) && Number(vendedorParam) > 0) {
+        setFiltroVendedor(vendedorParam);
+      }
+      if (esFechaISOValida(desdeParam)) setFiltroDesde(desdeParam);
+      if (esFechaISOValida(hastaParam)) setFiltroHasta(hastaParam);
+      if (ESTADO_FILTRO_OPCIONES.some((opcion) => opcion.value === estadoParam && opcion.value)) {
+        setFiltroEstado(estadoParam);
+      }
+      if (
+        METODO_PAGO_FILTRO_OPCIONES.some(
+          (opcion) => opcion.value === metodoPagoParam && opcion.value,
+        )
+      ) {
+        setFiltroMetodoPago(metodoPagoParam);
+      }
+      setFiltrosInicializados(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user, isAdmin, filtrosInicializados]);
 
   useEffect(() => {
