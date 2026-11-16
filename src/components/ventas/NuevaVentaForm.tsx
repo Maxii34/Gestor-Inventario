@@ -62,6 +62,9 @@ interface FeedbackEscaneo {
 interface VentaRegistrada {
   id: number;
   total: number;
+  cantidadProductos: number;
+  cantidadUnidades: number;
+  metodoPago: string;
 }
 
 function toNumber(valor: number | string): number {
@@ -338,8 +341,22 @@ export function NuevaVentaForm() {
         (acumulado, item) => acumulado + item.precioUnitario * item.cantidad,
         0,
       );
-      notifySuccess('Venta registrada', `La venta #${creada.ventaId} quedó confirmada.`);
-      setUltimaVenta({ id: creada.ventaId, total: totalVenta });
+      const cantidadProductos = itemsRef.current.length;
+      const cantidadUnidades = itemsRef.current.reduce(
+        (total, item) => total + item.cantidad,
+        0,
+      );
+      const metodoPagoEtiqueta =
+        NUEVA_VENTA_MEDIO_PAGO_OPCIONES.find((opcion) => opcion.value === medioPago)?.label ??
+        medioPago;
+      notifySuccess('Venta registrada', 'La venta quedó confirmada correctamente.');
+      setUltimaVenta({
+        id: creada.ventaId,
+        total: totalVenta,
+        cantidadProductos,
+        cantidadUnidades,
+        metodoPago: metodoPagoEtiqueta,
+      });
       reiniciarCamposVenta();
       await cargarSelectores();
     } catch (err) {
@@ -379,19 +396,34 @@ export function NuevaVentaForm() {
       {ultimaVenta && (
         <div
           role="status"
-          className="mb-5 flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+          className="mb-5 flex flex-col gap-4 rounded-2xl border border-emerald-200/70 bg-linear-to-br from-emerald-50 via-white to-white p-4 shadow-sm ring-1 ring-emerald-100/60 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-              <LuCircleCheck aria-hidden="true" size={18} />
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md shadow-emerald-600/25">
+              <LuCircleCheck aria-hidden="true" size={20} />
             </span>
-            <div>
-              <p className="text-sm font-semibold text-emerald-900">
-                Venta #{ultimaVenta.id} registrada correctamente
-              </p>
-              <p className="mt-0.5 text-xs text-emerald-800">
-                Total: {formatoMoneda(ultimaVenta.total)}. El stock ya fue actualizado.
-              </p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-950">Venta registrada con éxito</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 ring-1 ring-emerald-200/80">
+                  {ultimaVenta.cantidadProductos}{' '}
+                  {ultimaVenta.cantidadProductos === 1 ? 'producto' : 'productos'}
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 ring-1 ring-emerald-200/80">
+                  {ultimaVenta.cantidadUnidades}{' '}
+                  {ultimaVenta.cantidadUnidades === 1 ? 'unidad' : 'unidades'}
+                </span>
+                <span className="rounded-full bg-white px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 ring-1 ring-emerald-200/80">
+                  Pago: {ultimaVenta.metodoPago}
+                </span>
+                <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm shadow-emerald-600/20">
+                  Total: {formatoMoneda(ultimaVenta.total)}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200/60">
+                  <LuCircleCheck aria-hidden="true" size={11} />
+                  Stock actualizado
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:shrink-0">
@@ -402,7 +434,7 @@ export function NuevaVentaForm() {
               type="button"
               aria-label="Ocultar confirmación"
               onClick={() => setUltimaVenta(null)}
-              className="rounded-lg p-1.5 text-emerald-700 transition-colors hover:bg-emerald-100"
+              className="rounded-full p-1.5 text-emerald-700 transition-colors hover:bg-emerald-100/70"
             >
               <LuX aria-hidden="true" size={16} />
             </button>
