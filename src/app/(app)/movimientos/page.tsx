@@ -10,6 +10,7 @@ import {
   LuFilter,
   LuPlus,
   LuSave,
+  LuTriangleAlert,
   LuX,
 } from 'react-icons/lu';
 import {
@@ -28,6 +29,7 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import { useStockAlert } from '@/context/StockAlertContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
@@ -210,6 +212,7 @@ const MOVIMIENTO_COLUMNAS: TableColumn<BackendMovimiento>[] = [
 
 export default function MovimientosPage() {
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const { refrescar: refrescarStockBajo } = useStockAlert();
   const router = useRouter();
   const [movimientos, setMovimientos] = useState<BackendMovimiento[]>([]);
   const [meta, setMeta] = useState<PageMeta>({ total: 0, page: 1, totalPaginas: 1 });
@@ -416,6 +419,7 @@ export default function MovimientosPage() {
         producto ? `Inventario actualizado para "${producto.label}".` : 'El inventario fue actualizado.',
       );
       limpiarFormulario();
+      void refrescarStockBajo();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
       } else if (page === 1) {
@@ -754,20 +758,22 @@ export default function MovimientosPage() {
         {productosSinStock.length > 0 && (
           <section
             aria-labelledby="productos-sin-stock-titulo"
-            className="mb-4 rounded-xl border border-amber-200 bg-amber-50/70 p-3"
+            className="mb-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2"
           >
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <div>
-                <h3 id="productos-sin-stock-titulo" className="text-sm font-semibold text-amber-950">
-                  Productos sin stock
-                </h3>
-                <p className="text-xs text-amber-800">
-                  Seleccioná uno para cargarlo en la reposición.
-                </p>
-              </div>
-              <Badge tone="warning">{productosSinStock.length}</Badge>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3
+                id="productos-sin-stock-titulo"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-950"
+              >
+                <LuTriangleAlert aria-hidden="true" size={13} />
+                Sin stock
+                <span className="rounded-full bg-amber-200/80 px-1.5 text-[10px] font-bold tabular-nums text-amber-900">
+                  {productosSinStock.length}
+                </span>
+              </h3>
+              <span className="text-[11px] text-amber-800/80">Elegí uno para reponer</span>
             </div>
-            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto">
+            <div className="mt-1.5 flex max-h-20 flex-wrap gap-1.5 overflow-y-auto">
               {productosSinStock.map((producto) => (
                 <button
                   key={producto.value}
@@ -778,7 +784,7 @@ export default function MovimientosPage() {
                     setTipo('ENTRADA');
                     setFormError(null);
                   }}
-                  className={`max-w-full truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  className={`max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium transition-colors ${
                     productoId === producto.value
                       ? 'border-amber-400 bg-amber-100 text-amber-950 ring-2 ring-amber-200'
                       : 'border-amber-200 bg-white text-zinc-700 hover:border-amber-400 hover:bg-amber-100/70'

@@ -22,6 +22,7 @@ import {
   LuX,
 } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
+import { useStockAlert } from "@/context/StockAlertContext";
 import { MODULO_CLIENTES } from "@/lib/config";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import type { AuthRole } from "@/types/auth";
@@ -117,6 +118,7 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
+  const { stockBajoCount } = useStockAlert();
   const [userInfoExpanded, setUserInfoExpanded] = useState(false);
   const isAdmin = user?.rol === "ADMIN";
 
@@ -197,11 +199,21 @@ function SidebarContent({
                       : "border-l-2 border-transparent text-zinc-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    size={18}
-                    className={`shrink-0 ${active ? item.accentIcon : "text-zinc-500"}`}
-                  />
+                  <span className="relative shrink-0">
+                    <Icon
+                      aria-hidden="true"
+                      size={18}
+                      className={active ? item.accentIcon : "text-zinc-500"}
+                    />
+                    {item.href === "/movimientos" && stockBajoCount > 0 && (
+                      <span
+                        title={`${stockBajoCount} ${stockBajoCount === 1 ? "producto con stock bajo" : "productos con stock bajo"}`}
+                        className="absolute -right-1.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-0.5 text-[9px] font-bold leading-none text-white ring-2 ring-zinc-900 tabular-nums"
+                      >
+                        {stockBajoCount > 9 ? "9+" : stockBajoCount}
+                      </span>
+                    )}
+                  </span>
                   {!collapsed && item.label}
                 </Link>
               </li>

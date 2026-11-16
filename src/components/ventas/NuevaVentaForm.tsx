@@ -19,6 +19,7 @@ import {
 } from '@/components/ui';
 import { FormField, SearchInput } from '@/components/forms';
 import { useAuth } from '@/context/AuthContext';
+import { useStockAlert } from '@/context/StockAlertContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
@@ -80,6 +81,7 @@ export function NuevaVentaForm() {
   const router = useRouter();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const { refrescar: refrescarStockBajo } = useStockAlert();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [clienteId, setClienteId] = useState('');
@@ -359,6 +361,7 @@ export function NuevaVentaForm() {
       });
       reiniciarCamposVenta();
       await cargarSelectores();
+      void refrescarStockBajo();
     } catch (err) {
       setVentaError(
         err instanceof ApiError

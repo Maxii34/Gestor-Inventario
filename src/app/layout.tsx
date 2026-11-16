@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { StockAlertProvider } from "@/context/StockAlertContext";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -55,7 +56,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} h-full font-sans antialiased`}
     >
       <body className="min-h-screen bg-zinc-100 text-zinc-900">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <StockAlertProvider>{children}</StockAlertProvider>
+        </AuthProvider>
       </body>
     </html>
   );

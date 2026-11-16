@@ -31,6 +31,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useStockAlert } from '@/context/StockAlertContext';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -188,6 +189,7 @@ export default function ProductosPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const { refrescar: refrescarStockBajo } = useStockAlert();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [productos, setProductos] = useState<BackendProducto[]>([]);
@@ -429,6 +431,7 @@ export default function ProductosPage() {
         `"${input.nombre}" ya está en tu catálogo.`,
       );
       cancelarEdicion();
+      void refrescarStockBajo();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
       } else {
@@ -462,6 +465,7 @@ export default function ProductosPage() {
       await eliminarProducto(deleteTarget.id);
       notifySuccess('Producto eliminado', `"${nombreProducto}" se quitó del catálogo.`);
       setDeleteTarget(null);
+      void refrescarStockBajo();
       if (hayFiltros) {
         await cargarTodoParaFiltrar();
       } else if (productos.length === 1 && page > 1) {
