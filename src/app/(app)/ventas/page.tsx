@@ -20,6 +20,7 @@ import {
 import { Reveal } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useStockAlert } from '@/context/StockAlertContext';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,
@@ -216,6 +217,7 @@ export default function VentasPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
+  const { refrescar: refrescarStockBajo } = useStockAlert();
   const isAdmin = user?.rol === 'ADMIN';
 
   const [ventas, setVentas] = useState<BackendVenta[]>([]);
@@ -389,6 +391,7 @@ export default function VentasPage() {
       notifySuccess('Venta anulada', `La venta #${idAnulada} quedó anulada correctamente.`);
       setAnularTarget(null);
       setMotivoAnulacion('');
+      void refrescarStockBajo();
       await cargarPagina(page);
       if (detalleId === idAnulada) {
         await verDetalle(idAnulada);
