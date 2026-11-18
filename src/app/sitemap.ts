@@ -4,7 +4,8 @@ import { SITE_URL } from '@/lib/seo';
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: SITE_URL.toString(),
+      url: new URL('/', SITE_URL).toString(),
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1,
     },

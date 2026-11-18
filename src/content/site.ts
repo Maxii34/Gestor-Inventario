@@ -40,6 +40,10 @@ export const enlaces = {
   email: `mailto:${contacto.email}?subject=Consulta%20sobre%20StockNext`,
 } as const;
 
+export const accesibilidad = {
+  saltarContenido: 'Saltar al contenido',
+} as const;
+
 export const encabezado = {
   ariaInicio: 'StockNext, inicio',
   ariaNavegacion: 'Navegación principal',

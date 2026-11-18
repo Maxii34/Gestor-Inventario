@@ -19,33 +19,23 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
-  title: SITE_TITLE,
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: SITE_DESCRIPTION,
-  alternates: {
-    canonical: SITE_URL,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: {
+    telephone: false,
+    address: false,
+    email: false,
   },
   robots: {
     index: true,
     follow: true,
-  },
-  openGraph: {
-    type: "website",
-    locale: "es_AR",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: "/opengraph-image",
-        alt: "StockNext, gestión de inventario y ventas para comercios",
-      },
-    ],
   },
 };
 

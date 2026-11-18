@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { IconType } from 'react-icons';
 import {
@@ -26,6 +27,7 @@ import {
 import { Captura } from '@/components/landing/Captura';
 import { BrandLockup } from '@/components/ui/BrandLockup';
 import {
+  accesibilidad,
   ahorroTrimestral,
   beneficios,
   capturas,
@@ -49,6 +51,14 @@ import {
   preguntasFrecuentes,
   type FuncionalidadIcono,
 } from '@/content/site';
+import {
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_OG_ALT,
+  SITE_TITLE,
+  SITE_URL,
+} from '@/lib/seo';
 
 const ICONOS_FUNCIONALIDADES: Record<FuncionalidadIcono, IconType> = {
   productos: LuPackage,
@@ -80,10 +90,64 @@ const ICONO_CAJA =
 const PUNTO =
   'flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700';
 
+export const metadata: Metadata = {
+  title: { absolute: SITE_TITLE },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: new URL('/', SITE_URL).toString(),
+  },
+  openGraph: {
+    type: 'website',
+    locale: SITE_LOCALE,
+    url: new URL('/', SITE_URL).toString(),
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: new URL('/opengraph-image', SITE_URL).toString(),
+        alt: SITE_OG_ALT,
+      },
+    ],
+  },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  url: SITE_URL.toString(),
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es-AR',
+  offers: {
+    '@type': 'Offer',
+    price: planes[0].precio,
+    priceCurrency: 'ARS',
+    url: SITE_URL.toString(),
+  },
+};
+
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-x-clip bg-white pb-20 text-zinc-900 sm:pb-0">
-      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+        }}
+      />
+      <main className="min-h-screen overflow-x-clip bg-white pb-20 text-zinc-900 sm:pb-0">
+        <a href="#contenido" className="saltar-contenido">
+          {accesibilidad.saltarContenido}
+        </a>
+        <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className={`${CONTENEDOR} flex h-16 items-center justify-between gap-4`}>
           <Link
             href="/"
@@ -160,7 +224,11 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="relative isolate overflow-hidden bg-white py-16 sm:py-24">
+      <section
+        id="contenido"
+        tabIndex={-1}
+        className="relative isolate scroll-mt-24 overflow-hidden bg-white py-16 sm:py-24"
+      >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-indigo-50 via-white to-white"
@@ -208,10 +276,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div
-            aria-label={heroe.ariaVistaPrevia}
-            className="relative mx-auto w-full max-w-xl pb-16 sm:pb-20"
-          >
+          <div className="relative mx-auto w-full max-w-xl pb-16 sm:pb-20">
             <div
               aria-hidden="true"
               className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-100 via-white to-emerald-50 blur-2xl"
@@ -221,13 +286,12 @@ export default function Home() {
               marco="navegador"
               prioridad
               textoNoDisponible={capturas.noDisponible}
-              className="revelar w-full"
+              className="w-full"
             />
             <div className="absolute -bottom-2 -left-2 w-32 rotate-[-6deg] sm:-left-6 sm:w-40">
               <Captura
                 {...capturas.heroCelular}
                 marco="telefono"
-                prioridad
                 textoNoDisponible={capturas.noDisponible}
               />
             </div>
@@ -635,7 +699,6 @@ export default function Home() {
                   href={enlaces.whatsappConsulta}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={contacto.ariaWhatsapp}
                   className="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-700 transition-colors hover:text-indigo-700"
                 >
                   <LuMessageCircle aria-hidden="true" size={16} />
@@ -660,17 +723,18 @@ export default function Home() {
         </div>
       </footer>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/95 px-4 py-2 backdrop-blur sm:hidden">
-        <a
-          href={enlaces.whatsappProbar}
-          target="_blank"
-          rel="noreferrer"
-          className={`${BOTON_PRIMARIO} w-full px-4`}
-        >
-          {pie.mobileCta}
-          <LuArrowRight aria-hidden="true" size={16} />
-        </a>
-      </div>
-    </main>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/95 px-4 py-2 backdrop-blur sm:hidden">
+          <a
+            href={enlaces.whatsappProbar}
+            target="_blank"
+            rel="noreferrer"
+            className={`${BOTON_PRIMARIO} w-full px-4`}
+          >
+            {pie.mobileCta}
+            <LuArrowRight aria-hidden="true" size={16} />
+          </a>
+        </div>
+      </main>
+    </>
   );
 }
