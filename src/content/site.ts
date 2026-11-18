@@ -43,6 +43,7 @@ export const enlaces = {
 export const encabezado = {
   ariaInicio: 'StockNext, inicio',
   ariaNavegacion: 'Navegación principal',
+  menu: 'Menú',
   ingresar: 'Ingresar',
   probar: 'Probalo gratis',
 } as const;
@@ -81,6 +82,42 @@ export const vistaPrevia = {
   stockTitulo: 'Control de stock',
   stockDetalle: 'Información siempre a mano',
   privacidad: 'La información de cada comercio es privada',
+} as const;
+
+export const capturas = {
+  heroEscritorio: {
+    src: '/capturas/panel-escritorio.webp',
+    alt: 'Panel de StockNext en una computadora',
+  },
+  heroCelular: {
+    src: '/capturas/ventas-celular.webp',
+    alt: 'Ventas de StockNext en un celular',
+  },
+  ventas: {
+    src: '/capturas/ventas.webp',
+    alt: 'Registro de ventas de mostrador en StockNext',
+  },
+  productosCaja: {
+    src: '/capturas/productos-caja.webp',
+    alt: 'Costo por caja y costo por unidad en StockNext',
+  },
+  codigoBarras: {
+    src: '/capturas/codigo-barras.webp',
+    alt: 'Lectura de código de barras en StockNext',
+  },
+  stock: {
+    src: '/capturas/stock.webp',
+    alt: 'Stock y movimientos en StockNext',
+  },
+  estadisticas: {
+    src: '/capturas/estadisticas.webp',
+    alt: 'Estadísticas de recaudación y ventas por vendedor en StockNext',
+  },
+  equipo: {
+    src: '/capturas/equipo.webp',
+    alt: 'Equipo y roles en StockNext',
+  },
+  noDisponible: 'Captura no disponible',
 } as const;
 
 export const funcionesSeccion = {
@@ -185,6 +222,13 @@ export const funcionalidades: Funcionalidad[] = [
       'Entrá desde computadora, tablet o celular, sin instalar una aplicación.',
   },
 ];
+
+export const funcionesResumen = [
+  funcionalidades[0],
+  funcionalidades[2],
+  funcionalidades[6],
+  funcionalidades[7],
+] as const;
 
 export const beneficios = {
   etiqueta: 'Hecho para el día a día',
@@ -382,6 +426,51 @@ export const planesSeccion = {
   ],
   nota: 'Consultá por WhatsApp las condiciones vigentes y cómo empezar tu prueba gratuita.',
 } as const;
+
+export const funcionesDetalle = [
+  {
+    icono: 'ventas',
+    titulo: funcionalidades[2].titulo,
+    descripcion: funcionalidades[2].descripcion,
+    puntos: [planesSeccion.incluye[2], planesSeccion.incluye[3]],
+    captura: capturas.ventas,
+  },
+  {
+    icono: 'costo',
+    titulo: funcionalidades[4].titulo,
+    descripcion: funcionalidades[4].descripcion,
+    puntos: [planesSeccion.incluye[4]],
+    captura: capturas.productosCaja,
+  },
+  {
+    icono: 'codigo',
+    titulo: funcionalidades[5].titulo,
+    descripcion: funcionalidades[5].descripcion,
+    puntos: [planesSeccion.incluye[5]],
+    captura: capturas.codigoBarras,
+  },
+  {
+    icono: 'stock',
+    titulo: funcionalidades[1].titulo,
+    descripcion: funcionalidades[1].descripcion,
+    puntos: [planesSeccion.incluye[1], planesSeccion.incluye[0]],
+    captura: capturas.stock,
+  },
+  {
+    icono: 'estadisticas',
+    titulo: funcionalidades[6].titulo,
+    descripcion: funcionalidades[6].descripcion,
+    puntos: [planesSeccion.incluye[6]],
+    captura: capturas.estadisticas,
+  },
+  {
+    icono: 'equipo',
+    titulo: funcionalidades[7].titulo,
+    descripcion: funcionalidades[7].descripcion,
+    puntos: [planesSeccion.incluye[7]],
+    captura: capturas.equipo,
+  },
+] as const;
 
 export const preguntasFrecuentes = {
   id: 'preguntas',
