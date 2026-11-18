@@ -7,10 +7,12 @@ import {
   LuCalculator,
   LuChartBar,
   LuCheck,
+  LuChevronDown,
   LuClock3,
   LuCreditCard,
   LuDatabase,
   LuGlobe,
+  LuMessageCircle,
   LuPackage,
   LuScanBarcode,
   LuShieldCheck,
@@ -18,21 +20,29 @@ import {
   LuUndo2,
   LuUpload,
   LuUsers,
+  LuX,
 } from 'react-icons/lu';
 import { BrandLockup } from '@/components/ui/BrandLockup';
 import {
+  ahorroTrimestral,
   beneficios,
+  comoEmpezar,
+  contacto,
   ctaFinal,
   encabezado,
+  enlaceWhatsApp,
   enlaces,
   formatearPesos,
   funcionalidades,
   funcionesSeccion,
   heroe,
+  limitaciones,
   navegacion,
+  paraQuien,
   pie,
   planes,
   planesSeccion,
+  preguntasFrecuentes,
   type Funcionalidad,
   vistaPrevia,
 } from '@/content/site';
@@ -52,11 +62,9 @@ const ICONOS_FUNCIONALIDADES: Record<Funcionalidad['icono'], IconType> = {
   acceso: LuGlobe,
 };
 
-const NAVEGACION_ACTUAL = [navegacion[0], navegacion[1], navegacion[4]];
-
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-white text-zinc-900">
+    <main className="min-h-screen overflow-hidden bg-white pb-20 text-zinc-900 sm:pb-0">
       <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-5 px-5 sm:px-8">
           <Link href="/" aria-label={encabezado.ariaInicio}>
@@ -64,9 +72,9 @@ export default function Home() {
           </Link>
           <nav
             aria-label={encabezado.ariaNavegacion}
-            className="hidden items-center gap-7 text-sm font-medium text-zinc-600 md:flex"
+            className="hidden items-center gap-5 text-sm font-medium text-zinc-600 lg:flex xl:gap-7"
           >
-            {NAVEGACION_ACTUAL.map((item) => (
+            {navegacion.map((item) => (
               <a
                 key={item.href}
                 className="transition-colors hover:text-indigo-700"
@@ -302,6 +310,86 @@ export default function Home() {
         </div>
       </section>
 
+      <section id={comoEmpezar.id} className="scroll-mt-24 bg-zinc-50 py-20 sm:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold tracking-wide text-indigo-600 uppercase">
+              {comoEmpezar.etiqueta}
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+              {comoEmpezar.titulo}
+            </h2>
+            <p className="mt-4 leading-7 text-zinc-600">{comoEmpezar.descripcion}</p>
+          </div>
+          <ol className="mt-12 grid gap-5 md:grid-cols-3">
+            {comoEmpezar.pasos.map((paso, indice) => (
+              <li
+                key={paso.titulo}
+                className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-sm font-bold text-indigo-700">
+                  {String(indice + 1).padStart(2, '0')}
+                </span>
+                <h3 className="mt-5 text-lg font-semibold text-zinc-950">{paso.titulo}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-600">{paso.descripcion}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section id={paraQuien.id} className="scroll-mt-24 py-20 sm:py-24">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold tracking-wide text-indigo-600 uppercase">
+              {paraQuien.etiqueta}
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+              {paraQuien.titulo}
+            </h2>
+            <p className="mt-4 leading-7 text-zinc-600">{paraQuien.descripcion}</p>
+          </div>
+          <ul className="mt-10 flex flex-wrap justify-center gap-2.5">
+            {paraQuien.rubros.map((rubro) => (
+              <li
+                key={rubro}
+                className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm"
+              >
+                {rubro}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-8 text-center text-sm text-zinc-500">{paraQuien.nota}</p>
+        </div>
+      </section>
+
+      <section id={limitaciones.id} className="scroll-mt-24 bg-zinc-50 py-20 sm:py-24">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold tracking-wide text-indigo-600 uppercase">
+              {limitaciones.etiqueta}
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+              {limitaciones.titulo}
+            </h2>
+            <p className="mt-4 leading-7 text-zinc-600">{limitaciones.descripcion}</p>
+          </div>
+          <ul className="mt-10 grid gap-3 sm:grid-cols-2">
+            {limitaciones.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-700"
+              >
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
+                  <LuX aria-hidden="true" size={13} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <section id={planesSeccion.id} className="scroll-mt-24 bg-indigo-50/60 py-20 sm:py-24">
         <div className="mx-auto max-w-5xl px-5 sm:px-8">
           <div className="mx-auto max-w-2xl text-center">
@@ -315,7 +403,10 @@ export default function Home() {
               {planesSeccion.descripcion}
             </p>
           </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <p className="mx-auto mt-8 w-fit rounded-full border border-indigo-200 bg-white px-4 py-2 text-center text-sm font-semibold text-indigo-700 shadow-sm">
+            {planesSeccion.banda}
+          </p>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
             {planes.map((plan) => (
               <article
                 key={plan.id}
@@ -325,9 +416,9 @@ export default function Home() {
                     : 'border-zinc-200 shadow-sm'
                 }`}
               >
-                {plan.badge && (
-                  <span className="absolute right-5 top-5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700">
-                    {plan.badge}
+                {plan.destacado && (
+                  <span className="absolute right-5 top-5 rounded-full bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white">
+                    {`${planesSeccion.ahorroEtiqueta} ${ahorroTrimestral.porcentaje}%`}
                   </span>
                 )}
                 <div className="flex items-center gap-3">
@@ -351,9 +442,23 @@ export default function Home() {
                     {plan.sufijoPrecio}
                   </span>
                 </p>
+                {plan.destacado && (
+                  <div className="mt-2 space-y-1 text-sm font-semibold text-indigo-700">
+                    <p>
+                      {`${planesSeccion.equivalentePrefijo} ${formatearPesos(
+                        ahorroTrimestral.equivalenteMensual,
+                      )} ${planesSeccion.equivalenteSufijo}`}
+                    </p>
+                    <p>
+                      {`${planesSeccion.ahorroPesosPrefijo} ${formatearPesos(
+                        ahorroTrimestral.monto,
+                      )} ${planesSeccion.ahorroPesosSufijo}`}
+                    </p>
+                  </div>
+                )}
                 <p className="mt-2 text-sm text-zinc-600">{plan.descripcion}</p>
                 <a
-                  href={enlaces.whatsappConsulta}
+                  href={enlaceWhatsApp(plan.mensaje)}
                   target="_blank"
                   rel="noreferrer"
                   className={`mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
@@ -368,9 +473,75 @@ export default function Home() {
               </article>
             ))}
           </div>
+          <div className="mt-8 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-zinc-950">
+                {planesSeccion.incluyeTitulo}
+              </h3>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {planesSeccion.incluye.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-700">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                      <LuCheck aria-hidden="true" size={13} />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-zinc-950">
+                {planesSeccion.condicionesTitulo}
+              </h3>
+              <ul className="mt-4 grid gap-3">
+                {planesSeccion.condiciones.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-zinc-700">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                      <LuCheck aria-hidden="true" size={13} />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
           <p className="mt-5 text-center text-xs leading-5 text-zinc-500">
             {planesSeccion.nota}
           </p>
+        </div>
+      </section>
+
+      <section id={preguntasFrecuentes.id} className="scroll-mt-24 py-20 sm:py-24">
+        <div className="mx-auto max-w-3xl px-5 sm:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold tracking-wide text-indigo-600 uppercase">
+              {preguntasFrecuentes.etiqueta}
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl">
+              {preguntasFrecuentes.titulo}
+            </h2>
+            <p className="mt-4 leading-7 text-zinc-600">
+              {preguntasFrecuentes.descripcion}
+            </p>
+          </div>
+          <div className="mt-10 space-y-3">
+            {preguntasFrecuentes.items.map((item) => (
+              <details
+                key={item.pregunta}
+                className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-sm font-semibold text-zinc-950 [&::-webkit-details-marker]:hidden">
+                  {item.pregunta}
+                  <LuChevronDown
+                    aria-hidden="true"
+                    className="shrink-0 text-zinc-400 transition-transform group-open:rotate-180"
+                    size={18}
+                  />
+                </summary>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">{item.respuesta}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -404,17 +575,82 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-7 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <BrandLockup size="sm" />
-          <p>{pie.copyright(new Date().getFullYear())}</p>
-          <Link
-            href={enlaces.login}
-            className="font-semibold text-indigo-700 transition-colors hover:text-indigo-900"
-          >
-            {pie.ingresar}
-          </Link>
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+          <div>
+            <BrandLockup size="sm" />
+            <p className="mt-3 max-w-xs text-sm leading-6 text-zinc-500">
+              {pie.descripcion}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              {pie.etiquetaLegal}
+            </p>
+            <ul className="mt-3 grid gap-2 text-sm">
+              <li>
+                <a
+                  href={enlaces.terminos}
+                  className="transition-colors hover:text-indigo-700"
+                >
+                  {pie.terminos}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={enlaces.privacidad}
+                  className="transition-colors hover:text-indigo-700"
+                >
+                  {pie.privacidad}
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              {contacto.etiquetaWhatsapp}
+            </p>
+            <ul className="mt-3 grid gap-2 text-sm">
+              <li>
+                <a
+                  href={enlaces.whatsappConsulta}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={contacto.ariaWhatsapp}
+                  className="inline-flex items-center gap-2 transition-colors hover:text-indigo-700"
+                >
+                  <LuMessageCircle aria-hidden="true" size={15} />
+                  {contacto.ariaWhatsapp}
+                </a>
+              </li>
+              <li>
+                <Link
+                  href={enlaces.login}
+                  className="font-semibold text-indigo-700 transition-colors hover:text-indigo-900"
+                >
+                  {pie.ingresar}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-zinc-200">
+          <p className="mx-auto max-w-7xl px-5 py-5 text-xs text-zinc-500 sm:px-8">
+            {pie.copyright(new Date().getFullYear())}
+          </p>
         </div>
       </footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(24,24,27,0.08)] backdrop-blur sm:hidden">
+        <a
+          href={enlaces.whatsappProbar}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm"
+        >
+          {pie.mobileCta}
+          <LuArrowRight aria-hidden="true" size={16} />
+        </a>
+      </div>
     </main>
   );
 }
