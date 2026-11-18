@@ -24,6 +24,12 @@ export function Captura({
   prioridad = false,
 }: CapturaProps) {
   const [error, setError] = useState(false);
+  const esTelefono = marco === 'telefono';
+  const ancho = esTelefono ? 900 : 1600;
+  const alto = esTelefono ? 1900 : 1000;
+  const sizes = esTelefono
+    ? '(min-width: 640px) 160px, 128px'
+    : '(min-width: 1024px) 50vw, 100vw';
 
   const contenido = error ? (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-zinc-100 p-6 text-center text-sm font-medium text-zinc-700">
@@ -34,11 +40,12 @@ export function Captura({
     <Image
       src={src}
       alt={alt}
-      fill
-      sizes="(min-width: 1024px) 50vw, 100vw"
-      loading={prioridad ? 'eager' : 'lazy'}
-      className="object-cover"
+      width={ancho}
+      height={alto}
+      sizes={sizes}
+      className="h-full w-full object-cover"
       onError={() => setError(true)}
+      {...(prioridad ? { preload: true } : { loading: 'lazy' as const })}
     />
   );
 

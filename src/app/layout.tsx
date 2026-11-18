@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "sweetalert2/dist/sweetalert2.min.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { StockAlertProvider } from "@/context/StockAlertContext";
 import {
   SITE_DESCRIPTION,
+  SITE_LANG,
   SITE_NAME,
   SITE_TITLE,
   SITE_URL,
@@ -42,14 +40,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="es"
+      lang={SITE_LANG}
       className={`${inter.variable} h-full font-sans antialiased`}
     >
-      <body className="min-h-screen bg-zinc-100 text-zinc-900">
-        <AuthProvider>
-          <StockAlertProvider>{children}</StockAlertProvider>
-        </AuthProvider>
-      </body>
+      <body className="min-h-screen bg-zinc-100 text-zinc-900">{children}</body>
     </html>
   );
 }
