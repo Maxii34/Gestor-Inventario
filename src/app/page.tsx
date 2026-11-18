@@ -69,7 +69,7 @@ const CONTENEDOR = 'mx-auto max-w-7xl px-4 sm:px-8';
 const SECCION = 'scroll-mt-24 py-20 sm:py-24';
 const ETIQUETA = 'text-sm font-semibold uppercase tracking-wide text-indigo-700';
 const TITULO = 'mt-4 text-3xl font-bold tracking-tight text-zinc-950 sm:text-4xl';
-const PARRAFO = 'mt-4 text-base leading-7 text-zinc-600';
+const PARRAFO = 'mt-4 text-base leading-7 text-zinc-700';
 const TARJETA = 'revelar tarjeta sombra-tarjeta rounded-2xl border border-zinc-200 bg-white';
 const BOTON =
   'inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold transition-colors';
@@ -177,7 +177,7 @@ export default function Home() {
               {heroe.titulo}{' '}
               <span className="text-indigo-600">{heroe.tituloDestacado}</span>
             </h1>
-            <p className="mt-6 max-w-prose text-lg leading-8 text-zinc-600">
+            <p className="mt-6 max-w-prose text-lg leading-8 text-zinc-700">
               {heroe.descripcion}
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -198,7 +198,7 @@ export default function Home() {
               <LuCheck aria-hidden="true" size={16} />
               {heroe.nota}
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-zinc-600">
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-zinc-700">
               {heroe.senales.map((senal) => (
                 <span key={senal} className="inline-flex items-center gap-2">
                   <LuCheck aria-hidden="true" className="text-emerald-600" size={16} />
@@ -257,7 +257,7 @@ export default function Home() {
                   <h3 className="mt-6 text-lg font-semibold text-zinc-950">
                     {funcionalidad.titulo}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">
                     {funcionalidad.descripcion}
                   </p>
                 </article>
@@ -373,7 +373,7 @@ export default function Home() {
                   {String(indice + 1).padStart(2, '0')}
                 </span>
                 <h3 className="mt-6 text-lg font-semibold text-zinc-950">{paso.titulo}</h3>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">{paso.descripcion}</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-700">{paso.descripcion}</p>
               </li>
             ))}
           </ol>
@@ -397,7 +397,7 @@ export default function Home() {
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-center text-sm leading-6 text-zinc-600">
+          <p className="mt-8 text-center text-sm leading-6 text-zinc-700">
             {paraQuien.nota}
           </p>
         </div>
@@ -418,7 +418,7 @@ export default function Home() {
                 key={item}
                 className="tarjeta sombra-tarjeta flex items-start gap-4 rounded-2xl border border-zinc-200 bg-white p-4 text-sm leading-6 text-zinc-700"
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-600">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-700">
                   <LuX aria-hidden="true" size={13} />
                 </span>
                 {item}
@@ -460,7 +460,7 @@ export default function Home() {
                   </span>
                   <div>
                     <h3 className="text-lg font-semibold text-zinc-950">{plan.nombre}</h3>
-                    <p className="text-sm text-zinc-600">{plan.subtitulo}</p>
+                    <p className="text-sm text-zinc-700">{plan.subtitulo}</p>
                   </div>
                 </div>
                 {plan.destacado && (
@@ -470,7 +470,7 @@ export default function Home() {
                 )}
                 <p className="mt-8 text-4xl font-bold tracking-tight text-zinc-950">
                   {formatearPesos(plan.precio)}
-                  <span className="ml-2 text-sm font-medium text-zinc-600">
+                  <span className="ml-2 text-sm font-medium text-zinc-700">
                     {plan.sufijoPrecio}
                   </span>
                 </p>
@@ -488,7 +488,7 @@ export default function Home() {
                     </p>
                   </div>
                 )}
-                <p className="mt-4 text-sm leading-6 text-zinc-600">{plan.descripcion}</p>
+                <p className="mt-4 text-sm leading-6 text-zinc-700">{plan.descripcion}</p>
                 <a
                   href={enlaceWhatsApp(plan.mensaje)}
                   target="_blank"
@@ -535,7 +535,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <p className="mt-8 text-center text-sm leading-6 text-zinc-600">
+          <p className="mt-8 text-center text-sm leading-6 text-zinc-700">
             {planesSeccion.nota}
           </p>
         </div>
@@ -560,11 +560,11 @@ export default function Home() {
                   {item.pregunta}
                   <LuChevronDown
                     aria-hidden="true"
-                    className="shrink-0 text-zinc-600 transition-transform group-open:rotate-180"
+                    className="shrink-0 text-zinc-700 transition-transform group-open:rotate-180"
                     size={18}
                   />
                 </summary>
-                <p className="mt-4 text-sm leading-6 text-zinc-600">{item.respuesta}</p>
+                <p className="mt-4 text-sm leading-6 text-zinc-700">{item.respuesta}</p>
               </details>
             ))}
           </div>
@@ -606,7 +606,7 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
           <div>
             <BrandLockup size="sm" />
-            <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-600">
+            <p className="mt-4 max-w-xs text-sm leading-6 text-zinc-700">
               {pie.descripcion}
             </p>
           </div>
@@ -614,12 +614,12 @@ export default function Home() {
             <p className="text-sm font-semibold text-zinc-700">{pie.etiquetaLegal}</p>
             <ul className="mt-4 grid gap-2">
               <li>
-                <a href={enlaces.terminos} className="inline-flex min-h-11 items-center text-sm text-zinc-600 transition-colors hover:text-indigo-700">
+                <a href={enlaces.terminos} className="inline-flex min-h-11 items-center text-sm text-zinc-700 transition-colors hover:text-indigo-700">
                   {pie.terminos}
                 </a>
               </li>
               <li>
-                <a href={enlaces.privacidad} className="inline-flex min-h-11 items-center text-sm text-zinc-600 transition-colors hover:text-indigo-700">
+                <a href={enlaces.privacidad} className="inline-flex min-h-11 items-center text-sm text-zinc-700 transition-colors hover:text-indigo-700">
                   {pie.privacidad}
                 </a>
               </li>
@@ -636,7 +636,7 @@ export default function Home() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={contacto.ariaWhatsapp}
-                  className="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-600 transition-colors hover:text-indigo-700"
+                  className="inline-flex min-h-11 items-center gap-2 text-sm text-zinc-700 transition-colors hover:text-indigo-700"
                 >
                   <LuMessageCircle aria-hidden="true" size={16} />
                   {contacto.ariaWhatsapp}
@@ -654,7 +654,7 @@ export default function Home() {
           </div>
         </div>
         <div className="border-t border-zinc-200">
-          <p className="mx-auto max-w-7xl px-4 py-6 text-sm text-zinc-600 sm:px-8">
+          <p className="mx-auto max-w-7xl px-4 py-6 text-sm text-zinc-700 sm:px-8">
             {pie.copyright(new Date().getFullYear())}
           </p>
         </div>

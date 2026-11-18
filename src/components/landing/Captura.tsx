@@ -26,7 +26,7 @@ export function Captura({
   const [error, setError] = useState(false);
 
   const contenido = error ? (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-zinc-100 p-6 text-center text-sm font-medium text-zinc-600">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-zinc-100 p-6 text-center text-sm font-medium text-zinc-700">
       <LuImage aria-hidden="true" size={32} />
       <span>{textoNoDisponible}</span>
     </div>

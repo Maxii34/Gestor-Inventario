@@ -16,6 +16,60 @@ body {
   color: var(--foreground);
 }
 
+.sombra-tarjeta {
+  box-shadow:
+    0 1px 2px rgb(24 24 27 / 0.04),
+    0 12px 32px rgb(24 24 27 / 0.06);
+}
+
+.tarjeta {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .tarjeta:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 1px 2px rgb(24 24 27 / 0.04),
+      0 20px 48px rgb(24 24 27 / 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .revelar {
+      animation: aparecer linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta {
+    transition: none;
+  }
+
+  .revelar {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .swal2-popup.stocknext-toast {
   width: min(26rem, calc(100vw - 2rem));
   padding: 0.9rem 1rem;
