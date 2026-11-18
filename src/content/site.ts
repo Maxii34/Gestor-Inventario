@@ -90,35 +90,39 @@ export const vistaPrevia = {
 
 export const capturas = {
   heroEscritorio: {
-    src: '/capturas/panel-escritorio.webp',
-    alt: 'Panel de StockNext en una computadora',
+    src: '/img/home.png',
+    alt: 'Panel principal de StockNext en una computadora',
   },
   heroCelular: {
-    src: '/capturas/ventas-celular.webp',
-    alt: 'Ventas de StockNext en un celular',
+    src: '/img/homecelu.png',
+    alt: 'Panel principal de StockNext en un celular',
+  },
+  productosUnidad: {
+    src: '/img/cargaproductoxunidad.png',
+    alt: 'Carga de un producto por unidad en StockNext',
   },
   ventas: {
-    src: '/capturas/ventas.webp',
-    alt: 'Registro de ventas de mostrador en StockNext',
+    src: '/img/nuevaventa.png',
+    alt: 'Registro de una nueva venta en StockNext',
   },
   productosCaja: {
-    src: '/capturas/productos-caja.webp',
-    alt: 'Costo por caja y costo por unidad en StockNext',
+    src: '/img/cargaxcaja24.png',
+    alt: 'Costo por caja de 24 unidades en StockNext',
   },
   codigoBarras: {
-    src: '/capturas/codigo-barras.webp',
-    alt: 'Lectura de código de barras en StockNext',
+    src: '/img/cargaconbarra.png',
+    alt: 'Carga de un producto con código de barras en StockNext',
   },
   stock: {
-    src: '/capturas/stock.webp',
-    alt: 'Stock y movimientos en StockNext',
+    src: '/img/registrostock.png',
+    alt: 'Registro de stock y movimientos en StockNext',
   },
   estadisticas: {
-    src: '/capturas/estadisticas.webp',
-    alt: 'Estadísticas de recaudación y ventas por vendedor en StockNext',
+    src: '/img/personalstatus.png',
+    alt: 'Estadísticas de ventas por vendedor en StockNext',
   },
   equipo: {
-    src: '/capturas/equipo.webp',
+    src: '/img/equipoyroles.png',
     alt: 'Equipo y roles en StockNext',
   },
   noDisponible: 'Captura no disponible',
@@ -303,7 +307,6 @@ export const limitaciones = {
   descripcion:
     'Preferimos que sepas desde el principio qué cubre la plataforma y qué queda fuera.',
   items: [
-    'No envía alertas automáticas de stock bajo.',
     'No gestiona clientes.',
     'No emite facturas electrónicas.',
     'No cobra con posnet: solo registra el método de pago elegido.',
@@ -330,16 +333,18 @@ export interface Plan {
   destacado: boolean;
 }
 
+
 export const planes: Plan[] = [
   {
     id: 'mensual',
     nombre: 'Plan mensual',
-    subtitulo: 'Flexibilidad mes a mes',
-    precio: 25000,
+    subtitulo: 'Flexibilidad, mes a mes',
+    precio: 24999,
     meses: 1,
     sufijoPrecio: '/ mes',
     badge: null,
-    descripcion: 'Inventario, ventas y gestión del equipo para tu comercio.',
+    descripcion:
+      'Todas las herramientas para organizar el stock, registrar ventas y controlar tu comercio.',
     cta: 'Consultar plan mensual',
     mensaje: mensajesWhatsapp.mensual,
     destacado: false,
@@ -347,17 +352,19 @@ export const planes: Plan[] = [
   {
     id: 'trimestral',
     nombre: 'Plan trimestral',
-    subtitulo: 'Tres meses con ahorro',
-    precio: 60000,
+    subtitulo: 'Ahorrá pagando por adelantado',
+    precio: 59999,
     meses: 3,
     sufijoPrecio: '/ 3 meses',
-    badge: '3 meses',
-    descripcion: 'Las mismas herramientas de StockNext durante tres meses.',
+    badge: 'Más conveniente',
+    descripcion:
+      'Tres meses de acceso completo a StockNext por un precio más conveniente.',
     cta: 'Consultar plan trimestral',
     mensaje: mensajesWhatsapp.trimestral,
     destacado: true,
   },
 ];
+
 
 export interface AhorroCalculado {
   porcentaje: number;
@@ -399,39 +406,46 @@ export const planesSeccion = {
   etiqueta: 'Planes simples',
   titulo: 'Elegí cómo empezar',
   descripcion:
-    'Conocé las opciones disponibles y empezá con 14 días gratis.',
-  banda: 'Probá 14 días gratis, sin tarjeta',
+    'Conocé los planes disponibles y encontrá la opción que mejor se adapte a tu comercio.',
+  banda: 'Solicitá tu demo y probá StockNext durante 14 días gratis, sin tarjeta ni compromisos.',
   ahorroEtiqueta: 'Ahorrás',
   equivalentePrefijo: 'Equivale a',
   equivalenteSufijo: '/ mes',
   ahorroPesosPrefijo: 'Ahorrás',
   ahorroPesosSufijo: 'en total',
-  incluyeTitulo: 'Todos los planes incluyen todas las funciones',
+  incluyeTitulo: 'Los planes incluyen todas las siguientes funciones:',
   incluye: [
-    'Productos y categorías',
-    'Stock y movimientos con responsable',
-    'Ventas con efectivo, transferencia o tarjeta (solo registra el método)',
-    'Anulación con motivo y reposición de stock (solo administrador)',
-    'Costo por caja y cálculo del costo por unidad',
-    'Lector de código de barras USB o Bluetooth',
-    'Estadísticas de recaudación y ventas por vendedor',
-    'Equipo con roles ADMIN y VENDEDOR',
-    'Aviso de suscripción',
-    'Carga asistida de productos (de a 50)',
-    'Acceso desde el navegador en computadora, tablet o celular',
-    'Datos separados entre negocios',
+    'Gestión de productos y categorías',
+    'Control de stock y movimientos con registro de quién realiza cada operación',
+    'Registro de ventas y medios de pago (efectivo, transferencia y tarjeta)',
+    'Anulación de ventas con motivo y reposición automática del stock (solo administradores)',
+    'Gestión de costos por paquete y cálculo automático del costo por unidad',
+    'Compatible con lectores de códigos de barras USB y Bluetooth',
+    'Estadísticas de ventas, recaudación y rendimiento por vendedor',
+    'Gestión de usuarios y permisos: administrador y vendedor',
+    'Notificaciones sobre el estado de la suscripción',
+    'Carga inicial de productos asistida por soporte (opcional).',
+    'Información de tu negocio privada e independiente de otros comercios',
+    'Actualizaciones y mejoras continuas, con nuevas funciones y correcciones de errores',
   ],
-  condicionesTitulo: 'Condiciones',
+  condicionesTitulo: 'Condiciones:',
   condiciones: [
-    'Pago por transferencia.',
-    'Sin renovación automática ni permanencia.',
-    'Los meses se suman.',
-    '3 días de gracia y luego el sistema queda en solo lectura.',
+    'Pago mediante transferencia bancaria.',
+    'Sin renovación automática ni compromisos de permanencia.',
+    'Los períodos contratados son acumulables.',
+    '3 días de gracia para regularizar el pago. Luego, el acceso pasa a modo de solo lectura.',
   ],
   nota: 'Consultá por WhatsApp las condiciones vigentes y cómo empezar tu prueba gratuita.',
 } as const;
 
 export const funcionesDetalle = [
+  {
+    icono: 'productos',
+    titulo: funcionalidades[0].titulo,
+    descripcion: funcionalidades[0].descripcion,
+    puntos: [planesSeccion.incluye[0]],
+    captura: capturas.productosUnidad,
+  },
   {
     icono: 'ventas',
     titulo: funcionalidades[2].titulo,

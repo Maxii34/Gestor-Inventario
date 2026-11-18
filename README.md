@@ -171,20 +171,22 @@ npm run start
 
 ### Capturas
 
-Guardá las imágenes en `public/capturas/` respetando estos nombres y medidas:
+Guardá las imágenes en `public/img/`. Los nombres actuales ya están conectados en `src/content/site.ts`:
 
-| Archivo | Uso | Medida recomendada |
-|---------|-----|--------------------|
-| `panel-escritorio.webp` | Hero de escritorio | 1600 × 1000 px |
-| `ventas-celular.webp` | Hero de celular | 900 × 1900 px |
-| `ventas.webp` | Fila de ventas | 1600 × 1000 px |
-| `productos-caja.webp` | Costo por caja | 1600 × 1000 px |
-| `codigo-barras.webp` | Código de barras | 1600 × 1000 px |
-| `stock.webp` | Stock y movimientos | 1600 × 1000 px |
-| `estadisticas.webp` | Estadísticas | 1600 × 1000 px |
-| `equipo.webp` | Equipo y roles | 1600 × 1000 px |
+| Archivo | Uso | Medida actual |
+|---------|-----|----------------|
+| `home.png` | Hero de escritorio | 1352 × 767 px |
+| `homecelu.png` | Hero de celular | 322 × 573 px |
+| `cargaproductoxunidad.png` | Productos por unidad | 1365 × 766 px |
+| `nuevaventa.png` | Nueva venta | 1365 × 767 px |
+| `cargaxcaja24.png` | Costo por caja de 24 | 1365 × 767 px |
+| `cargaconbarra.png` | Carga con código de barras | 1365 × 767 px |
+| `registrostock.png` | Registro de stock | 1365 × 767 px |
+| `personalstatus.png` | Ventas por vendedor | 1365 × 767 px |
+| `equipoyroles.png` | Equipo y roles | 1365 × 767 px |
 
-- Usá formato WebP y mantené la proporción indicada; las capturas de escritorio son 16:10 y la de celular es 9:19.
+- Las capturas de escritorio se muestran en 16:9 y la de celular en 9:16. Si reemplazás una imagen, mantené esa proporción.
+- Hacé clic sobre una captura para verla en grande; `Escape` o el botón de cerrar cierran la vista ampliada.
 - Evitá datos reales o sensibles en las imágenes.
 - Si falta una captura, la landing muestra el recuadro "Captura no disponible".
 

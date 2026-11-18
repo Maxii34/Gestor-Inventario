@@ -231,7 +231,7 @@ export default function Home() {
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-indigo-50 via-white to-white"
+          className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-b from-indigo-50 via-white to-white"
         />
         <div
           className={`${CONTENEDOR} grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16`}
@@ -279,7 +279,7 @@ export default function Home() {
           <div className="relative mx-auto w-full max-w-xl pb-16 sm:pb-20">
             <div
               aria-hidden="true"
-              className="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-100 via-white to-emerald-50 blur-2xl"
+              className="absolute inset-0 -z-10 bg-linear-to-br from-indigo-100 via-white to-emerald-50 blur-2xl"
             />
             <Captura
               {...capturas.heroEscritorio}
@@ -288,7 +288,7 @@ export default function Home() {
               textoNoDisponible={capturas.noDisponible}
               className="w-full"
             />
-            <div className="absolute -bottom-2 -left-2 w-32 rotate-[-6deg] sm:-left-6 sm:w-40">
+            <div className="absolute -bottom-2 -left-2 w-32 -rotate-6 sm:-left-6 sm:w-40">
               <Captura
                 {...capturas.heroCelular}
                 marco="telefono"
@@ -637,7 +637,7 @@ export default function Home() {
 
       <section className={`${SECCION} bg-white`}>
         <div className="mx-auto max-w-5xl px-4 sm:px-8">
-          <div className="sombra-tarjeta flex flex-col items-center rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-indigo-950 px-6 py-16 text-center text-white sm:px-12 sm:py-20">
+          <div className="sombra-tarjeta flex flex-col items-center rounded-2xl bg-linear-to-br from-zinc-950 via-zinc-900 to-indigo-950 px-6 py-16 text-center text-white sm:px-12 sm:py-20">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-indigo-300">
               <LuBoxes aria-hidden="true" size={24} />
             </span>
