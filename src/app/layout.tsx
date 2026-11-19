@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "sweetalert2/dist/sweetalert2.min.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { StockAlertProvider } from "@/context/StockAlertContext";
 import {
   SITE_DESCRIPTION,
+  SITE_LANG,
   SITE_NAME,
   SITE_TITLE,
   SITE_URL,
@@ -19,47 +17,33 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: SITE_URL,
-  title: SITE_TITLE,
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: SITE_DESCRIPTION,
-  alternates: {
-    canonical: SITE_URL,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: {
+    telephone: false,
+    address: false,
+    email: false,
   },
   robots: {
     index: true,
     follow: true,
-  },
-  openGraph: {
-    type: "website",
-    locale: "es_AR",
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: "/opengraph-image",
-        alt: "StockNext, gestión de inventario y ventas para comercios",
-      },
-    ],
   },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="es"
+      lang={SITE_LANG}
       className={`${inter.variable} h-full font-sans antialiased`}
     >
-      <body className="min-h-screen bg-zinc-100 text-zinc-900">
-        <AuthProvider>
-          <StockAlertProvider>{children}</StockAlertProvider>
-        </AuthProvider>
-      </body>
+      <body className="min-h-screen bg-zinc-100 text-zinc-900">{children}</body>
     </html>
   );
 }

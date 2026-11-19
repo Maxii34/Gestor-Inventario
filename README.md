@@ -89,7 +89,7 @@ Este frontend **no funciona solo**: necesita el backend REST.
 
 | Recurso | Link |
 |---------|------|
-| 🌐 **Frontend en producción (este proyecto)** | URL pendiente de confirmar |
+| 🌐 **Frontend en producción (este proyecto)** | [https://codemaxdev-sigma.vercel.app](https://codemaxdev-sigma.vercel.app) |
 | 🚀 **Backend en producción (deploy)** | [https://gestor-inventario-back.vercel.app](https://gestor-inventario-back.vercel.app) |
 | 💻 **GitHub del backend** | [Maxii34/Gestor-Inventario-back](https://github.com/Maxii34/Gestor-Inventario-back) |
 
@@ -114,35 +114,32 @@ npm install
 
 ### 2. Variables de entorno
 
-Copia la plantilla (no contiene secretos):
-
-```bash
-# Desarrollo
-# NEXT_PUBLIC_API_URL=http://localhost:3001
-
-# Producción
-# NEXT_PUBLIC_API_URL=https://gestor-inventario-back.vercel.app
-```
-
-Crea tu archivo local:
+Copia la plantilla y completá las variables públicas:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edita `.env.local`:
+| Variable | Para qué se usa | Ejemplo local |
+|----------|-----------------|---------------|
+| `NEXT_PUBLIC_API_URL` | URL base del backend REST (sin `/api`) | `http://localhost:3001` |
+| `NEXT_PUBLIC_APP_URL` | URL pública del frontend para canonical, Open Graph, sitemap y enlaces legales | `http://localhost:3000` |
+
+Contenido de `.env.local` para desarrollo:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Para producción (`.env.production` + variable en Vercel):
+En producción (`.env.production` o variables de Vercel):
 
 ```env
 NEXT_PUBLIC_API_URL=https://gestor-inventario-back.vercel.app
+NEXT_PUBLIC_APP_URL=https://codemaxdev-sigma.vercel.app
 ```
 
-> 🔒 Solo se usa `NEXT_PUBLIC_*` (URL base pública). No se guardan tokens, claves ni contraseñas en el repo.
+> 🔒 Solo se usan variables `NEXT_PUBLIC_*` públicas. No guardes tokens, claves ni contraseñas en el repo ni en `.env.local`.
 
 ### 3. Desarrollo
 
@@ -167,6 +164,48 @@ npm run start
 | `npm run build` | Build de producción |
 | `npm run start` | Sirve el build |
 | `npm run lint` | Linter (ESLint) |
+
+---
+
+## Capturas, textos y SEO
+
+### Capturas
+
+Guardá las imágenes en `public/img/`. Los nombres actuales ya están conectados en `src/content/site.ts`:
+
+| Archivo | Uso | Medida actual |
+|---------|-----|----------------|
+| `home.png` | Hero de escritorio | 1352 × 767 px |
+| `homecelu.png` | Hero de celular | 322 × 573 px |
+| `cargaproductoxunidad.png` | Productos por unidad | 1365 × 766 px |
+| `nuevaventa.png` | Nueva venta | 1365 × 767 px |
+| `cargaxcaja24.png` | Costo por caja de 24 | 1365 × 767 px |
+| `cargaconbarra.png` | Carga con código de barras | 1365 × 767 px |
+| `registrostock.png` | Registro de stock | 1365 × 767 px |
+| `personalstatus.png` | Ventas por vendedor | 1365 × 767 px |
+| `equipoyroles.png` | Equipo y roles | 1365 × 767 px |
+
+- Las capturas de escritorio se muestran en 16:9 y la de celular en 9:16. Si reemplazás una imagen, mantené esa proporción.
+- Hacé clic sobre una captura para verla en grande; `Escape` o el botón de cerrar cierran la vista ampliada.
+- Evitá datos reales o sensibles en las imágenes.
+- Si falta una captura, la landing muestra el recuadro "Captura no disponible".
+
+### Textos y precios
+
+Todo el contenido de la landing está en `src/content/site.ts`:
+
+- `heroe`, `funcionesSeccion`, `funcionesResumen`, `funcionesDetalle`, `beneficios`, `comoEmpezar`, `paraQuien`, `limitaciones`, `preguntasFrecuentes` y `pie`.
+- `planes` define precio, meses, textos y plan destacado. `calcularAhorro` recalcula el ahorro y el equivalente mensual; no hardcodees esos valores en `page.tsx`.
+- `contacto` y `mensajesWhatsapp` concentran el email y los mensajes de WhatsApp.
+- Los metadatos y la URL pública se editan en `src/lib/seo.ts`.
+
+### SEO
+
+- `src/lib/seo.ts`: nombre, título, descripción, locale y URL del sitio (`NEXT_PUBLIC_APP_URL`).
+- `src/app/opengraph-image.tsx`: imagen de 1200 × 630 generada con `next/og`.
+- `src/app/sitemap.ts` y `src/app/robots.ts`: sitemap público y exclusión de rutas privadas.
+- `src/app/icon.svg`: favicon e icono de la aplicación.
+- El JSON-LD de `SoftwareApplication` está en `src/app/page.tsx`, sin valoraciones ni reseñas.
 
 ---
 
