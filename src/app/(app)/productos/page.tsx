@@ -915,7 +915,7 @@ export default function ProductosPage() {
                 ? 'Completá la información para incorporarlo al catálogo.'
                 : 'Actualizá los datos del producto y guardá los cambios.'
             }
-            size="lg"
+            size="wide"
             onClose={() => {
               if (!isSubmitting) cancelarEdicion();
             }}
@@ -946,286 +946,344 @@ export default function ProductosPage() {
                 event.preventDefault();
                 void guardarProducto();
               }}
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+              className="flex flex-col gap-5"
             >
-              <FormField label="Nombre" htmlFor="producto-nombre">
-                <Input
-                  id="producto-nombre"
-                  placeholder="Ej: Notebook Lenovo IdeaPad"
-                  autoFocus
-                  required
-                  value={form.nombre}
-                  onChange={(event) => setCampo('nombre', event.target.value)}
-                />
-              </FormField>
-              <FormField label="Categoría" htmlFor="producto-categoria">
-                <Select
-                  id="producto-categoria"
-                  value={form.categoriaId}
-                  onChange={(event) => setCampo('categoriaId', event.target.value)}
-                  required
-                  placeholder="Seleccionar categoría"
-                  options={categorias.map((categoria) => ({
-                    value: String(categoria.id),
-                    label: categoria.nombre,
-                  }))}
-                />
-              </FormField>
-              <div className="sm:col-span-2">
-                <FormField label="Descripción" htmlFor="producto-descripcion">
-                  <Input
-                    id="producto-descripcion"
-                    placeholder="Descripción breve del producto (opcional)"
-                    value={form.descripcion}
-                    onChange={(event) => setCampo('descripcion', event.target.value)}
-                  />
-                </FormField>
-              </div>
-              <div className="sm:col-span-2">
-                <FormField
-                  label="Código de barras"
-                  htmlFor="producto-codigo-barras"
-                  error={codigoBarrasError ?? undefined}
-                  hint="Escaneá el código con el lector o escribilo"
+              <section
+                aria-labelledby="producto-seccion-datos"
+                className="rounded-xl border border-zinc-200 p-4"
+              >
+                <h3
+                  id="producto-seccion-datos"
+                  className="text-sm font-semibold text-zinc-800"
                 >
-                  <Input
-                    id="producto-codigo-barras"
-                    placeholder="Opcional"
-                    value={form.codigoBarras}
-                    aria-invalid={Boolean(codigoBarrasError)}
-                    onChange={(event) => setCampo('codigoBarras', event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter') return;
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setCampo('codigoBarras', event.currentTarget.value.trim());
-                    }}
-                  />
-                </FormField>
-              </div>
-              <div className="sm:col-span-2 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-zinc-800">
-                      Lo compro por caja o pack
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      Cargá el precio de la caja y el sistema calcula el costo por unidad.
-                    </p>
+                  Datos del producto
+                </h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="lg:col-span-2">
+                    <FormField label="Nombre" htmlFor="producto-nombre">
+                      <Input
+                        id="producto-nombre"
+                        placeholder="Ej: Notebook Lenovo IdeaPad"
+                        autoFocus
+                        required
+                        value={form.nombre}
+                        onChange={(event) => setCampo('nombre', event.target.value)}
+                      />
+                    </FormField>
                   </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={form.compraPorPaquete}
-                    aria-label="Lo compro por caja o pack"
-                    onClick={() => {
-                      setForm((anterior) => ({
-                        ...anterior,
-                        compraPorPaquete: !anterior.compraPorPaquete,
-                        stockUnidad: 'unidad',
-                      }));
-                      setFormError(null);
-                    }}
-                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                      form.compraPorPaquete ? 'bg-zinc-900' : 'bg-zinc-300'
+                  <FormField label="Categoría" htmlFor="producto-categoria">
+                    <Select
+                      id="producto-categoria"
+                      value={form.categoriaId}
+                      onChange={(event) => setCampo('categoriaId', event.target.value)}
+                      required
+                      placeholder="Seleccionar categoría"
+                      options={categorias.map((categoria) => ({
+                        value: String(categoria.id),
+                        label: categoria.nombre,
+                      }))}
+                    />
+                  </FormField>
+                  <div className="sm:col-span-2">
+                    <FormField label="Descripción" htmlFor="producto-descripcion">
+                      <Input
+                        id="producto-descripcion"
+                        placeholder="Descripción breve del producto (opcional)"
+                        value={form.descripcion}
+                        onChange={(event) => setCampo('descripcion', event.target.value)}
+                      />
+                    </FormField>
+                  </div>
+                  <div className="sm:col-span-2 lg:col-span-1">
+                    <FormField
+                      label="Código de barras"
+                      htmlFor="producto-codigo-barras"
+                      error={codigoBarrasError ?? undefined}
+                      hint="Escaneá el código con el lector o escribilo"
+                    >
+                      <Input
+                        id="producto-codigo-barras"
+                        placeholder="Opcional"
+                        value={form.codigoBarras}
+                        aria-invalid={Boolean(codigoBarrasError)}
+                        onChange={(event) => setCampo('codigoBarras', event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter') return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setCampo('codigoBarras', event.currentTarget.value.trim());
+                        }}
+                      />
+                    </FormField>
+                  </div>
+                  {categoriasError && (
+                    <p
+                      role="alert"
+                      className="text-xs text-red-600 sm:col-span-2 lg:col-span-3"
+                    >
+                      {categoriasError}
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section
+                aria-labelledby="producto-seccion-precios"
+                className="rounded-xl border border-zinc-200 p-4"
+              >
+                <h3
+                  id="producto-seccion-precios"
+                  className="text-sm font-semibold text-zinc-800"
+                >
+                  Compra, costos y precio
+                </h3>
+                <div className="mt-3 flex flex-col gap-4">
+                  <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-zinc-800">
+                        Lo compro por caja o pack
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Cargá el precio de la caja y el sistema calcula el costo por unidad.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={form.compraPorPaquete}
+                      aria-label="Lo compro por caja o pack"
+                      onClick={() => {
+                        setForm((anterior) => ({
+                          ...anterior,
+                          compraPorPaquete: !anterior.compraPorPaquete,
+                          stockUnidad: 'unidad',
+                        }));
+                        setFormError(null);
+                      }}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                        form.compraPorPaquete ? 'bg-zinc-900' : 'bg-zinc-300'
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                          form.compraPorPaquete ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {form.compraPorPaquete ? (
+                      <>
+                        <FormField
+                          label="Precio de la caja"
+                          htmlFor="producto-precio-paquete"
+                        >
+                          <Input
+                            id="producto-precio-paquete"
+                            type="number"
+                            min={0.01}
+                            step="0.01"
+                            required
+                            placeholder="0"
+                            value={form.precioCompraPaquete}
+                            onChange={(event) =>
+                              setCampo('precioCompraPaquete', event.target.value)
+                            }
+                          />
+                        </FormField>
+                        <FormField
+                          label="Unidades por caja"
+                          htmlFor="producto-unidades-paquete"
+                        >
+                          <Input
+                            id="producto-unidades-paquete"
+                            type="number"
+                            min={1}
+                            max={100000}
+                            step={1}
+                            required
+                            placeholder="1"
+                            value={form.unidadesPorPaquete}
+                            onChange={(event) =>
+                              setCampo('unidadesPorPaquete', event.target.value)
+                            }
+                          />
+                        </FormField>
+                        <FormField
+                          label="Costo por unidad"
+                          htmlFor="producto-costo-calculado"
+                          hint="Calculado automáticamente desde la caja"
+                        >
+                          <div
+                            id="producto-costo-calculado"
+                            className="rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-900 tabular-nums"
+                          >
+                            {Number.isFinite(costoUnitarioFormulario) &&
+                            costoUnitarioFormulario > 0
+                              ? formatoCosto(costoUnitarioFormulario)
+                              : '—'}
+                          </div>
+                        </FormField>
+                      </>
+                    ) : (
+                      <FormField
+                        label="Costo por unidad"
+                        htmlFor="producto-precio-compra"
+                      >
+                        <Input
+                          id="producto-precio-compra"
+                          type="number"
+                          min={0.01}
+                          step="0.0001"
+                          required
+                          placeholder="0"
+                          value={form.precioCompra}
+                          onChange={(event) =>
+                            setCampo('precioCompra', event.target.value)
+                          }
+                        />
+                      </FormField>
+                    )}
+                    <FormField label="Precio venta" htmlFor="producto-precio-venta">
+                      <Input
+                        id="producto-precio-venta"
+                        type="number"
+                        min={0.01}
+                        step="0.01"
+                        required
+                        placeholder="0"
+                        value={form.precioVenta}
+                        onChange={(event) => setCampo('precioVenta', event.target.value)}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Margen deseado %"
+                      htmlFor="producto-margen-deseado"
+                      hint="Sugiere el precio de venta sobre el costo"
+                    >
+                      <Input
+                        id="producto-margen-deseado"
+                        type="number"
+                        min={0}
+                        step="0.1"
+                        placeholder="Opcional"
+                        value={form.margenDeseado}
+                        onChange={(event) => aplicarMargenDeseado(event.target.value)}
+                      />
+                    </FormField>
+                  </div>
+                  <div
+                    role="status"
+                    className={`rounded-lg border px-3 py-2 text-xs ${
+                      Number.isFinite(margenMonto) && margenMonto > 0
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                        : 'border-amber-200 bg-amber-50 text-amber-900'
                     }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                        form.compraPorPaquete ? 'translate-x-5' : 'translate-x-0.5'
-                      }`}
-                    />
-                  </button>
+                    {Number.isFinite(costoUnitarioFormulario) &&
+                    costoUnitarioFormulario > 0 &&
+                    Number.isFinite(precioVentaNumero) &&
+                    precioVentaNumero > 0 ? (
+                      <>
+                        Costo por unidad:{' '}
+                        <strong>{formatoCosto(costoUnitarioFormulario)}</strong>
+                        <span className="mx-1.5" aria-hidden="true">·</span>
+                        Margen:{' '}
+                        <strong>{formatoCosto(margenMonto, 2)}</strong>
+                        {Number.isFinite(margenPorcentaje) && (
+                          <> ({margenPorcentaje.toLocaleString('es-AR', {
+                            maximumFractionDigits: 1,
+                          })}%)</>
+                        )}
+                        {margenMonto <= 0 && (
+                          <span className="ml-2 font-semibold">
+                            El precio de venta no supera el costo.
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      'Completá el costo y el precio de venta para ver el margen.'
+                    )}
+                  </div>
                 </div>
-              </div>
-              {form.compraPorPaquete ? (
-                <>
-                  <FormField label="Precio de la caja" htmlFor="producto-precio-paquete">
-                    <Input
-                      id="producto-precio-paquete"
-                      type="number"
-                      min={0.01}
-                      step="0.01"
-                      required
-                      placeholder="0"
-                      value={form.precioCompraPaquete}
-                      onChange={(event) =>
-                        setCampo('precioCompraPaquete', event.target.value)
-                      }
-                    />
-                  </FormField>
+              </section>
+
+              <section
+                aria-labelledby="producto-seccion-inventario"
+                className="rounded-xl border border-zinc-200 p-4"
+              >
+                <h3
+                  id="producto-seccion-inventario"
+                  className="text-sm font-semibold text-zinc-800"
+                >
+                  Inventario
+                </h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <FormField
-                    label="Unidades por caja"
-                    htmlFor="producto-unidades-paquete"
+                    label={editingId === null ? 'Stock inicial' : 'Stock'}
+                    htmlFor="producto-stock"
                   >
                     <Input
-                      id="producto-unidades-paquete"
+                      id="producto-stock"
                       type="number"
-                      min={1}
-                      max={100000}
+                      min={0}
                       step={1}
                       required
-                      placeholder="1"
-                      value={form.unidadesPorPaquete}
-                      onChange={(event) =>
-                        setCampo('unidadesPorPaquete', event.target.value)
-                      }
+                      placeholder="0"
+                      value={form.stock}
+                      onChange={(event) => setCampo('stock', event.target.value)}
                     />
                   </FormField>
-                  <FormField
-                    label="Costo por unidad"
-                    htmlFor="producto-costo-calculado"
-                    hint="Calculado automáticamente desde la caja"
-                  >
-                    <div
-                      id="producto-costo-calculado"
-                      className="rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-900 tabular-nums"
+                  {mostrarSelectorStock && (
+                    <FormField
+                      label="Cargar stock en"
+                      htmlFor="producto-stock-unidad"
+                      hint={
+                        form.stockUnidad === 'caja'
+                          ? `= ${stockEnUnidadesFormulario} unidades`
+                          : 'El stock se guarda siempre en unidades'
+                      }
                     >
-                      {Number.isFinite(costoUnitarioFormulario) &&
-                      costoUnitarioFormulario > 0
-                        ? formatoCosto(costoUnitarioFormulario)
-                        : '—'}
-                    </div>
+                      <Select
+                        id="producto-stock-unidad"
+                        value={form.stockUnidad}
+                        onChange={(event) =>
+                          setCampo(
+                            'stockUnidad',
+                            event.target.value as FormularioProducto['stockUnidad'],
+                          )
+                        }
+                        options={[
+                          { value: 'unidad', label: 'Unidades' },
+                          { value: 'caja', label: 'Cajas' },
+                        ]}
+                      />
+                    </FormField>
+                  )}
+                  <FormField label="Stock mínimo" htmlFor="producto-stock-minimo">
+                    <Input
+                      id="producto-stock-minimo"
+                      type="number"
+                      min={0}
+                      step={1}
+                      required
+                      placeholder="0"
+                      value={form.stockMinimo}
+                      onChange={(event) => setCampo('stockMinimo', event.target.value)}
+                    />
                   </FormField>
-                </>
-              ) : (
-                <FormField label="Costo por unidad" htmlFor="producto-precio-compra">
-                  <Input
-                    id="producto-precio-compra"
-                    type="number"
-                    min={0.01}
-                    step="0.0001"
-                    required
-                    placeholder="0"
-                    value={form.precioCompra}
-                    onChange={(event) => setCampo('precioCompra', event.target.value)}
-                  />
-                </FormField>
-              )}
-              <FormField label="Precio venta" htmlFor="producto-precio-venta">
-                <Input
-                  id="producto-precio-venta"
-                  type="number"
-                  min={0.01}
-                  step="0.01"
-                  required
-                  placeholder="0"
-                  value={form.precioVenta}
-                  onChange={(event) => setCampo('precioVenta', event.target.value)}
-                />
-              </FormField>
-              <FormField
-                label="Margen deseado %"
-                htmlFor="producto-margen-deseado"
-                hint="Sugiere el precio de venta sobre el costo"
-              >
-                <Input
-                  id="producto-margen-deseado"
-                  type="number"
-                  min={0}
-                  step="0.1"
-                  placeholder="Opcional"
-                  value={form.margenDeseado}
-                  onChange={(event) => aplicarMargenDeseado(event.target.value)}
-                />
-              </FormField>
-              <div
-                role="status"
-                className={`sm:col-span-2 rounded-lg border px-3 py-2 text-xs ${
-                  Number.isFinite(margenMonto) && margenMonto > 0
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                    : 'border-amber-200 bg-amber-50 text-amber-900'
-                }`}
-              >
-                {Number.isFinite(costoUnitarioFormulario) &&
-                costoUnitarioFormulario > 0 &&
-                Number.isFinite(precioVentaNumero) &&
-                precioVentaNumero > 0 ? (
-                  <>
-                    Costo por unidad:{' '}
-                    <strong>{formatoCosto(costoUnitarioFormulario)}</strong>
-                    <span className="mx-1.5" aria-hidden="true">·</span>
-                    Margen:{' '}
-                    <strong>{formatoCosto(margenMonto, 2)}</strong>
-                    {Number.isFinite(margenPorcentaje) && (
-                      <> ({margenPorcentaje.toLocaleString('es-AR', {
-                        maximumFractionDigits: 1,
-                      })}%)</>
-                    )}
-                    {margenMonto <= 0 && (
-                      <span className="ml-2 font-semibold">
-                        El precio de venta no supera el costo.
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  'Completá el costo y el precio de venta para ver el margen.'
-                )}
-              </div>
-              <FormField
-                label={editingId === null ? 'Stock inicial' : 'Stock'}
-                htmlFor="producto-stock"
-              >
-                <Input
-                  id="producto-stock"
-                  type="number"
-                  min={0}
-                  step={1}
-                  required
-                  placeholder="0"
-                  value={form.stock}
-                  onChange={(event) => setCampo('stock', event.target.value)}
-                />
-              </FormField>
-              {mostrarSelectorStock && (
-                <FormField
-                  label="Cargar stock en"
-                  htmlFor="producto-stock-unidad"
-                  hint={
-                    form.stockUnidad === 'caja'
-                      ? `= ${stockEnUnidadesFormulario} unidades`
-                      : 'El stock se guarda siempre en unidades'
-                  }
+                </div>
+              </section>
+
+              {formError && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
                 >
-                  <Select
-                    id="producto-stock-unidad"
-                    value={form.stockUnidad}
-                    onChange={(event) =>
-                      setCampo(
-                        'stockUnidad',
-                        event.target.value as FormularioProducto['stockUnidad'],
-                      )
-                    }
-                    options={[
-                      { value: 'unidad', label: 'Unidades' },
-                      { value: 'caja', label: 'Cajas' },
-                    ]}
-                  />
-                </FormField>
+                  {formError}
+                </p>
               )}
-              <FormField label="Stock mínimo" htmlFor="producto-stock-minimo">
-                <Input
-                  id="producto-stock-minimo"
-                  type="number"
-                  min={0}
-                  step={1}
-                  required
-                  placeholder="0"
-                  value={form.stockMinimo}
-                  onChange={(event) => setCampo('stockMinimo', event.target.value)}
-                />
-              </FormField>
-            {categoriasError && (
-              <p role="alert" className="sm:col-span-2 mt-2 text-xs text-red-600">
-                {categoriasError}
-              </p>
-            )}
-            {formError && (
-              <p role="alert" className="sm:col-span-2 mt-2 text-sm text-red-600">
-                {formError}
-              </p>
-            )}
             </form>
           </Modal>
         )}
