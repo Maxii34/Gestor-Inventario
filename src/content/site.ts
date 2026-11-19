@@ -511,6 +511,31 @@ export const preguntasFrecuentes = {
         'No. La prueba es de 14 días gratis y no necesitás ingresar una tarjeta.',
     },
     {
+      pregunta: '¿Necesito instalar algo?',
+      respuesta:
+        'No. StockNext funciona desde el navegador de tu dispositivo, sin necesidad de instalar programas.',
+    },
+    {
+      pregunta: '¿Funciona en el celular?',
+      respuesta:
+        'Sí. Podés utilizarlo desde el navegador de una computadora, tablet o celular. No necesitás descargar una aplicación.',
+    },
+    {
+      pregunta: '¿Puedo cargar mis propios productos?',
+      respuesta:
+        'Sí. Podés cargar tus productos manualmente desde el sistema o solicitar el servicio opcional de carga asistida, que realizo personalmente.',
+    },
+    {
+      pregunta: '¿Puedo agregar vendedores?',
+      respuesta:
+        'Sí. Podés incorporar usuarios con roles de administrador o vendedor y asignarles los permisos correspondientes.',
+    },
+    {
+      pregunta: '¿Puedo anular una venta?',
+      respuesta:
+        'Sí. Un administrador puede anular una venta indicando el motivo y el stock correspondiente se repone.',
+    },
+    {
       pregunta: '¿Cómo se paga?',
       respuesta:
         'El pago se realiza mediante transferencia bancaria. No hay renovación automática ni permanencia obligatoria.',
@@ -526,9 +551,9 @@ export const preguntasFrecuentes = {
         'Sí. Los períodos contratados son acumulables, por lo que podés extender tu acceso anticipadamente.',
     },
     {
-      pregunta: '¿Funciona en el celular?',
+      pregunta: '¿Cobran con posnet o emiten factura?',
       respuesta:
-        'Sí. Podés utilizarlo desde el navegador de una computadora, tablet o celular. No necesitás descargar una aplicación.',
+        'No. StockNext registra el medio de pago elegido (efectivo, transferencia o tarjeta), pero no procesa cobros mediante posnet ni emite facturas electrónicas.',
     },
     {
       pregunta: '¿Dónde se guardan los datos de mi negocio?',
@@ -536,39 +561,14 @@ export const preguntasFrecuentes = {
         'La información se almacena de forma segura en la nube. Esto significa que tus productos, ventas, clientes y movimientos no dependen de tu computadora o celular. Podés acceder a ellos desde cualquier dispositivo con conexión a internet.',
     },
     {
-      pregunta: '¿Puedo anular una venta?',
-      respuesta:
-        'Sí. Un administrador puede anular una venta indicando el motivo y el stock correspondiente se repone.',
-    },
-    {
-      pregunta: '¿Cobran con posnet o emiten factura?',
-      respuesta:
-        'No. StockNext registra el medio de pago elegido (efectivo, transferencia o tarjeta), pero no procesa cobros mediante posnet ni emite facturas electrónicas.',
-    },
-    {
       pregunta: '¿Los datos de cada negocio están separados?',
       respuesta:
         'Sí. Cada negocio tiene su propia información, protegida mediante controles de acceso para que sus usuarios solo puedan consultar y gestionar los datos correspondientes a su comercio.',
     },
     {
-      pregunta: '¿Puedo cargar mis propios productos?',
-      respuesta:
-        'Sí. Podés cargar tus productos manualmente desde el sistema o solicitar el servicio opcional de carga asistida, que realizo personalmente.',
-    },
-    {
-      pregunta: '¿Puedo agregar vendedores?',
-      respuesta:
-        'Sí. Podés incorporar usuarios con roles de administrador o vendedor y asignarles los permisos correspondientes.',
-    },
-    {
       pregunta: '¿StockNext recibe actualizaciones?',
       respuesta:
         'Sí. La plataforma recibe mejoras, nuevas funcionalidades y correcciones de errores a medida que evoluciona.',
-    },
-    {
-      pregunta: '¿Necesito instalar algo?',
-      respuesta:
-        'No. StockNext funciona desde el navegador de tu dispositivo, sin necesidad de instalar programas.',
     },
   ],
 } as const;

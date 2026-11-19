@@ -606,7 +606,7 @@ export default function Home() {
       </section>
 
       <section id={preguntasFrecuentes.id} className={`${SECCION} bg-zinc-50`}>
-        <div className="mx-auto max-w-3xl px-4 sm:px-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-8">
           <div className="mx-auto max-w-2xl text-center">
             <p className={ETIQUETA}>{preguntasFrecuentes.etiqueta}</p>
             <h2 className={TITULO}>{preguntasFrecuentes.titulo}</h2>
@@ -614,22 +614,31 @@ export default function Home() {
               {preguntasFrecuentes.descripcion}
             </p>
           </div>
-          <div className="mt-12 grid gap-4">
-            {preguntasFrecuentes.items.map((item) => (
-              <details
-                key={item.pregunta}
-                className="group revelar tarjeta sombra-tarjeta rounded-2xl border border-zinc-200 bg-white p-4 sm:p-6"
-              >
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-left text-base font-semibold text-zinc-950 marker:content-none [&::-webkit-details-marker]:hidden">
-                  {item.pregunta}
-                  <LuChevronDown
-                    aria-hidden="true"
-                    className="shrink-0 text-zinc-700 transition-transform group-open:rotate-180"
-                    size={18}
-                  />
-                </summary>
-                <p className="mt-4 text-sm leading-6 text-zinc-700">{item.respuesta}</p>
-              </details>
+          <div className="mt-8 grid gap-3 md:grid-cols-2 md:items-start">
+            {[
+              { id: 'inicio', items: preguntasFrecuentes.items.slice(0, 7) },
+              { id: 'pagos', items: preguntasFrecuentes.items.slice(7) },
+            ].map((columna) => (
+              <div key={columna.id} className="space-y-2.5">
+                {columna.items.map((item) => (
+                  <details
+                    key={item.pregunta}
+                    className="group revelar rounded-xl border border-zinc-200 bg-white px-4 py-1 shadow-sm"
+                  >
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-left text-sm font-semibold text-zinc-950 marker:content-none [&::-webkit-details-marker]:hidden">
+                      <span>{item.pregunta}</span>
+                      <LuChevronDown
+                        aria-hidden="true"
+                        className="shrink-0 text-zinc-600 transition-transform group-open:rotate-180"
+                        size={16}
+                      />
+                    </summary>
+                    <p className="pb-3 pr-1 text-sm leading-6 text-zinc-700">
+                      {item.respuesta}
+                    </p>
+                  </details>
+                ))}
+              </div>
             ))}
           </div>
         </div>
