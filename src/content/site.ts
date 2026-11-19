@@ -21,10 +21,6 @@ export function enlaceWhatsApp(mensaje: string): string {
   return `https://wa.me/${contacto.telefonoWhatsapp}?text=${encodeURIComponent(mensaje)}`;
 }
 
-const appBase = (
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://codemaxdev-sigma.vercel.app'
-).replace(/\/+$/, '');
-
 export const enlaces = {
   login: '/login',
   funciones: '#funciones',
@@ -33,8 +29,8 @@ export const enlaces = {
   paraQuien: '#para-quien',
   planes: '#planes',
   preguntas: '#preguntas',
-  terminos: `${appBase}/terminos`,
-  privacidad: `${appBase}/privacidad`,
+  terminos: '/terminos',
+  privacidad: '/privacidad',
   whatsappProbar: enlaceWhatsApp(mensajesWhatsapp.probar),
   whatsappConsulta: enlaceWhatsApp(mensajesWhatsapp.consulta),
   email: `mailto:${contacto.email}?subject=Consulta%20sobre%20StockNext`,

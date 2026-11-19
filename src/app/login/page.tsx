@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import {
@@ -9,6 +10,7 @@ import {
   LuCircleHelp,
   LuEye,
   LuEyeOff,
+  LuHouse,
   LuLockKeyhole,
   LuShieldCheck,
 } from 'react-icons/lu';
@@ -107,6 +109,15 @@ export default function LoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-zinc-800/40 blur-3xl"
         />
+
+        <Link
+          href="/"
+          aria-label="Volver al inicio"
+          title="Volver al inicio"
+          className="absolute top-6 right-6 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          <LuHouse aria-hidden="true" size={18} />
+        </Link>
 
         <div className="relative">
           <motion.div
