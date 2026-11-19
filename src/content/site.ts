@@ -70,7 +70,10 @@ export const heroe = {
   ctaPrincipal: 'Probalo 14 días gratis',
   ctaSecundario: 'Ver cómo funciona',
   nota: '14 días gratis, sin tarjeta',
-  senales: ['Fácil de usar', 'Acceso desde computadora, tablet o celular'],
+  senales: [
+  'Gestión simple y organizada',
+  'Para computadora, tablet y celular',
+],
   ariaVistaPrevia: 'Vista ilustrativa de StockNext para el control de inventario',
 } as const;
 
@@ -161,67 +164,67 @@ export const funcionalidades: Funcionalidad[] = [
     icono: 'productos',
     titulo: 'Productos y categorías',
     descripcion:
-      'Organizá tu catálogo por categorías y definí un stock mínimo por producto.',
+      'Organizá tus productos por categorías, consultá sus precios y establecé niveles mínimos de stock.',
   },
   {
     icono: 'stock',
     titulo: 'Stock y movimientos',
     descripcion:
-      'Registrá entradas, salidas y ajustes de stock con el responsable de cada movimiento.',
+      'Registrá entradas, salidas y ajustes de stock, con seguimiento de quién realiza cada operación.',
   },
   {
     icono: 'ventas',
     titulo: 'Ventas de mostrador',
     descripcion:
-      'Registrá ventas en efectivo, transferencia o tarjeta. El sistema guarda el método de pago elegido.',
+      'Registrá ventas y sus medios de pago: efectivo, transferencia o tarjeta.',
   },
   {
     icono: 'anulacion',
     titulo: 'Anulación con motivo',
     descripcion:
-      'Anulá una venta con un motivo y el stock se repone. La acción queda reservada al administrador.',
+      'Anulá ventas indicando el motivo y recuperá automáticamente las unidades en stock. Disponible para administradores.',
   },
   {
     icono: 'costo',
     titulo: 'Costo por caja',
     descripcion:
-      'Cargá el costo de la caja y el sistema calcula el costo por unidad.',
+      'Registrá el costo de los paquetes y calculá automáticamente el costo de cada unidad.',
   },
   {
     icono: 'codigo',
     titulo: 'Código de barras',
     descripcion:
-      'Agregá productos a la venta con un lector de código de barras USB o Bluetooth.',
+      'Agilizá la carga de productos en las ventas utilizando lectores de códigos de barras USB o Bluetooth.',
   },
   {
     icono: 'estadisticas',
     titulo: 'Estadísticas',
     descripcion:
-      'Consultá la recaudación y las ventas por vendedor.',
+      'Consultá la recaudación y las ventas registradas por cada vendedor.',
   },
   {
     icono: 'equipo',
     titulo: 'Equipo y roles',
     descripcion:
-      'Sumá integrantes con rol ADMIN o VENDEDOR y permisos según su responsabilidad.',
+      'Incorporá vendedores y administradores, con permisos según el rol asignado.',
   },
   {
     icono: 'suscripcion',
     titulo: 'Aviso de suscripción',
     descripcion:
-      'Recibí avisos sobre el estado de tu suscripción y su fecha de acceso.',
+      'Consultá el estado de tu suscripción y recibí avisos sobre su vigencia.',
   },
   {
     icono: 'datos',
     titulo: 'Datos separados',
     descripcion:
-      'Cada negocio accede solo a sus productos, ventas y movimientos.',
+      'Cada comercio tiene acceso independiente a sus propios productos, ventas y movimientos.',
   },
   {
     icono: 'carga',
     titulo: 'Carga asistida',
     descripcion:
-      'Si preferís, nuestro equipo carga tus productos de a 50.',
+      '	¿Preferís no cargar todo manualmente? Podés solicitar que nuestro equipo cargue tus productos.',
   },
   {
     icono: 'acceso',
@@ -240,20 +243,20 @@ export const funcionesResumen = [
 
 export const beneficios = {
   etiqueta: 'Hecho para el día a día',
-  titulo: 'Más orden para enfocarte en tu comercio',
+  titulo: 'Tené el control de tu comercio en un solo lugar',
   descripcion:
-    'StockNext reúne las tareas esenciales de gestión en una experiencia clara, accesible y fácil de incorporar a tu rutina.',
+    'Organizá tus productos, seguí los movimientos de stock y consultá las ventas de tu negocio sin depender de registros dispersos.',
   items: [
-    'Menos tiempo buscando información en planillas.',
-    'Stock y ventas organizados en un solo lugar.',
-    'Acceso desde computadora, tablet o celular.',
-    'Herramientas pensadas para el día a día de tu comercio.',
+    'Encontrá tus productos y consultá su disponibilidad fácilmente.',
+    'Mantené un registro de entradas, salidas y ajustes de stock.',
+    'Consultá las ventas y la recaudación de tu comercio.',
+    'Conocé quién realiza cada movimiento y registrá la actividad de tu equipo.',
   ],
   panel: {
-    titulo: 'Información que acompaña cada decisión',
+    titulo: 'Toda la información de tu comercio organizada',
     descripcion:
-      'Revisá movimientos, consultá ventas y seguí tus productos con el historial de ventas y movimientos.',
-    nota: 'Cada comercio accede a su propio espacio de trabajo.',
+      'Consultá tus ventas, revisá los movimientos de stock y mantené un seguimiento de la actividad de tu equipo.',
+    nota: 'Cada comercio cuenta con su propio espacio de trabajo.',
   },
 } as const;
 
@@ -263,30 +266,30 @@ export const comoEmpezar = {
   titulo: 'Tres pasos para probar StockNext',
   descripcion: 'Sin instalaciones ni configuraciones complicadas.',
   pasos: [
-    {
-      titulo: 'Escribinos por WhatsApp',
-      descripcion:
-        'Contanos qué vendés y cuántos productos tenés. Coordinamos tu prueba de 14 días.',
-    },
-    {
-      titulo: 'Cargá tus productos',
-      descripcion:
-        'Podés cargarlos vos o pedirnos que lo hagamos nosotros, de a 50.',
-    },
-    {
-      titulo: 'Empezá a vender',
-      descripcion:
-        'Ingresá desde el navegador, registrá ventas y movimientos, y sumá a tu equipo.',
-    },
-  ],
+  {
+    titulo: 'Solicitá tu demo',
+    descripcion:
+      'Escribinos por WhatsApp, contanos sobre tu comercio y coordinamos el acceso de prueba.',
+  },
+  {
+    titulo: 'Prepará tus productos',
+    descripcion:
+      'Podés cargar tus productos manualmente o solicitar nuestro servicio opcional de carga asistida.',
+  },
+  {
+    titulo: 'Empezá a trabajar',
+    descripcion:
+      'Registrá tus ventas, controlá el stock y sumá a los integrantes de tu equipo.',
+  },
+],
 } as const;
 
 export const paraQuien = {
   id: 'para-quien',
   etiqueta: 'Para quién es',
-  titulo: 'Pensado para comercios con stock y equipo',
-  descripcion:
-    'Si vendés productos y necesitás ordenar existencias, ventas y permisos, StockNext puede ayudarte.',
+  titulo: 'Para comercios que necesitan controlar su stock',
+descripcion:
+  'StockNext está pensado para negocios que venden productos y buscan organizar sus existencias, registrar ventas y llevar un mejor control de su equipo.',
   rubros: [
     'Kioscos',
     'Almacenes',
@@ -297,7 +300,8 @@ export const paraQuien = {
     'Librerías',
     'Negocios de barrio',
   ],
-  nota: 'Si vendés productos con stock y trabajás con un equipo chico o mediano, es para vos.',
+  nota:
+  'Si tu negocio trabaja con productos, stock y vendedores, StockNext puede ayudarte a llevar un control más organizado.',
 } as const;
 
 export const limitaciones = {
@@ -307,16 +311,14 @@ export const limitaciones = {
   descripcion:
     'Preferimos que sepas desde el principio qué cubre la plataforma y qué queda fuera.',
   items: [
-    'No gestiona clientes.',
-    'No emite facturas electrónicas.',
-    'No cobra con posnet: solo registra el método de pago elegido.',
-    'No imprime tickets.',
-    'No lee códigos de barras con la cámara del celular.',
-    'No se conecta con balanzas.',
-    'No administra varias sucursales.',
-    'No es una app para descargar: se usa desde el navegador.',
-    'No usa inteligencia artificial.',
-  ],
+  'No emite facturas electrónicas.',
+  'No procesa cobros mediante posnet: solo registra el medio de pago elegido.',
+  'No imprime tickets de venta.',
+  'No permite escanear códigos de barras con la cámara del celular.',
+  'No se conecta con balanzas.',
+  'No administra múltiples sucursales.',
+  'Se utiliza desde el navegador, no requiere descargar una aplicación.',
+],
 } as const;
 
 export interface Plan {
@@ -490,63 +492,92 @@ export const funcionesDetalle = [
   },
 ] as const;
 
+
 export const preguntasFrecuentes = {
   id: 'preguntas',
   etiqueta: 'Preguntas frecuentes',
   titulo: 'Lo que suelen preguntarnos',
-  descripcion: 'Si te queda alguna duda, escribinos por WhatsApp.',
+  descripcion:
+    'Resolvemos algunas dudas para que conozcas mejor StockNext. Si necesitás más información, escribinos por WhatsApp.',
   items: [
     {
+      pregunta: '¿Cómo solicito una demo?',
+      respuesta:
+        'Escribinos por WhatsApp y coordinamos tu acceso de prueba de 14 días para que puedas conocer y utilizar StockNext.',
+    },
+    {
       pregunta: '¿Necesito tarjeta para probar?',
-      respuesta: 'No. La prueba es de 14 días gratis, sin tarjeta.',
+      respuesta:
+        'No. La prueba es de 14 días gratis y no necesitás ingresar una tarjeta.',
     },
     {
       pregunta: '¿Cómo se paga?',
       respuesta:
-        'El pago es por transferencia. No hay renovación automática ni permanencia.',
+        'El pago se realiza mediante transferencia bancaria. No hay renovación automática ni permanencia obligatoria.',
     },
     {
       pregunta: '¿Qué pasa cuando vence la suscripción?',
       respuesta:
-        'Tenés 3 días de gracia. Después, el sistema queda en modo solo lectura hasta que renueves.',
+        'Al vencer tu suscripción contás con 3 días de gracia para regularizar el pago. Después, el sistema pasa a modo de solo lectura hasta que se reactive el servicio.',
     },
     {
       pregunta: '¿Puedo sumar meses?',
-      respuesta: 'Sí, los meses se suman.',
+      respuesta:
+        'Sí. Los períodos contratados son acumulables, por lo que podés extender tu acceso anticipadamente.',
     },
     {
       pregunta: '¿Funciona en el celular?',
       respuesta:
-        'Sí. Se usa desde el navegador en computadora, tablet o celular. No es una app para descargar.',
+        'Sí. Podés utilizarlo desde el navegador de una computadora, tablet o celular. No necesitás descargar una aplicación.',
+    },
+    {
+      pregunta: '¿Dónde se guardan los datos de mi negocio?',
+      respuesta:
+        'La información se almacena de forma segura en la nube. Esto significa que tus productos, ventas, clientes y movimientos no dependen de tu computadora o celular. Podés acceder a ellos desde cualquier dispositivo con conexión a internet.',
     },
     {
       pregunta: '¿Puedo anular una venta?',
       respuesta:
-        'Sí. Un administrador puede anularla con un motivo y el stock se repone.',
+        'Sí. Un administrador puede anular una venta indicando el motivo y el stock correspondiente se repone.',
     },
     {
       pregunta: '¿Cobran con posnet o emiten factura?',
       respuesta:
-        'No. Solo se registra el método de pago: efectivo, transferencia o tarjeta. No hay cobro con posnet ni facturación electrónica.',
+        'No. StockNext registra el medio de pago elegido (efectivo, transferencia o tarjeta), pero no procesa cobros mediante posnet ni emite facturas electrónicas.',
     },
     {
       pregunta: '¿Los datos de cada negocio están separados?',
       respuesta:
-        'Sí. Cada negocio accede solo a sus productos, ventas y movimientos.',
+        'Sí. Cada negocio tiene su propia información, protegida mediante controles de acceso para que sus usuarios solo puedan consultar y gestionar los datos correspondientes a su comercio.',
     },
     {
-      pregunta: '¿Puedo cargar muchos productos?',
+      pregunta: '¿Puedo cargar mis propios productos?',
       respuesta:
-        'Sí. Podés cargarlos vos o pedirnos carga asistida de a 50.',
+        'Sí. Podés cargar tus productos manualmente desde el sistema o solicitar el servicio opcional de carga asistida, que realizo personalmente.',
+    },
+    {
+      pregunta: '¿Puedo agregar vendedores?',
+      respuesta:
+        'Sí. Podés incorporar usuarios con roles de administrador o vendedor y asignarles los permisos correspondientes.',
+    },
+    {
+      pregunta: '¿StockNext recibe actualizaciones?',
+      respuesta:
+        'Sí. La plataforma recibe mejoras, nuevas funcionalidades y correcciones de errores a medida que evoluciona.',
+    },
+    {
+      pregunta: '¿Necesito instalar algo?',
+      respuesta:
+        'No. StockNext funciona desde el navegador de tu dispositivo, sin necesidad de instalar programas.',
     },
   ],
 } as const;
 
 export const ctaFinal = {
-  titulo: '¿Listo para tener tu negocio más organizado?',
+  titulo: 'Empezá a tener el control de tu comercio',
   descripcion:
-    'Escribinos, probá StockNext durante 14 días y encontrá el plan que mejor se adapta a tu comercio.',
-  boton: 'Probalo 14 días gratis',
+    'Conocé StockNext, solicitá tu demo y probá sus herramientas durante 14 días sin costo.',
+  boton: 'Solicitar demo gratis',
   secundario: 'O escribinos por email',
 } as const;
 
