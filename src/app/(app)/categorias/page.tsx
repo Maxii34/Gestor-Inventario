@@ -586,7 +586,7 @@ export default function CategoriasPage() {
               event.preventDefault();
               void guardarCategoria();
             }}
-            className="flex flex-col gap-4"
+            className="stocknext-modal-form stocknext-form flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]"
           >
             <FormField label="Nombre" htmlFor="categoria-nombre" required>
               <Input
@@ -607,7 +607,7 @@ export default function CategoriasPage() {
               />
             </FormField>
             {editingId !== null && (
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_4px_10px_-8px_rgba(15,23,42,0.25)]">
                 <Checkbox
                   id="categoria-activa"
                   label="Categoría activa"
@@ -623,7 +623,7 @@ export default function CategoriasPage() {
             {formError && (
               <p
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
               >
                 {formError}
               </p>
