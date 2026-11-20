@@ -946,19 +946,25 @@ export default function ProductosPage() {
                 event.preventDefault();
                 void guardarProducto();
               }}
-              className="flex flex-col gap-5"
+              className="stocknext-modal-form stocknext-form flex flex-col gap-5"
             >
               <section
                 aria-labelledby="producto-seccion-datos"
-                className="rounded-xl border border-zinc-200 p-4"
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]"
               >
-                <h3
-                  id="producto-seccion-datos"
-                  className="text-sm font-semibold text-zinc-800"
-                >
-                  Datos del producto
-                </h3>
-                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-1 shrink-0 rounded-full bg-indigo-500"
+                  />
+                  <h3
+                    id="producto-seccion-datos"
+                    className="text-sm font-semibold text-slate-800"
+                  >
+                    Datos del producto
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="lg:col-span-2">
                     <FormField label="Nombre" htmlFor="producto-nombre">
                       <Input
@@ -1029,21 +1035,27 @@ export default function ProductosPage() {
 
               <section
                 aria-labelledby="producto-seccion-precios"
-                className="rounded-xl border border-zinc-200 p-4"
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]"
               >
-                <h3
-                  id="producto-seccion-precios"
-                  className="text-sm font-semibold text-zinc-800"
-                >
-                  Compra, costos y precio
-                </h3>
-                <div className="mt-3 flex flex-col gap-4">
-                  <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-3 flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-1 shrink-0 rounded-full bg-indigo-500"
+                  />
+                  <h3
+                    id="producto-seccion-precios"
+                    className="text-sm font-semibold text-slate-800"
+                  >
+                    Compra, costos y precio
+                  </h3>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_6px_16px_-12px_rgba(15,23,42,0.25)] sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm font-medium text-zinc-800">
+                      <p className="text-sm font-medium text-slate-800">
                         Lo compro por caja o pack
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-slate-500">
                         Cargá el precio de la caja y el sistema calcula el costo por unidad.
                       </p>
                     </div>
@@ -1060,13 +1072,13 @@ export default function ProductosPage() {
                         }));
                         setFormError(null);
                       }}
-                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full shadow-[inset_0_1px_2px_rgba(15,23,42,0.18)] transition-colors ${
                         form.compraPorPaquete ? 'bg-zinc-900' : 'bg-zinc-300'
                       }`}
                     >
                       <span
                         aria-hidden="true"
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-[0_1px_2px_rgba(15,23,42,0.25)] transition-transform ${
                           form.compraPorPaquete ? 'translate-x-5' : 'translate-x-0.5'
                         }`}
                       />
@@ -1117,7 +1129,7 @@ export default function ProductosPage() {
                         >
                           <div
                             id="producto-costo-calculado"
-                            className="rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-900 tabular-nums"
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_10px_-8px_rgba(15,23,42,0.25)] tabular-nums"
                           >
                             {Number.isFinite(costoUnitarioFormulario) &&
                             costoUnitarioFormulario > 0
@@ -1175,7 +1187,7 @@ export default function ProductosPage() {
                   </div>
                   <div
                     role="status"
-                    className={`rounded-lg border px-3 py-2 text-xs ${
+                    className={`rounded-lg border px-3 py-2 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
                       Number.isFinite(margenMonto) && margenMonto > 0
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
                         : 'border-amber-200 bg-amber-50 text-amber-900'
@@ -1211,15 +1223,21 @@ export default function ProductosPage() {
 
               <section
                 aria-labelledby="producto-seccion-inventario"
-                className="rounded-xl border border-zinc-200 p-4"
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]"
               >
-                <h3
-                  id="producto-seccion-inventario"
-                  className="text-sm font-semibold text-zinc-800"
-                >
-                  Inventario
-                </h3>
-                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-1 shrink-0 rounded-full bg-indigo-500"
+                  />
+                  <h3
+                    id="producto-seccion-inventario"
+                    className="text-sm font-semibold text-slate-800"
+                  >
+                    Inventario
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <FormField
                     label={editingId === null ? 'Stock inicial' : 'Stock'}
                     htmlFor="producto-stock"
@@ -1279,7 +1297,7 @@ export default function ProductosPage() {
               {formError && (
                 <p
                   role="alert"
-                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
                 >
                   {formError}
                 </p>

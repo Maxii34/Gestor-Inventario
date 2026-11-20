@@ -394,7 +394,7 @@ export function NuevaVentaForm() {
         event.preventDefault();
         void registrarVenta();
       }}
-      className="pb-28 lg:pb-0"
+      className="stocknext-form pb-28 lg:pb-0"
     >
       {ultimaVenta && (
         <div
@@ -452,65 +452,67 @@ export function NuevaVentaForm() {
           className="h-full border-zinc-200/80 shadow-sm"
         >
           <div className="flex flex-col gap-4">
-            <FormField label="Escáner de código de barras" htmlFor="venta-escaner">
-              <Input
-                id="venta-escaner"
-                placeholder="Escaneá un producto o escribí el código"
-                autoComplete="off"
-                disabled={isRegistrando}
-                value={codigoEscaneo}
-                onChange={(event) => setCodigoEscaneo(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  const codigo = event.currentTarget.value;
-                  setCodigoEscaneo('');
-                  encolarCodigoEscaneado(codigo);
-                  enfocarEscaner();
+            <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]">
+              <FormField label="Escáner de código de barras" htmlFor="venta-escaner">
+                <Input
+                  id="venta-escaner"
+                  placeholder="Escaneá un producto o escribí el código"
+                  autoComplete="off"
+                  disabled={isRegistrando}
+                  value={codigoEscaneo}
+                  onChange={(event) => setCodigoEscaneo(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const codigo = event.currentTarget.value;
+                    setCodigoEscaneo('');
+                    encolarCodigoEscaneado(codigo);
+                    enfocarEscaner();
+                  }}
+                />
+              </FormField>
+
+              {feedbackEscaneo && (
+                <div
+                  role={feedbackEscaneo.tono === 'error' ? 'alert' : 'status'}
+                  className={`rounded-lg border px-3 py-2 text-sm shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
+                    feedbackEscaneo.tono === 'error'
+                      ? 'border-red-200 bg-red-50 text-red-700'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  }`}
+                >
+                  <p>{feedbackEscaneo.mensaje}</p>
+                  {feedbackEscaneo.codigoNoRegistrado && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const codigo = feedbackEscaneo.codigoNoRegistrado;
+                        if (codigo) crearProductoConCodigo(codigo);
+                      }}
+                      className="mt-1 font-semibold underline underline-offset-2"
+                    >
+                      Crear producto con este código
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <SearchInput
+                id="buscar-producto-venta"
+                label="Buscar producto"
+                placeholder="Escribí el nombre del producto…"
+                value={busquedaProducto}
+                disabled={isLoadingSelectors || !!selectoresError}
+                onChange={(valor) => {
+                  setBusquedaProducto(valor);
+                  setVentaError(null);
                 }}
               />
-            </FormField>
-
-            {feedbackEscaneo && (
-              <div
-                role={feedbackEscaneo.tono === 'error' ? 'alert' : 'status'}
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  feedbackEscaneo.tono === 'error'
-                    ? 'border-red-200 bg-red-50 text-red-700'
-                    : 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                }`}
-              >
-                <p>{feedbackEscaneo.mensaje}</p>
-                {feedbackEscaneo.codigoNoRegistrado && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const codigo = feedbackEscaneo.codigoNoRegistrado;
-                      if (codigo) crearProductoConCodigo(codigo);
-                    }}
-                    className="mt-1 font-semibold underline underline-offset-2"
-                  >
-                    Crear producto con este código
-                  </button>
-                )}
-              </div>
-            )}
-
-            <SearchInput
-              id="buscar-producto-venta"
-              label="Buscar producto"
-              placeholder="Escribí el nombre del producto…"
-              value={busquedaProducto}
-              disabled={isLoadingSelectors || !!selectoresError}
-              onChange={(valor) => {
-                setBusquedaProducto(valor);
-                setVentaError(null);
-              }}
-            />
+            </div>
 
             {selectoresError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                 <p role="alert" className="text-sm text-red-700">
                   {selectoresError}
                 </p>
@@ -727,7 +729,7 @@ export function NuevaVentaForm() {
               </div>
 
               {ventaError && (
-                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                   {ventaError}
                 </p>
               )}
