@@ -6,6 +6,7 @@ import {
   LuCircleCheck,
   LuMinus,
   LuPlus,
+  LuScanBarcode,
   LuShoppingCart,
   LuTrash2,
   LuX,
@@ -394,7 +395,7 @@ export function NuevaVentaForm() {
         event.preventDefault();
         void registrarVenta();
       }}
-      className="pb-28 lg:pb-0"
+      className="stocknext-form pb-28 lg:pb-0"
     >
       {ultimaVenta && (
         <div
@@ -452,65 +453,82 @@ export function NuevaVentaForm() {
           className="h-full border-zinc-200/80 shadow-sm"
         >
           <div className="flex flex-col gap-4">
-            <FormField label="Escáner de código de barras" htmlFor="venta-escaner">
-              <Input
-                id="venta-escaner"
-                placeholder="Escaneá un producto o escribí el código"
-                autoComplete="off"
-                disabled={isRegistrando}
-                value={codigoEscaneo}
-                onChange={(event) => setCodigoEscaneo(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  const codigo = event.currentTarget.value;
-                  setCodigoEscaneo('');
-                  encolarCodigoEscaneado(codigo);
-                  enfocarEscaner();
-                }}
-              />
-            </FormField>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                <FormField
+                  label="Escáner de código de barras"
+                  htmlFor="venta-escaner"
+                  className="lg:flex-1"
+                >
+                  <div className="relative">
+                    <LuScanBarcode
+                      aria-hidden="true"
+                      size={16}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500"
+                    />
+                    <Input
+                      id="venta-escaner"
+                      placeholder="Escaneá un producto o escribí el código"
+                      autoComplete="off"
+                      disabled={isRegistrando}
+                      value={codigoEscaneo}
+                      onChange={(event) => setCodigoEscaneo(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter') return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const codigo = event.currentTarget.value;
+                        setCodigoEscaneo('');
+                        encolarCodigoEscaneado(codigo);
+                        enfocarEscaner();
+                      }}
+                      className="pl-9"
+                    />
+                  </div>
+                </FormField>
 
-            {feedbackEscaneo && (
-              <div
-                role={feedbackEscaneo.tono === 'error' ? 'alert' : 'status'}
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  feedbackEscaneo.tono === 'error'
-                    ? 'border-red-200 bg-red-50 text-red-700'
-                    : 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                }`}
-              >
-                <p>{feedbackEscaneo.mensaje}</p>
-                {feedbackEscaneo.codigoNoRegistrado && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const codigo = feedbackEscaneo.codigoNoRegistrado;
-                      if (codigo) crearProductoConCodigo(codigo);
-                    }}
-                    className="mt-1 font-semibold underline underline-offset-2"
-                  >
-                    Crear producto con este código
-                  </button>
-                )}
+                <SearchInput
+                  id="buscar-producto-venta"
+                  label="Buscar producto"
+                  placeholder="Escribí el nombre del producto…"
+                  value={busquedaProducto}
+                  disabled={isLoadingSelectors || !!selectoresError}
+                  onChange={(valor) => {
+                    setBusquedaProducto(valor);
+                    setVentaError(null);
+                  }}
+                  className="lg:flex-1"
+                />
               </div>
-            )}
 
-            <SearchInput
-              id="buscar-producto-venta"
-              label="Buscar producto"
-              placeholder="Escribí el nombre del producto…"
-              value={busquedaProducto}
-              disabled={isLoadingSelectors || !!selectoresError}
-              onChange={(valor) => {
-                setBusquedaProducto(valor);
-                setVentaError(null);
-              }}
-            />
+              {feedbackEscaneo && (
+                <div
+                  role={feedbackEscaneo.tono === 'error' ? 'alert' : 'status'}
+                  className={`mt-3 rounded-lg border px-3 py-2 text-sm shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
+                    feedbackEscaneo.tono === 'error'
+                      ? 'border-red-200 bg-red-50 text-red-700'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  }`}
+                >
+                  <p>{feedbackEscaneo.mensaje}</p>
+                  {feedbackEscaneo.codigoNoRegistrado && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const codigo = feedbackEscaneo.codigoNoRegistrado;
+                        if (codigo) crearProductoConCodigo(codigo);
+                      }}
+                      className="mt-1 font-semibold underline underline-offset-2"
+                    >
+                      Crear producto con este código
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {selectoresError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                 <p role="alert" className="text-sm text-red-700">
                   {selectoresError}
                 </p>
@@ -643,33 +661,33 @@ export function NuevaVentaForm() {
                   {items.map((item) => (
                     <li
                       key={item.productoId}
-                      className="rounded-xl border border-zinc-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                      className="rounded-xl border border-zinc-200/90 bg-white p-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_6px_16px_-12px_rgba(15,23,42,0.3)] transition-[border-color,box-shadow,transform] duration-150 hover:border-indigo-200 hover:shadow-[0_2px_4px_rgba(15,23,42,0.06),0_10px_22px_-14px_rgba(15,23,42,0.35)]"
                     >
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-zinc-900">
+                          <p className="truncate text-sm font-medium leading-5 text-zinc-900">
                             {item.nombre}
                           </p>
-                          <p className="mt-0.5 text-xs text-zinc-500">
-                            {formatoMoneda(item.precioUnitario)} c/u · Stock {item.stock}
+                          <p className="text-xs leading-4 text-zinc-500">
+                            {formatoMoneda(item.precioUnitario)} c/u
                           </p>
                         </div>
-                        <p className="shrink-0 text-sm font-semibold tabular-nums text-zinc-900">
+                        <p className="shrink-0 text-sm font-semibold leading-5 tabular-nums text-zinc-900">
                           {formatoMoneda(item.precioUnitario * item.cantidad)}
                         </p>
                       </div>
-                      <div className="mt-2.5 flex items-center justify-between gap-2">
-                        <div className="inline-flex items-center rounded-lg border border-zinc-200 bg-white">
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <div className="inline-flex items-center rounded-lg border border-zinc-200 bg-zinc-50/70 shadow-[inset_0_1px_2px_rgba(15,23,42,0.05)]">
                           <button
                             type="button"
                             aria-label={`Quitar una unidad de ${item.nombre}`}
                             disabled={item.cantidad <= 1 || isRegistrando}
                             onClick={() => cambiarCantidad(item.productoId, -1)}
-                            className="rounded-l-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded-l-lg p-1 text-zinc-500 transition-colors hover:bg-white hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            <LuMinus aria-hidden="true" size={14} />
+                            <LuMinus aria-hidden="true" size={13} />
                           </button>
-                          <span className="min-w-8 text-center text-sm font-semibold tabular-nums text-zinc-900">
+                          <span className="min-w-7 text-center text-sm font-semibold tabular-nums text-zinc-900">
                             {item.cantidad}
                           </span>
                           <button
@@ -677,9 +695,9 @@ export function NuevaVentaForm() {
                             aria-label={`Agregar una unidad de ${item.nombre}`}
                             disabled={item.cantidad >= item.stock || isRegistrando}
                             onClick={() => cambiarCantidad(item.productoId, 1)}
-                            className="rounded-r-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded-r-lg p-1 text-zinc-500 transition-colors hover:bg-white hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            <LuPlus aria-hidden="true" size={14} />
+                            <LuPlus aria-hidden="true" size={13} />
                           </button>
                         </div>
                         <button
@@ -727,7 +745,7 @@ export function NuevaVentaForm() {
               </div>
 
               {ventaError && (
-                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                   {ventaError}
                 </p>
               )}

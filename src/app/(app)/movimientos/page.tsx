@@ -758,7 +758,7 @@ export default function MovimientosPage() {
         {productosSinStock.length > 0 && (
           <section
             aria-labelledby="productos-sin-stock-titulo"
-            className="mb-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2"
+            className="mb-3 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h3
@@ -803,7 +803,7 @@ export default function MovimientosPage() {
             event.preventDefault();
             void guardarMovimiento();
           }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          className="stocknext-modal-form stocknext-form grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)] sm:grid-cols-2"
         >
             <FormField
               label="Producto"
@@ -827,7 +827,7 @@ export default function MovimientosPage() {
             {productoSeleccionado && (
               <div
                 role="status"
-                className={`-mt-2 rounded-lg border px-3 py-2 text-xs sm:col-span-2 ${
+                className={`-mt-2 rounded-lg border px-3 py-2 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.05)] sm:col-span-2 ${
                   productoSeleccionado.stock <= productoSeleccionado.stockMinimo
                     ? 'border-amber-200 bg-amber-50 text-amber-900'
                     : 'border-zinc-200 bg-zinc-50 text-zinc-600'
@@ -911,7 +911,7 @@ export default function MovimientosPage() {
               />
             </FormField>
           {productosError && (
-            <div className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+            <div className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
               <p role="alert" className="text-sm font-medium text-red-700">{productosError}</p>
               <Button
                 type="button"
@@ -928,7 +928,7 @@ export default function MovimientosPage() {
           {formError && (
             <p
               role="alert"
-              className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+              className="sm:col-span-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
             >
               {formError}
             </p>

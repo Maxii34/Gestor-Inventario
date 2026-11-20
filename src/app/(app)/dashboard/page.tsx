@@ -10,6 +10,7 @@ import {
   LuBanknote,
   LuCalendarDays,
   LuCircleDollarSign,
+  LuFolder,
   LuPackage,
   LuPlus,
   LuRefreshCw,
@@ -36,7 +37,6 @@ import type {
   DatosDashboard,
   EstadoStockBajo,
   EstadoVentaReciente,
-  ProductoStockBajo,
   VentaReciente,
 } from '@/types/dashboard';
 
@@ -109,54 +109,6 @@ const VENTAS_COLUMNAS: TableColumn<VentaReciente>[] = [
   },
 ];
 
-const STOCK_COLUMNAS: TableColumn<ProductoStockBajo>[] = [
-  {
-    key: 'producto',
-    header: '# Producto',
-    render: (row) => (
-      <span className="block max-w-55 truncate font-medium text-zinc-900" title={row.producto}>
-        {row.producto}
-      </span>
-    ),
-  },
-  {
-    key: 'categoria',
-    header: '# Categoría',
-    render: (row) => <span className="whitespace-nowrap text-zinc-600">{row.categoria}</span>,
-  },
-  {
-    key: 'stockActual',
-    header: '# Stock actual',
-    align: 'center',
-    render: (row) => (
-      <span
-        className={`font-bold tabular-nums ${
-          row.stockActual === 0 ? 'text-red-700' : 'text-amber-700'
-        }`}
-      >
-        {row.stockActual}
-      </span>
-    ),
-  },
-  {
-    key: 'stockMinimo',
-    header: '# Stock mínimo',
-    align: 'center',
-    render: (row) => (
-      <span className="text-zinc-600 tabular-nums">{row.stockMinimo}</span>
-    ),
-  },
-  {
-    key: 'estado',
-    header: '# Estado',
-    render: (row) => (
-      <Badge tone={STOCK_TONO[row.estado]} className={`border ${STOCK_BADGE_BORDE[row.estado]}`}>
-        {row.estado}
-      </Badge>
-    ),
-  },
-];
-
 const ACCIONES_RAPIDAS = [
   {
     etiqueta: 'Nueva venta',
@@ -171,6 +123,13 @@ const ACCIONES_RAPIDAS = [
     icono: LuPlus,
     href: '/productos',
     tono: 'bg-sky-50 text-sky-700',
+  },
+  {
+    etiqueta: 'Agregar categoría',
+    descripcion: 'Organizar el catálogo',
+    icono: LuFolder,
+    href: '/categorias',
+    tono: 'bg-fuchsia-50 text-fuchsia-700',
   },
   {
     etiqueta: 'Control de stock',
@@ -531,21 +490,124 @@ export default function DashboardPage() {
                     ? 'border-amber-200/80'
                     : 'border-zinc-200/80'
                 }`}
+                bodyClassName="pt-2.5"
               >
                 {datos.stockBajo.length > 0 ? (
                   <>
-                    <div className="mb-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
+                    <div className="mb-2 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
                       <LuTriangleAlert aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
                       <p>
                         Hay productos que podrían impedir completar una venta. Revisá las cantidades antes de reponer.
                       </p>
                     </div>
-                    <Table
-                      columns={STOCK_COLUMNAS}
-                      data={datos.stockBajo}
-                      getRowKey={(row) => row.id}
-                      emptyMessage="No hay productos con stock bajo."
-                    />
+                    <ul
+                      aria-label="Productos con stock bajo"
+                      className="grid max-h-64 grid-cols-1 gap-2.5 overflow-y-auto overscroll-contain pr-1 sm:max-h-48 sm:grid-cols-2"
+                    >
+                      {datos.stockBajo.map((producto) => {
+                        const sinStock = producto.stockActual === 0;
+                        const porcentaje = producto.stockMinimo > 0
+                          ? Math.min(
+                              100,
+                              Math.max(
+                                0,
+                                Math.round((producto.stockActual / producto.stockMinimo) * 100),
+                              ),
+                            )
+                          : 0;
+
+                        return (
+                          <li key={producto.id} className="min-w-0">
+                            <Link
+                              href={`/movimientos?reponer=1&productoId=${encodeURIComponent(producto.id)}`}
+                              aria-label={`Cargar stock de ${producto.producto}`}
+                              className={`group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_6px_16px_-12px_rgba(15,23,42,0.28)] transition-[border-color,box-shadow] duration-150 hover:shadow-[0_2px_4px_rgba(15,23,42,0.06),0_10px_22px_-14px_rgba(15,23,42,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                                sinStock
+                                  ? 'border-red-200/80 focus-visible:outline-red-500'
+                                  : 'border-amber-200/80 focus-visible:outline-amber-500'
+                              }`}
+                            >
+                              <div className="flex items-start gap-2.5">
+                                <span
+                                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                    sinStock
+                                      ? 'bg-red-50 text-red-600 ring-1 ring-red-100'
+                                      : 'bg-amber-50 text-amber-600 ring-1 ring-amber-100'
+                                  }`}
+                                >
+                                  {sinStock ? (
+                                    <LuTriangleAlert aria-hidden="true" size={15} />
+                                  ) : (
+                                    <LuPackage aria-hidden="true" size={15} />
+                                  )}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <p
+                                    className="truncate text-sm font-semibold leading-5 text-zinc-900"
+                                    title={producto.producto}
+                                  >
+                                    {producto.producto}
+                                  </p>
+                                  <p className="truncate text-xs leading-4 text-zinc-500">
+                                    {producto.categoria}
+                                  </p>
+                                </div>
+                                <Badge
+                                  tone={STOCK_TONO[producto.estado]}
+                                  className={`shrink-0 border ${STOCK_BADGE_BORDE[producto.estado]}`}
+                                >
+                                  {producto.estado}
+                                </Badge>
+                              </div>
+
+                              <div className="mt-3">
+                                <div className="flex items-end justify-between gap-2">
+                                  <p className="flex items-baseline gap-1.5">
+                                    <span
+                                      className={`text-xl font-semibold leading-none tabular-nums ${
+                                        sinStock ? 'text-red-700' : 'text-amber-700'
+                                      }`}
+                                    >
+                                      {producto.stockActual}
+                                    </span>
+                                    <span className="text-[11px] font-medium text-zinc-500">
+                                      {producto.stockActual === 1 ? 'unidad' : 'unidades'}
+                                    </span>
+                                  </p>
+                                  <span className="text-[11px] font-medium text-zinc-400">
+                                    Mínimo {producto.stockMinimo}
+                                  </span>
+                                </div>
+                                <div className="mt-1.5 flex items-center gap-2">
+                                  <div
+                                    className={`h-1.5 min-w-0 flex-1 overflow-hidden rounded-full ${
+                                      sinStock ? 'bg-red-100' : 'bg-amber-100'
+                                    }`}
+                                  >
+                                    <div
+                                      className={`h-full rounded-full ${
+                                        sinStock ? 'bg-red-500' : 'bg-amber-400'
+                                      }`}
+                                      style={{ width: `${porcentaje}%` }}
+                                    />
+                                  </div>
+                                  <span
+                                    className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold leading-none transition-colors ${
+                                      sinStock
+                                        ? 'border-red-200 bg-red-50 text-red-700 group-hover:bg-red-100'
+                                        : 'border-amber-200 bg-amber-50 text-amber-800 group-hover:bg-amber-100'
+                                    }`}
+                                  >
+                                    <LuPlus aria-hidden="true" size={11} />
+                                    Cargar stock
+                                  </span>
+                                </div>
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
                     <div className="mt-3 flex justify-end">
                       <Link
                         href="/movimientos?reponer=1"

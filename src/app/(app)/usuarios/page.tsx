@@ -1043,7 +1043,7 @@ export default function UsuariosPage() {
             event.preventDefault();
             void guardarUsuario();
           }}
-          className="flex flex-col gap-4"
+          className="stocknext-modal-form stocknext-form flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_24px_-18px_rgba(15,23,42,0.35)]"
         >
           <FormField label="Nombre completo" htmlFor="usuario-nombre" required>
             <Input
@@ -1093,7 +1093,7 @@ export default function UsuariosPage() {
               options={NUEVO_USUARIO_ROL_OPCIONES}
             />
           </FormField>
-          <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2.5 text-xs leading-relaxed text-sky-900">
+          <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2.5 text-xs leading-relaxed text-sky-900 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
             <p>
               <strong>Vendedor:</strong> acceso a las operaciones cotidianas del comercio.
             </p>
@@ -1102,7 +1102,7 @@ export default function UsuariosPage() {
             </p>
           </div>
           {formError && (
-            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
               {formError}
             </p>
           )}
