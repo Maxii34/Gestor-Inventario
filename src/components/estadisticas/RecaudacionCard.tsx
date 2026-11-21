@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LuBanknote, LuCalendarDays } from 'react-icons/lu';
 import { Button, Card, HelpTooltip, Input } from '@/components/ui';
 import { FormField } from '@/components/forms';
 import { ApiError } from '@/lib/api/client';
+import { mismoContenido } from '@/lib/comparar';
 import { obtenerRecaudacion, type Recaudacion } from '@/services/estadisticas.service';
 
 function toISODate(fecha: Date): string {
@@ -40,24 +41,45 @@ export function useRecaudacion() {
   const [datos, setDatos] = useState<Recaudacion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const ultimoRangoRef = useRef(rangoInicial);
 
-  const consultar = useCallback(async (desdeParam: string, hastaParam: string): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const resultado = await obtenerRecaudacion(desdeParam, hastaParam);
-      setDatos(resultado);
-    } catch (err) {
-      setDatos(null);
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos cargar la recaudación. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const consultar = useCallback(
+    async (
+      desdeParam: string,
+      hastaParam: string,
+      opciones?: { silencioso?: boolean },
+    ): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setError(null);
+      }
+      try {
+        const resultado = await obtenerRecaudacion(desdeParam, hastaParam);
+        ultimoRangoRef.current = { desde: desdeParam, hasta: hastaParam };
+        setDatos((anterior) =>
+          mismoContenido(anterior, resultado) ? anterior : resultado,
+        );
+        setError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setDatos(null);
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar la recaudación. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  const refrescar = useCallback(async (): Promise<void> => {
+    const { desde: desdeConsultado, hasta: hastaConsultado } = ultimoRangoRef.current;
+    await consultar(desdeConsultado, hastaConsultado, { silencioso: true });
+  }, [consultar]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +97,18 @@ export function useRecaudacion() {
     void consultar(rango.desde, rango.hasta);
   }
 
-  return { desde, setDesde, hasta, setHasta, datos, isLoading, error, consultar, aplicarRango };
+  return {
+    desde,
+    setDesde,
+    hasta,
+    setHasta,
+    datos,
+    isLoading,
+    error,
+    consultar,
+    refrescar,
+    aplicarRango,
+  };
 }
 
 type RecaudacionState = ReturnType<typeof useRecaudacion>;
