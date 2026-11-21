@@ -69,6 +69,7 @@ export const heroe = {
   senales: [
   'Gestión simple y organizada',
   'Para computadora, tablet y celular',
+  'Escaneá códigos de barras con la cámara del celular',
 ],
   ariaVistaPrevia: 'Vista ilustrativa de StockNext para el control de inventario',
 } as const;
