@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LuBriefcaseBusiness,
@@ -32,9 +32,12 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { ApiError } from '@/lib/api/client';
+import { mismoContenido } from '@/lib/comparar';
 import { notifySuccess } from '@/lib/notifications/toast';
 import type { PageMeta } from '@/types/api';
 import {
@@ -237,15 +240,28 @@ function VentasPorVendedorSection() {
   const [datos, setDatos] = useState<VentasPorVendedor | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const ultimoRangoRef = useRef(rangoInicial);
 
   const consultar = useCallback(
-    async (desdeParam: string, hastaParam: string): Promise<void> => {
-      setIsLoading(true);
-      setError(null);
+    async (
+      desdeParam: string,
+      hastaParam: string,
+      opciones?: { silencioso?: boolean },
+    ): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setError(null);
+      }
       try {
         const resultado = await obtenerVentasPorVendedor(desdeParam, hastaParam);
-        setDatos(resultado);
+        ultimoRangoRef.current = { desde: desdeParam, hasta: hastaParam };
+        setDatos((anterior) =>
+          mismoContenido(anterior, resultado) ? anterior : resultado,
+        );
+        setError(null);
       } catch (err) {
+        if (silencioso) throw err;
         setDatos(null);
         setError(
           err instanceof ApiError
@@ -253,7 +269,7 @@ function VentasPorVendedorSection() {
             : 'No pudimos cargar las ventas por vendedor. Inténtalo nuevamente.',
         );
       } finally {
-        setIsLoading(false);
+        if (!silencioso) setIsLoading(false);
       }
     },
     [],
@@ -268,6 +284,17 @@ function VentasPorVendedorSection() {
       cancelled = true;
     };
   }, [consultar, rangoInicial]);
+
+  const cargarParaRefresco = useCallback(async (): Promise<void> => {
+    const { desde: desdeConsultado, hasta: hastaConsultado } =
+      ultimoRangoRef.current;
+    await consultar(desdeConsultado, hastaConsultado, { silencioso: true });
+  }, [consultar]);
+
+  const { ultimaActualizacion, actualizando, hayError, refrescar } = useAutoRefresh(
+    cargarParaRefresco,
+    { intervaloMs: 30000 },
+  );
 
   function aplicarRango(rango: { desde: string; hasta: string }): void {
     setDesde(rango.desde);
@@ -288,7 +315,14 @@ function VentasPorVendedorSection() {
     <Card
       title="Ventas por vendedor"
       subtitle="Rendimiento del equipo en el período seleccionado."
-      actions={<LuUsers aria-hidden="true" size={16} className="text-zinc-400" />}
+      actions={
+        <IndicadorActualizacion
+          ultimaActualizacion={ultimaActualizacion}
+          actualizando={actualizando}
+          hayError={hayError}
+          refrescar={refrescar}
+        />
+      }
       className="border-zinc-200/80 shadow-sm"
     >
       <div className="flex flex-col gap-4">
