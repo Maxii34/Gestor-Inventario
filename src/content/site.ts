@@ -310,7 +310,6 @@ export const limitaciones = {
   'No emite facturas electrónicas.',
   'No procesa cobros mediante posnet: solo registra el medio de pago elegido.',
   'No imprime tickets de venta.',
-  'No permite escanear códigos de barras con la cámara del celular.',
   'No se conecta con balanzas.',
   'No administra múltiples sucursales.',
   'Se utiliza desde el navegador, no requiere descargar una aplicación.',
