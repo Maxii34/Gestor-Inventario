@@ -69,6 +69,7 @@ export const heroe = {
   senales: [
   'Gestión simple y organizada',
   'Para computadora, tablet y celular',
+  'Escaneá códigos de barras con la cámara del celular',
 ],
   ariaVistaPrevia: 'Vista ilustrativa de StockNext para el control de inventario',
 } as const;
@@ -190,7 +191,7 @@ export const funcionalidades: Funcionalidad[] = [
     icono: 'codigo',
     titulo: 'Código de barras',
     descripcion:
-      'Agilizá la carga de productos en las ventas utilizando lectores de códigos de barras USB o Bluetooth.',
+      'Escaneá códigos de barras con un lector USB o Bluetooth o con la cámara del celular, sin instalar nada. Funciona mejor con buena luz y el código a unos 15 cm; para atender con cola conviene un lector físico.',
   },
   {
     icono: 'estadisticas',
@@ -310,7 +311,6 @@ export const limitaciones = {
   'No emite facturas electrónicas.',
   'No procesa cobros mediante posnet: solo registra el medio de pago elegido.',
   'No imprime tickets de venta.',
-  'No permite escanear códigos de barras con la cámara del celular.',
   'No se conecta con balanzas.',
   'No administra múltiples sucursales.',
   'Se utiliza desde el navegador, no requiere descargar una aplicación.',
@@ -418,7 +418,7 @@ export const planesSeccion = {
     'Registro de ventas y medios de pago (efectivo, transferencia y tarjeta)',
     'Anulación de ventas con motivo y reposición automática del stock (solo administradores)',
     'Gestión de costos por paquete y cálculo automático del costo por unidad',
-    'Compatible con lectores de códigos de barras USB y Bluetooth',
+    'Escaneo con lector USB o Bluetooth o con la cámara del celular, sin instalar nada',
     'Estadísticas de ventas, recaudación y rendimiento por vendedor',
     'Gestión de usuarios y permisos: administrador y vendedor',
     'Notificaciones sobre el estado de la suscripción',
@@ -510,6 +510,11 @@ export const preguntasFrecuentes = {
       pregunta: '¿Necesito instalar algo?',
       respuesta:
         'No. StockNext funciona desde el navegador de tu dispositivo, sin necesidad de instalar programas.',
+    },
+    {
+      pregunta: '¿Puedo usar un lector de códigos de barras?',
+      respuesta:
+        'Sí. Podés escanear con un lector USB o Bluetooth que funcione como teclado o con la cámara del celular, sin instalar nada. La cámara funciona mejor con buena luz y el código a unos 15 cm; para atender con cola conviene un lector físico. La primera vez el navegador te pide permiso para usar la cámara.',
     },
     {
       pregunta: '¿Funciona en el celular?',

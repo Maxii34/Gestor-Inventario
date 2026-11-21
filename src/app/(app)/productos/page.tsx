@@ -9,6 +9,7 @@ import {
   LuPlus,
   LuSearch,
   LuSave,
+  LuScanBarcode,
   LuTrash2,
   LuTriangleAlert,
   LuX,
@@ -29,9 +30,11 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import EscanerCamara from '@/components/EscanerCamara';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { useStockAlert } from '@/context/StockAlertContext';
+import { useSoporteCamara } from '@/hooks/useSoporteCamara';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -207,6 +210,8 @@ export default function ProductosPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [codigoBarrasError, setCodigoBarrasError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [escanerAbierto, setEscanerAbierto] = useState(false);
+  const soporteCamara = useSoporteCamara();
   const codigoBarrasParamHandled = useRef(false);
 
   const [deleteTarget, setDeleteTarget] = useState<BackendProducto | null>(null);
@@ -1007,19 +1012,35 @@ export default function ProductosPage() {
                       error={codigoBarrasError ?? undefined}
                       hint="Escaneá el código con el lector o escribilo"
                     >
-                      <Input
-                        id="producto-codigo-barras"
-                        placeholder="Opcional"
-                        value={form.codigoBarras}
-                        aria-invalid={Boolean(codigoBarrasError)}
-                        onChange={(event) => setCampo('codigoBarras', event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key !== 'Enter') return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setCampo('codigoBarras', event.currentTarget.value.trim());
-                        }}
-                      />
+                      <div className="flex items-end gap-2 max-[400px]:flex-col max-[400px]:items-stretch">
+                        <div className="min-w-0 flex-1">
+                          <Input
+                            id="producto-codigo-barras"
+                            placeholder="Opcional"
+                            value={form.codigoBarras}
+                            aria-invalid={Boolean(codigoBarrasError)}
+                            onChange={(event) => setCampo('codigoBarras', event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key !== 'Enter') return;
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setCampo('codigoBarras', event.currentTarget.value.trim());
+                            }}
+                          />
+                        </div>
+                        {soporteCamara && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-label="Escanear con la cámara"
+                            className="min-h-11 shrink-0 max-[400px]:w-full"
+                            onClick={() => setEscanerAbierto(true)}
+                          >
+                            <LuScanBarcode aria-hidden="true" size={16} />
+                            Escanear
+                          </Button>
+                        )}
+                      </div>
                     </FormField>
                   </div>
                   {categoriasError && (
@@ -1350,6 +1371,16 @@ export default function ProductosPage() {
           </p>
         )}
       </Modal>
+
+      {escanerAbierto && (
+        <EscanerCamara
+          onCodigo={(codigo) => {
+            setCampo('codigoBarras', codigo);
+            setEscanerAbierto(false);
+          }}
+          onCerrar={() => setEscanerAbierto(false)}
+        />
+      )}
     </>
   );
 }

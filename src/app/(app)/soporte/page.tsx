@@ -179,7 +179,28 @@ const PREGUNTAS_FRECUENTES = [
       {
         pregunta: "¿Puedo usar un lector de códigos de barras?",
         respuesta:
-          "Sí. Los lectores USB o Bluetooth que funcionan como teclado (la mayoría) se usan sin instalar nada. En el producto cargás el código y en la pantalla de venta lo escaneás. Por ahora no se puede escanear con la cámara del celular.",
+          "Sí. Podés usar un lector USB o Bluetooth que funcione como teclado, o la cámara del celular: en la pantalla de venta o al cargar un producto, tocá el botón de la cámara y apuntá al código, a unos 15 cm y con buena luz. La primera vez el navegador te pide permiso para usar la cámara.",
+      },
+      {
+        pregunta: "La cámara no se abre o no lee el código",
+        respuesta: (
+          <>
+            Revisá estos pasos:
+            <ol className="list-decimal space-y-1.5 pl-5">
+              <li>
+                Permití el uso de la cámara en el navegador (ícono del candado
+                junto a la dirección).
+              </li>
+              <li>Cerrá otras aplicaciones que la estén usando.</li>
+              <li>Usá buena luz y probá a distinta distancia.</li>
+              <li>Comprobá que la página se abre con https.</li>
+              <li>
+                Si nada funciona, escribí el código a mano o usá un lector USB o
+                Bluetooth.
+              </li>
+            </ol>
+          </>
+        ),
       },
       {
         pregunta: "Tengo muchos productos para cargar. ¿Me pueden ayudar?",

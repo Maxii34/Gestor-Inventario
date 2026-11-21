@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  LuCamera,
   LuCircleCheck,
   LuMinus,
   LuPlus,
@@ -19,9 +20,11 @@ import {
   Select,
 } from '@/components/ui';
 import { FormField, SearchInput } from '@/components/forms';
+import EscanerCamara from '@/components/EscanerCamara';
 import { useAuth } from '@/context/AuthContext';
 import { useStockAlert } from '@/context/StockAlertContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useSoporteCamara } from '@/hooks/useSoporteCamara';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
 import { notifySuccess } from '@/lib/notifications/toast';
@@ -100,7 +103,9 @@ export function NuevaVentaForm() {
   const scanQueueRef = useRef<Promise<void>>(Promise.resolve());
   const scanSessionRef = useRef(0);
   const [isRegistrando, setIsRegistrando] = useState(false);
+  const [escanerCamaraAbierto, setEscanerCamaraAbierto] = useState(false);
   const [ultimaVenta, setUltimaVenta] = useState<VentaRegistrada | null>(null);
+  const soporteCamara = useSoporteCamara();
 
   const cargarSelectores = useCallback(async (): Promise<void> => {
     setIsLoadingSelectors(true);
@@ -261,45 +266,36 @@ export function NuevaVentaForm() {
     enfocarEscaner();
   }
 
-  async function procesarCodigoEscaneado(codigo: string, sesion: number): Promise<void> {
+  async function agregarPorCodigo(codigo: string): Promise<string> {
     try {
       const producto = await obtenerProductoPorCodigoBarras(codigo);
-      if (scanSessionRef.current !== sesion) return;
       if (soloLectura) {
-        setFeedbackEscaneo({
-          mensaje: `${producto.nombre} encontrado. La venta está deshabilitada por la suscripción.`,
-          tono: 'success',
-        });
-        return;
+        return `${producto.nombre} encontrado. La venta está deshabilitada por la suscripción.`;
       }
-      agregarItem(
-        {
-          value: String(producto.id),
-          label: producto.nombre,
-          precio: toNumber(producto.precioVenta),
-          stock: producto.stock,
-        },
-        true,
+      const opcion: ProductoOpcion = {
+        value: String(producto.id),
+        label: producto.nombre,
+        precio: toNumber(producto.precioVenta),
+        stock: producto.stock,
+      };
+      const existente = itemsRef.current.find(
+        (item) => item.productoId === Number(opcion.value),
       );
-    } catch (err) {
-      if (scanSessionRef.current !== sesion) return;
-      if (err instanceof ApiError && err.status === 404) {
-        setFeedbackEscaneo({
-          mensaje: `Código no registrado: ${codigo}`,
-          tono: 'error',
-          ...(isAdmin ? { codigoNoRegistrado: codigo } : {}),
-        });
-      } else {
-        setFeedbackEscaneo({
-          mensaje:
-            err instanceof ApiError
-              ? err.message
-              : 'No pudimos consultar el código de barras.',
-          tono: 'error',
-        });
+      const cantidadTotal = (existente?.cantidad ?? 0) + 1;
+      if (cantidadTotal > opcion.stock) {
+        return `Stock insuficiente: ${producto.nombre}`;
       }
-    } finally {
-      if (scanSessionRef.current === sesion) enfocarEscaner();
+      agregarItem(opcion);
+      return existente
+        ? `Agregado: ${producto.nombre} (${cantidadTotal})`
+        : `Agregado: ${producto.nombre}`;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return `Código no registrado: ${codigo}`;
+      }
+      return err instanceof ApiError
+        ? err.message
+        : 'No pudimos consultar el código de barras.';
     }
   }
 
@@ -309,13 +305,39 @@ export function NuevaVentaForm() {
     const sesion = scanSessionRef.current;
     setFeedbackEscaneo(null);
     scanQueueRef.current = scanQueueRef.current
-      .then(() => procesarCodigoEscaneado(codigo, sesion))
+      .then(async () => {
+        const mensaje = await agregarPorCodigo(codigo);
+        if (scanSessionRef.current !== sesion) return;
+        const noRegistrado = mensaje === `Código no registrado: ${codigo}`;
+        const exitoso =
+          mensaje.startsWith('Agregado:') ||
+          mensaje.includes('encontrado. La venta está deshabilitada');
+        setFeedbackEscaneo({
+          mensaje,
+          tono: exitoso ? 'success' : 'error',
+          ...(isAdmin && noRegistrado ? { codigoNoRegistrado: codigo } : {}),
+        });
+        enfocarEscaner();
+      })
       .catch(() => {
+        if (scanSessionRef.current !== sesion) return;
         setFeedbackEscaneo({
           mensaje: 'No pudimos consultar el código de barras.',
           tono: 'error',
         });
+        enfocarEscaner();
       });
+  }
+
+  function cerrarEscanerCamara(): void {
+    setEscanerCamaraAbierto(false);
+    reemplazarItems([...itemsRef.current]);
+    if (window.matchMedia('(pointer: fine)').matches) {
+      requestAnimationFrame(() => {
+        const input = document.getElementById('venta-escaner');
+        if (input instanceof HTMLInputElement) input.focus();
+      });
+    }
   }
 
   function crearProductoConCodigo(codigo: string): void {
@@ -389,7 +411,8 @@ export function NuevaVentaForm() {
     !isRegistrando && !isLoadingSelectors && !selectoresError && !soloLectura;
 
   return (
-    <form
+    <>
+      <form
       id="nueva-venta-formulario"
       onSubmit={(event) => {
         event.preventDefault();
@@ -460,30 +483,45 @@ export function NuevaVentaForm() {
                   htmlFor="venta-escaner"
                   className="lg:flex-1"
                 >
-                  <div className="relative">
-                    <LuScanBarcode
-                      aria-hidden="true"
-                      size={16}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500"
-                    />
-                    <Input
-                      id="venta-escaner"
-                      placeholder="Escaneá un producto o escribí el código"
-                      autoComplete="off"
-                      disabled={isRegistrando}
-                      value={codigoEscaneo}
-                      onChange={(event) => setCodigoEscaneo(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter') return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        const codigo = event.currentTarget.value;
-                        setCodigoEscaneo('');
-                        encolarCodigoEscaneado(codigo);
-                        enfocarEscaner();
-                      }}
-                      className="pl-9"
-                    />
+                  <div className="flex items-end gap-2">
+                    <div className="relative min-w-0 flex-1">
+                      <LuScanBarcode
+                        aria-hidden="true"
+                        size={16}
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500"
+                      />
+                      <Input
+                        id="venta-escaner"
+                        placeholder="Escaneá un producto o escribí el código"
+                        autoComplete="off"
+                        disabled={isRegistrando}
+                        value={codigoEscaneo}
+                        onChange={(event) => setCodigoEscaneo(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter') return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          const codigo = event.currentTarget.value;
+                          setCodigoEscaneo('');
+                          encolarCodigoEscaneado(codigo);
+                          enfocarEscaner();
+                        }}
+                        className="pl-9"
+                      />
+                    </div>
+                    {soporteCamara && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-label="Escanear con la cámara"
+                        title={soloLectura ? motivoSoloLectura : undefined}
+                        disabled={isRegistrando || soloLectura}
+                        className="h-[38px] shrink-0 rounded-full"
+                        onClick={() => setEscanerCamaraAbierto(true)}
+                      >
+                        <LuCamera aria-hidden="true" size={16} />
+                      </Button>
+                    )}
                   </div>
                 </FormField>
 
@@ -798,5 +836,14 @@ export function NuevaVentaForm() {
         </div>
       </div>
     </form>
+
+      {escanerCamaraAbierto && (
+        <EscanerCamara
+          continuo
+          onCodigo={agregarPorCodigo}
+          onCerrar={cerrarEscanerCamara}
+        />
+      )}
+    </>
   );
 }

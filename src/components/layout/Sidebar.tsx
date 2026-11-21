@@ -309,7 +309,7 @@ function SidebarContent({
           <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-zinc-600">
             <span>© {new Date().getFullYear()} StockNext</span>
             <span className="rounded-full border border-white/5 px-2 py-0.5 text-zinc-500">
-              v1.1.0
+              v1.2.0
             </span>
           </div>
         )}
