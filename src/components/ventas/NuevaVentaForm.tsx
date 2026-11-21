@@ -516,11 +516,10 @@ export function NuevaVentaForm() {
                         aria-label="Escanear con la cámara"
                         title={soloLectura ? motivoSoloLectura : undefined}
                         disabled={isRegistrando || soloLectura}
-                        className="min-h-11 min-w-11 shrink-0"
+                        className="h-[38px] shrink-0 rounded-full"
                         onClick={() => setEscanerCamaraAbierto(true)}
                       >
                         <LuCamera aria-hidden="true" size={16} />
-                        Cámara
                       </Button>
                     )}
                   </div>
