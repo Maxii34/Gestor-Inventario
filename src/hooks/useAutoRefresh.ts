@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export interface UseAutoRefreshOptions {
   intervaloMs?: number;
   pausado?: boolean;
+  inactividadMs?: number;
+  intervaloInactivoMs?: number;
 }
 
 export interface UseAutoRefreshResult {
@@ -13,6 +15,9 @@ export interface UseAutoRefreshResult {
 }
 
 const INTERVALO_POR_DEFECTO = 20000;
+const INTERVALO_INACTIVO_POR_DEFECTO = 150000;
+const INACTIVIDAD_POR_DEFECTO = 10 * 60 * 1000;
+const ACTIVIDAD_MINIMA_MS = 1000;
 const VARIACION_INTERVALO = 0.1;
 const INTERVALO_MAXIMO = 120000;
 const UMBRAL_REFRESCO = 5000;
@@ -30,7 +35,12 @@ export function useAutoRefresh(
   cargar: () => Promise<void>,
   opciones: UseAutoRefreshOptions = {},
 ): UseAutoRefreshResult {
-  const { intervaloMs = INTERVALO_POR_DEFECTO, pausado = false } = opciones;
+  const {
+    intervaloMs = INTERVALO_POR_DEFECTO,
+    pausado = false,
+    inactividadMs = INACTIVIDAD_POR_DEFECTO,
+    intervaloInactivoMs = INTERVALO_INACTIVO_POR_DEFECTO,
+  } = opciones;
 
   const [ultimaActualizacion, setUltimaActualizacion] = useState<Date | null>(null);
   const [actualizando, setActualizando] = useState(false);
@@ -40,12 +50,22 @@ export function useAutoRefresh(
   const intervaloRef = useRef(intervaloMs);
   const pausadoRef = useRef(pausado);
   const esperaRef = useRef(intervaloMs);
-  const ultimaCargaRef = useRef<number>(Date.now());
+  const ultimaCargaRef = useRef<number>(0);
   const detenidoRef = useRef(false);
   const montadoRef = useRef(false);
   const temporizadorRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cargaRef = useRef<Promise<void> | null>(null);
   const iniciarCargaRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const inactivoRef = useRef(false);
+  const intervaloInactivoRef = useRef(intervaloInactivoMs);
+  const inactividadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ultimaActividadRef = useRef<number>(0);
+
+  useEffect(() => {
+    const ahora = Date.now();
+    ultimaCargaRef.current = ahora;
+    ultimaActividadRef.current = ahora;
+  }, []);
 
   useEffect(() => {
     cargarRef.current = cargar;
@@ -61,6 +81,13 @@ export function useAutoRefresh(
     return pausadoRef.current;
   }, []);
 
+  const limiteEspera = useCallback((): number => {
+    if (inactivoRef.current) {
+      return Math.max(INTERVALO_MAXIMO, intervaloInactivoRef.current * 2);
+    }
+    return INTERVALO_MAXIMO;
+  }, []);
+
   const programar = useCallback(
     (espera: number): void => {
       if (temporizadorRef.current !== null) {
@@ -70,14 +97,14 @@ export function useAutoRefresh(
       if (detenidoRef.current || estaPausado()) return;
 
       const variacion = 1 + (Math.random() * 2 - 1) * VARIACION_INTERVALO;
-      const demora = Math.min(espera * variacion, INTERVALO_MAXIMO);
+      const demora = Math.min(espera * variacion, limiteEspera());
 
       temporizadorRef.current = setTimeout(() => {
         temporizadorRef.current = null;
         void iniciarCargaRef.current();
       }, demora);
     },
-    [estaPausado],
+    [estaPausado, limiteEspera],
   );
 
   const iniciarCarga = useCallback((): Promise<void> => {
@@ -91,7 +118,9 @@ export function useAutoRefresh(
         await cargarRef.current();
         if (!montadoRef.current) return;
         setHayError(false);
-        esperaRef.current = intervaloRef.current;
+        esperaRef.current = inactivoRef.current
+          ? intervaloInactivoRef.current
+          : intervaloRef.current;
         ultimaCargaRef.current = Date.now();
         setUltimaActualizacion(new Date());
       } catch (error) {
@@ -100,7 +129,7 @@ export function useAutoRefresh(
         if (esNoAutorizado(error)) {
           detenidoRef.current = true;
         } else {
-          esperaRef.current = Math.min(esperaRef.current * 2, INTERVALO_MAXIMO);
+          esperaRef.current = Math.min(esperaRef.current * 2, limiteEspera());
         }
       } finally {
         if (montadoRef.current) setActualizando(false);
@@ -116,21 +145,89 @@ export function useAutoRefresh(
     });
 
     return promesa;
-  }, [estaPausado, programar]);
+  }, [estaPausado, limiteEspera, programar]);
 
   useEffect(() => {
     iniciarCargaRef.current = iniciarCarga;
   }, [iniciarCarga]);
 
-  useEffect(() => {
-    intervaloRef.current = intervaloMs;
-    esperaRef.current = intervaloMs;
+  const limpiarTimerInactividad = useCallback((): void => {
+    if (inactividadTimerRef.current !== null) {
+      clearTimeout(inactividadTimerRef.current);
+      inactividadTimerRef.current = null;
+    }
+  }, []);
+
+  const programarTimerInactividad = useCallback((): void => {
+    limpiarTimerInactividad();
+    if (inactividadMs <= 0 || detenidoRef.current) return;
+
+    inactividadTimerRef.current = setTimeout(() => {
+      inactividadTimerRef.current = null;
+      if (detenidoRef.current) return;
+
+      inactivoRef.current = true;
+      esperaRef.current = intervaloInactivoRef.current;
+
+      if (temporizadorRef.current !== null) {
+        clearTimeout(temporizadorRef.current);
+        temporizadorRef.current = null;
+      }
+
+      if (!estaPausado()) programar(esperaRef.current);
+    }, inactividadMs);
+  }, [estaPausado, inactividadMs, limpiarTimerInactividad, programar]);
+
+  const marcarActividad = useCallback((): void => {
+    const ahora = Date.now();
+    if (ahora - ultimaActividadRef.current < ACTIVIDAD_MINIMA_MS) return;
+
+    ultimaActividadRef.current = ahora;
+    programarTimerInactividad();
+
+    if (!inactivoRef.current) return;
+
+    inactivoRef.current = false;
+    esperaRef.current = intervaloRef.current;
+
     if (temporizadorRef.current !== null) {
       clearTimeout(temporizadorRef.current);
       temporizadorRef.current = null;
     }
-    if (!pausadoRef.current && !detenidoRef.current) programar(intervaloMs);
+
+    if (detenidoRef.current || estaPausado()) return;
+
+    if (Date.now() - ultimaCargaRef.current > intervaloRef.current) {
+      void iniciarCarga();
+      return;
+    }
+
+    programar(esperaRef.current);
+  }, [estaPausado, iniciarCarga, programar, programarTimerInactividad]);
+
+  useEffect(() => {
+    intervaloRef.current = intervaloMs;
+    esperaRef.current = inactivoRef.current
+      ? intervaloInactivoRef.current
+      : intervaloMs;
+    if (temporizadorRef.current !== null) {
+      clearTimeout(temporizadorRef.current);
+      temporizadorRef.current = null;
+    }
+    if (!pausadoRef.current && !detenidoRef.current) programar(esperaRef.current);
   }, [intervaloMs, programar]);
+
+  useEffect(() => {
+    intervaloInactivoRef.current = intervaloInactivoMs;
+    if (!inactivoRef.current) return;
+
+    esperaRef.current = intervaloInactivoMs;
+    if (temporizadorRef.current !== null) {
+      clearTimeout(temporizadorRef.current);
+      temporizadorRef.current = null;
+    }
+    if (!pausadoRef.current && !detenidoRef.current) programar(esperaRef.current);
+  }, [intervaloInactivoMs, programar]);
 
   useEffect(() => {
     pausadoRef.current = pausado;
@@ -148,6 +245,7 @@ export function useAutoRefresh(
     montadoRef.current = true;
 
     const intentarRefrescar = (): void => {
+      marcarActividad();
       if (detenidoRef.current || estaPausado()) return;
       if (Date.now() - ultimaCargaRef.current > UMBRAL_REFRESCO) {
         void iniciarCarga();
@@ -179,7 +277,26 @@ export function useAutoRefresh(
         temporizadorRef.current = null;
       }
     };
-  }, [estaPausado, iniciarCarga, programar]);
+  }, [estaPausado, iniciarCarga, marcarActividad, programar]);
+
+  useEffect(() => {
+    if (inactividadMs <= 0) return;
+
+    programarTimerInactividad();
+    const alActivar = (): void => marcarActividad();
+    const eventos = ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'];
+
+    for (const evento of eventos) {
+      document.addEventListener(evento, alActivar, { passive: true, capture: true });
+    }
+
+    return () => {
+      for (const evento of eventos) {
+        document.removeEventListener(evento, alActivar, { capture: true });
+      }
+      limpiarTimerInactividad();
+    };
+  }, [inactividadMs, limpiarTimerInactividad, marcarActividad, programarTimerInactividad]);
 
   const refrescar = useCallback(async (): Promise<void> => {
     await iniciarCarga();

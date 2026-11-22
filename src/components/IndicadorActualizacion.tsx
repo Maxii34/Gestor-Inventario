@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
 
 interface IndicadorActualizacionProps {
@@ -24,18 +24,17 @@ export default function IndicadorActualizacion({
   refrescar,
 }: IndicadorActualizacionProps) {
   const [ahora, setAhora] = useState<number | null>(null);
-  const montajeRef = useRef(0);
 
   useEffect(() => {
-    montajeRef.current = Date.now();
-    setAhora(Date.now());
     const id = setInterval(() => setAhora(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const referencia = ultimaActualizacion?.getTime() ?? montajeRef.current;
+  const referencia = ultimaActualizacion?.getTime();
   const texto =
-    ahora === null ? 'Actualizado hace 0 s' : formatearTiempo(ahora - referencia);
+    ahora === null || referencia === undefined
+      ? 'Actualizado hace 0 s'
+      : formatearTiempo(ahora - referencia);
 
   return (
     <div className="flex items-center gap-2">

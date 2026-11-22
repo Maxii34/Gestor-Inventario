@@ -290,6 +290,21 @@ const PREGUNTAS_FRECUENTES = [
         respuesta:
           "Sí. El sistema funciona en línea desde cualquier navegador, en computadora, tablet o celular.",
       },
+      {
+        pregunta: "¿Las pantallas se actualizan solas?",
+        respuesta: (
+          <>
+            Sí. Productos, ventas, panel, estadísticas y control de stock se
+            actualizan automáticamente cada 20 a 30 segundos. Si pasás 10
+            minutos sin interactuar, el refresco pasa a cada 2,5 minutos para
+            reducir el consumo; al tocar la pantalla, escribir o volver a la
+            pestaña se retoma el ritmo normal. En la pantalla de venta también
+            se actualiza el stock: si otro dispositivo vendió y ya no alcanza,
+            la línea muestra <strong>Quedan N unidades</strong> sin borrar el
+            carrito, y el servidor decide si la venta se confirma.
+          </>
+        ),
+      },
     ],
   },
 ];
