@@ -315,6 +315,7 @@ function VentasPorVendedorSection() {
     <Card
       title="Ventas por vendedor"
       subtitle="Rendimiento del equipo en el período seleccionado."
+      subtitleClassName="hidden sm:block"
       actions={
         <IndicadorActualizacion
           ultimaActualizacion={ultimaActualizacion}
@@ -325,8 +326,8 @@ function VentasPorVendedorSection() {
       }
       className="border-zinc-200/80 shadow-sm"
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+      <div className="flex flex-col gap-2 sm:gap-4">
+        <div className="flex flex-col gap-2 sm:gap-4 lg:flex-row lg:items-end">
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -360,7 +361,7 @@ function VentasPorVendedorSection() {
             </Button>
           </div>
 
-          <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-3">
             <Input
               label="Desde"
               type="date"

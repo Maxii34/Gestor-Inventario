@@ -516,6 +516,7 @@ export function NuevaVentaForm() {
         <Card
           title="Productos"
           subtitle="Buscá por nombre o escaneá el código de barras."
+          subtitleClassName="hidden sm:block"
           actions={
             <IndicadorActualizacion
               ultimaActualizacion={ultimaActualizacion}

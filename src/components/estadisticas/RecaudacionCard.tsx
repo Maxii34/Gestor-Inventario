@@ -141,7 +141,7 @@ export function RecaudacionTotalCard({
           </p>
         ) : datos ? (
           <>
-            <p className="wrap-break-word text-lg font-semibold leading-tight text-zinc-900 tabular-nums sm:text-2xl">
+            <p className="wrap-break-word text-2xl font-semibold leading-tight text-zinc-900 tabular-nums sm:text-2xl">
               {formatoMoneda(Number(datos.totalRecaudado) || 0)}
             </p>
             <p className="mt-1 text-xs text-zinc-500">
@@ -175,7 +175,7 @@ export function RecaudacionConsultaCard({
       subtitle="Filtra el total por período"
       actions={<LuCalendarDays aria-hidden="true" size={16} className="text-zinc-400" />}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:gap-4">
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -199,7 +199,7 @@ export function RecaudacionConsultaCard({
           </Button>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-3">
           <FormField label="Desde" htmlFor={desdeId}>
             <Input
               id={desdeId}

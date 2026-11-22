@@ -521,7 +521,7 @@ export default function VentasPage() {
           aria-label="Resumen de ventas"
           className="grid grid-cols-2 items-stretch gap-2 sm:gap-3"
         >
-          <Reveal delay={0}>
+          <Reveal delay={0} className="order-2 col-span-2 sm:order-1 sm:col-span-1">
             <Card className="h-full border-zinc-200/80 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -540,7 +540,7 @@ export default function VentasPage() {
               </div>
             </Card>
           </Reveal>
-          <Reveal delay={0.05}>
+          <Reveal delay={0.05} className="order-1 col-span-2 sm:order-2 sm:col-span-1">
             <RecaudacionTotalCard
               datos={recaudacion.datos}
               isLoading={recaudacion.isLoading}
@@ -568,7 +568,7 @@ export default function VentasPage() {
             actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
             className="border-zinc-200/80 shadow-sm"
           >
-            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-2 items-end gap-2 md:gap-3 xl:grid-cols-5">
               {isAdmin && (
                 <Select
                   label="Vendedor"
@@ -623,7 +623,7 @@ export default function VentasPage() {
               />
             </div>
             {hayFiltros && (
-              <div className="mt-4 flex justify-end border-t border-zinc-100 pt-3">
+              <div className="mt-2 flex justify-end border-t border-zinc-100 pt-2 sm:mt-4 sm:pt-3">
                 <Button type="button" variant="ghost" size="sm" onClick={limpiarFiltros}>
                   <LuX aria-hidden="true" size={14} />
                   Limpiar
