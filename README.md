@@ -1,8 +1,8 @@
-# 📦 StockNext — Frontend
+# 📦 StockNext — SaaS de gestión para comercios
 
-Panel administrativo web para la gestión de inventario, ventas, clientes y usuarios. Incluye dashboard con métricas, control de stock, ventas presenciales con medios de pago directos (efectivo, transferencia y tarjeta), y autenticación con roles.
+**StockNext** es un SaaS multi-comercio para gestionar inventario, ventas, stock, equipo y suscripciones desde el navegador. Cada comercio trabaja en un espacio aislado, con sus propios usuarios, productos, movimientos y estadísticas.
 
-> Frontend en **Next.js (App Router)** que consume el backend REST del proyecto. No expone secretos: solo usa la URL pública del API.
+> Frontend en **Next.js (App Router)** que consume el backend REST. No expone secretos.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
@@ -10,7 +10,6 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Motion](https://img.shields.io/badge/Motion-13-FF0080?logo=framer&logoColor=white)](https://motion.dev/)
 [![React Icons](https://img.shields.io/badge/React_Icons-5-E91E63?logo=react&logoColor=white)](https://react-icons.github.io/react-icons/)
-[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
 [![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?logo=eslint&logoColor=white)](https://eslint.org/)
 [![License](https://img.shields.io/badge/License-Privado-lightgrey)](#-licencia)
 
@@ -18,40 +17,43 @@ Panel administrativo web para la gestión de inventario, ventas, clientes y usua
 
 ## ✨ Descripción
 
-**StockNext** es una aplicación full-stack para pequeños y medianos negocios:
+- **SaaS multi-comercio**: datos separados por comercio y acceso independiente.
+- **Prueba de 14 días** sin tarjeta, con planes mensual y trimestral.
+- **Pago por transferencia**, sin renovación automática ni permanencia.
+- **3 días de gracia** al vencer; luego el acceso pasa a modo solo lectura.
+- El alta de comercios la realiza el superadministrador desde una **ruta especial de administración de plataforma** (uso interno del autor).
 
-- Control de **productos, categorías y stock** (con mínimo y alertas de stock bajo / crítico).
-- Registro de **movimientos de stock** (entradas, salidas, ajustes).
-- Gestión de **clientes** y **ventas**.
-- **Ventas directas**: registro inmediato con medios de pago efectivo, transferencia o tarjeta.
-- **Usuarios y roles** (ej. admin / vendedor) con rutas protegidas.
-- **Dashboard** con resumen (totales, ventas recientes, stock bajo) y acciones rápidas.
-- UI responsive: sidebar fijo en desktop, drawer en móvil, skeletons de carga, animaciones con Motion y tablas con paginación.
-
-Rutas principales:
+Rutas de los comercios:
 
 | Ruta | Módulo |
 |------|--------|
-| `/login` | Inicio de sesión |
-| `/dashboard` | Resumen general del negocio |
-| `/productos` | Alta, edición y control de stock |
+| `/login` | Ingreso con identificador del comercio, email y contraseña |
+| `/dashboard` | Recaudación, indicadores, ventas recientes y stock bajo |
+| `/productos` | Catálogo, precios, costo por caja, código de barras y stock mínimo |
 | `/categorias` | Organización del catálogo |
-| `/movimientos` | Entradas / salidas / ajustes de stock |
-| `/clientes` | Gestión de clientes |
-| `/ventas` | Ventas presenciales y anulación con motivo |
-| `/usuarios` | Administración de usuarios y roles |
+| `/movimientos` | Entradas, salidas y ajustes con historial auditable |
+| `/ventas` | Recaudación, historial, filtros y anulación |
+| `/ventas/nueva` | Venta de mostrador con escaneo y medios de pago |
+| `/usuarios` | Equipo, roles y ventas por vendedor |
+| `/soporte` | Ayuda, preguntas frecuentes, suscripción, pagos y contacto |
 
 ---
 
-## 🧩 Funcionalidades destacadas
+## 🧩 Funcionalidades
 
-- 🔐 **Auth con JWT + refresh**: contexto `AuthContext`, guard `RequireAuth`, control por rol (`hasRole`), cierre de sesión y manejo de sesión expirada.
-- 📊 **Dashboard en vivo**: tarjetas de Productos / Stock bajo / Ventas / Clientes, tablas de ventas recientes y stock bajo.
-- 🛒 **Ventas directas**: alta con stock, cliente opcional y medios de pago efectivo, transferencia o tarjeta; anulación con motivo y reposición de stock.
-- 📦 **Stock inteligente**: badges Crítico / Bajo, validaciones y movimientos auditables.
-- 🧱 **UI propia reutilizable**: `Button`, `Input`, `Select`, `Modal`, `Card`, `Badge`, `Table`, `Pagination`, `PageHeader`, `EmptyState`, `SearchInput`, `FormField`, `Reveal`.
-- 📱 **Responsive + accesible**: drawer móvil, `aria-*`, skeletons, `prefers-reduced-motion`.
-- 🔌 **Cliente API centralizado**: `lib/api/client` + servicios por dominio (`auth`, `productos`, `categorias`, `clientes`, `ventas`, `movimientos`, `dashboard`, `estadisticas`, `usuarios`).
+- 🔐 **Auth con JWT + refresh**: login por `slug` + email + contraseña, sesión expirada, cuenta suspendida y cambio obligatorio de contraseña.
+- 👥 **Roles**: administrador y vendedor, con rutas y acciones protegidas.
+- 📊 **Dashboard**: recaudación por período, ventas, productos, ventas recientes, stock bajo y accesos rápidos.
+- 📦 **Productos y categorías**: costo por unidad o por caja (cálculo automático), código de barras, stock mínimo, búsqueda, filtros y paginación.
+- 🔄 **Control de stock**: entradas, salidas y ajustes con motivo, proveedor, responsable y fecha; historial filtrable y reposición rápida.
+- 🛒 **Ventas**: escaneo con lector USB/Bluetooth o cámara, sincronización de stock, medios de pago efectivo/transferencia/tarjeta y anulación con motivo + reposición de stock.
+- 📈 **Estadísticas**: recaudación por rango de fechas y ventas por vendedor (cantidad, total, ticket promedio, anuladas y última venta).
+- ⏱️ **Actualización automática**: las pantallas se refrescan cada 20–30 segundos; si no hay actividad, baja la frecuencia.
+- 💳 **Suscripción integrada**: estado del plan, vencimiento, días restantes, avisos en pantalla, renovación por transferencia y modo solo lectura.
+- 💬 **Centro de ayuda**: preguntas frecuentes, datos de pago, reporte de problemas con diagnóstico automático y sugerencias.
+- 🏢 **Administración de plataforma** (ruta especial del autor): métricas, alta/suspensión/reactivación de comercios, extensión de accesos, cambios de plan, registro de pagos, auditoría, gestión de usuarios y cargas masivas de categorías/productos con simulación.
+- 🧱 **UI propia**: `Button`, `Input`, `Select`, `Modal`, `Card`, `Badge`, `Table`, `Pagination`, `PageHeader`, `EmptyState`, `SearchInput`, `FormField`, `Reveal`.
+- 📱 **Responsive y accesible**: sidebar colapsable, drawer móvil, skeletons, `aria-*`, `prefers-reduced-motion` y avisos con SweetAlert2.
 
 ---
 
@@ -59,111 +61,28 @@ Rutas principales:
 
 | Área | Tecnología |
 |------|------------|
-| Framework | ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white) App Router |
-| Librería UI | ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) + React DOM |
-| Lenguaje | ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white) |
-| Estilos | ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white) + PostCSS |
-| Animaciones | ![Motion](https://img.shields.io/badge/Motion-13-FF0080) (`motion/react`) |
-| Iconos | ![Icons](https://img.shields.io/badge/react--icons-Lu-red) Lucide (`react-icons/lu`) |
+| Framework | Next.js 16 (App Router) |
+| UI | React 19 + TypeScript 5 |
+| Estilos | Tailwind CSS 4 + PostCSS |
+| Animaciones | Motion 13 (`motion/react`) |
+| Iconos | React Icons (Lucide) |
+| Escaneo | `barcode-detector` + cámara del dispositivo |
+| Avisos | SweetAlert2 |
 | Calidad | ESLint + `eslint-config-next` |
-| Deploy | ![Vercel](https://img.shields.io/badge/Vercel-deploy-black?logo=vercel) |
 
 **Estructura:**
 
 ```text
 src/
-├── app/            # Rutas App Router ((app), dashboard, productos, ventas, login)
-├── components/     # ui, layout, tables, forms, motion, auth, estadisticas
-├── context/        # AuthContext
-├── lib/api/        # cliente fetch + manejo ApiError
-├── lib/auth/       # storage de tokens / usuario
-├── services/       # llamadas al backend por dominio
-└── types/          # tipos TS por dominio
+├── app/            # Landing, login, panel del comercio y ruta especial de plataforma
+├── components/     # ui, layout, tables, forms, motion, auth, estadísticas, ventas
+├── content/        # Textos, precios y capturas de la landing
+├── context/        # Auth, Suscripción y Alertas de stock
+├── hooks/          # Auto-refresh y soporte de cámara
+├── lib/            # API, auth, SEO, suscripción y utilidades
+├── services/       # Llamadas al backend por dominio
+└── types/          # Tipos TS por dominio
 ```
-
----
-
-## 🔗 Backend y Deploy
-
-Este frontend **no funciona solo**: necesita el backend REST.
-
-| Recurso | Link |
-|---------|------|
-| 🌐 **Frontend en producción (este proyecto)** | [https://codemaxdev-sigma.vercel.app](https://codemaxdev-sigma.vercel.app) |
-| 🚀 **Backend en producción (deploy)** | [https://gestor-inventario-back.vercel.app](https://gestor-inventario-back.vercel.app) |
-| 💻 **GitHub del backend** | [Maxii34/Gestor-Inventario-back](https://github.com/Maxii34/Gestor-Inventario-back) |
-
-> El backend expone sus rutas en la raíz, **sin prefijo `/api`**. El frontend solo configura la URL base pública vía `NEXT_PUBLIC_API_URL`.
-
----
-
-## 🚀 Puesta en marcha
-
-### Requisitos
-
-- Node.js 20+ (recomendado LTS)
-- npm 10+
-
-### 1. Clonar e instalar
-
-```bash
-git clone <URL-DE-ESTE-FRONTEND>
-cd gestor-front
-npm install
-```
-
-### 2. Variables de entorno
-
-Copia la plantilla y completá las variables públicas:
-
-```bash
-cp .env.example .env.local
-```
-
-| Variable | Para qué se usa | Ejemplo local |
-|----------|-----------------|---------------|
-| `NEXT_PUBLIC_API_URL` | URL base del backend REST (sin `/api`) | `http://localhost:3001` |
-| `NEXT_PUBLIC_APP_URL` | URL pública del frontend para canonical, Open Graph, sitemap y enlaces legales | `http://localhost:3000` |
-
-Contenido de `.env.local` para desarrollo:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-En producción (`.env.production` o variables de Vercel):
-
-```env
-NEXT_PUBLIC_API_URL=https://gestor-inventario-back.vercel.app
-NEXT_PUBLIC_APP_URL=https://codemaxdev-sigma.vercel.app
-```
-
-> 🔒 Solo se usan variables `NEXT_PUBLIC_*` públicas. No guardes tokens, claves ni contraseñas en el repo ni en `.env.local`.
-
-### 3. Desarrollo
-
-```bash
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000) para ver la landing pública. El acceso de los comercios está en `/login`.
-
-### 4. Producción
-
-```bash
-npm run build
-npm run start
-```
-
-### Scripts
-
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Build de producción |
-| `npm run start` | Sirve el build |
-| `npm run lint` | Linter (ESLint) |
 
 ---
 
@@ -171,66 +90,52 @@ npm run start
 
 ### Capturas
 
-Guardá las imágenes en `public/img/`. Los nombres actuales ya están conectados en `src/content/site.ts`:
+Las imágenes están en `public/img/` y conectadas desde `src/content/site.ts`:
 
-| Archivo | Uso | Medida actual |
-|---------|-----|----------------|
-| `home.png` | Hero de escritorio | 1352 × 767 px |
-| `homecelu.png` | Hero de celular | 322 × 573 px |
-| `cargaproductoxunidad.png` | Productos por unidad | 1365 × 766 px |
-| `nuevaventa.png` | Nueva venta | 1365 × 767 px |
-| `cargaxcaja24.png` | Costo por caja de 24 | 1365 × 767 px |
-| `cargaconbarra.png` | Carga con código de barras | 1365 × 767 px |
-| `registrostock.png` | Registro de stock | 1365 × 767 px |
-| `personalstatus.png` | Ventas por vendedor | 1365 × 767 px |
-| `equipoyroles.png` | Equipo y roles | 1365 × 767 px |
+`home.png`, `homecelu.png`, `cargaproductoxunidad.png`, `nuevaventa.png`, `cargaxcaja24.png`, `cargaconbarra.png`, `registrostock.png`, `personalstatus.png`, `equipoyroles.png`.
 
-- Las capturas de escritorio se muestran en 16:9 y la de celular en 9:16. Si reemplazás una imagen, mantené esa proporción.
-- Hacé clic sobre una captura para verla en grande; `Escape` o el botón de cerrar cierran la vista ampliada.
-- Evitá datos reales o sensibles en las imágenes.
-- Si falta una captura, la landing muestra el recuadro "Captura no disponible".
+- Escritorio en proporción 16:9 y celular en 9:16.
+- Clic para ampliar; `Escape` cierra la vista.
+- Si falta una imagen, se muestra “Captura no disponible”.
 
-### Textos y precios
+### Contenido
 
-Todo el contenido de la landing está en `src/content/site.ts`:
-
-- `heroe`, `funcionesSeccion`, `funcionesResumen`, `funcionesDetalle`, `beneficios`, `comoEmpezar`, `paraQuien`, `limitaciones`, `preguntasFrecuentes` y `pie`.
-- `planes` define precio, meses, textos y plan destacado. `calcularAhorro` recalcula el ahorro y el equivalente mensual; no hardcodees esos valores en `page.tsx`.
-- `contacto` y `mensajesWhatsapp` concentran el email y los mensajes de WhatsApp.
-- Los metadatos y la URL pública se editan en `src/lib/seo.ts`.
+Todo el texto de la landing está en `src/content/site.ts`: hero, funciones, beneficios, cómo empezar, para quién, limitaciones, planes, preguntas frecuentes, CTA y pie. Los precios y el ahorro se calculan desde `planes` y `calcularAhorro`.
 
 ### SEO
 
-- `src/lib/seo.ts`: nombre, título, descripción, locale y URL del sitio (`NEXT_PUBLIC_APP_URL`).
-- `src/app/opengraph-image.tsx`: imagen de 1200 × 630 generada con `next/og`.
+- `src/lib/seo.ts`: nombre, título, descripción, locale y URL pública.
+- `src/app/opengraph-image.tsx`: imagen 1200 × 630 con `next/og`.
 - `src/app/sitemap.ts` y `src/app/robots.ts`: sitemap público y exclusión de rutas privadas.
-- `src/app/icon.svg`: favicon e icono de la aplicación.
-- El JSON-LD de `SoftwareApplication` está en `src/app/page.tsx`, sin valoraciones ni reseñas.
+- `src/app/icon.svg`: favicon.
+- JSON-LD de `SoftwareApplication` en `src/app/page.tsx`.
+- El panel del comercio y la ruta especial de administración no se indexan.
 
 ---
 
-## 👤 Autor
+## 👤 Autor y soporte
 
-**Maxi Ordoñez** — Desarrollo y diseño del frontend (panel administrativo, dashboard, ventas directas, auth con roles, UI reutilizable).
+**Maxi Ordoñez** — desarrollo y diseño del frontend.
 
-- 📧 `exemaxi@outlook.com`
-- 💼 Frontend: Next.js + React + TypeScript + Tailwind
-
-> ¿Quieres colaborar? Abre un issue o PR en el repo del frontend.
+- 📧 `stocknext.dev@gmail.com`
+- 📱 WhatsApp: +54 381 6870337
+- 💼 Next.js + React + TypeScript + Tailwind
 
 ---
 
-## 🛡️ Notas de seguridad
+## 🛡️ Seguridad
 
-- No se commitean `.env.local` ni credenciales (revisar `.gitignore`).
-- Los tokens se manejan en cliente vía `lib/auth/storage` + refresh; nunca se hardcodean.
+- No se commitean credenciales ni secretos.
+- Tokens en cliente con refresh; nunca hardcodeados.
+- Datos aislados por comercio y accesos por rol.
+- Al vencer la suscripción, el sistema pasa a solo lectura.
 
 ---
 
 ## 📄 Licencia
 
-Proyecto privado / de uso interno. Todos los derechos reservados por el autor. Si quieres reutilizarlo, pide autorización.
+Proyecto privado / de uso interno. Todos los derechos reservados por el autor. Si querés reutilizarlo, pedí autorización.
 
 ---
 
-💡 *Hecho con Next.js, React y Tailwind — optimizado para Vercel.*
+💡 *Hecho con Next.js, React y Tailwind.*
