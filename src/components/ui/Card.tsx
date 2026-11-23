@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 interface CardProps {
   title?: string;
   subtitle?: string;
+  subtitleClassName?: string;
   actions?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
@@ -16,14 +17,14 @@ const BODY_PADDING = {
   lg: 'p-6',
 };
 
-export function Card({ title, subtitle, actions, footer, children, padding = 'md', className = '', bodyClassName = '' }: CardProps) {
+export function Card({ title, subtitle, subtitleClassName = '', actions, footer, children, padding = 'md', className = '', bodyClassName = '' }: CardProps) {
   return (
     <div className={`rounded-xl border border-zinc-200 bg-white shadow-md ${className}`}>
       {(title || actions) && (
         <div className="flex items-start justify-between gap-4 p-4 pb-0">
           <div>
             {title && <h3 className="text-base font-semibold text-zinc-900">{title}</h3>}
-            {subtitle && <p className="mt-0.5 text-sm font-medium text-zinc-500">{subtitle}</p>}
+            {subtitle && <p className={`mt-0.5 text-sm font-medium text-zinc-500 ${subtitleClassName}`}>{subtitle}</p>}
           </div>
           {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
         </div>

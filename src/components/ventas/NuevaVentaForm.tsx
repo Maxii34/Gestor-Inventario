@@ -21,9 +21,11 @@ import {
 } from '@/components/ui';
 import { FormField, SearchInput } from '@/components/forms';
 import EscanerCamara from '@/components/EscanerCamara';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useAuth } from '@/context/AuthContext';
 import { useStockAlert } from '@/context/StockAlertContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useSoporteCamara } from '@/hooks/useSoporteCamara';
 import { ApiError } from '@/lib/api/client';
 import { MODULO_CLIENTES } from '@/lib/config';
@@ -147,6 +149,44 @@ export function NuevaVentaForm() {
       setIsLoadingSelectors(false);
     }
   }, []);
+
+  const refrescarStock = useCallback(async (): Promise<void> => {
+    const { productos } = await listarProductos(1, SELECTOR_PAGE_SIZE);
+    const stockPorId = new Map(
+      productos.map((producto): [number, number] => [
+        Number(producto.id),
+        producto.stock,
+      ]),
+    );
+    setProductoOpciones((anteriores) =>
+      anteriores.map((opcion) => {
+        const stock = stockPorId.get(Number(opcion.value));
+        return stock === undefined ? opcion : { ...opcion, stock };
+      }),
+    );
+    const itemsActuales = itemsRef.current;
+    let huboCambios = false;
+    const itemsActualizados = itemsActuales.map((item) => {
+      const stock = stockPorId.get(item.productoId);
+      if (stock === undefined || stock === item.stock) return item;
+      huboCambios = true;
+      return { ...item, stock };
+    });
+    if (huboCambios) {
+      itemsRef.current = itemsActualizados;
+      setItems(itemsActualizados);
+    }
+  }, []);
+
+  const {
+    ultimaActualizacion,
+    actualizando,
+    hayError,
+    refrescar: refrescarStockAuto,
+  } = useAutoRefresh(refrescarStock, {
+    intervaloMs: 20000,
+    pausado: isLoadingSelectors || escanerCamaraAbierto || isRegistrando,
+  });
 
   useEffect(() => {
     async function cargarInicial(): Promise<void> {
@@ -383,7 +423,7 @@ export function NuevaVentaForm() {
         metodoPago: metodoPagoEtiqueta,
       });
       reiniciarCamposVenta();
-      await cargarSelectores();
+      await refrescarStock().catch(() => undefined);
       void refrescarStockBajo();
     } catch (err) {
       setVentaError(
@@ -391,6 +431,9 @@ export function NuevaVentaForm() {
           ? err.message
           : 'No pudimos registrar la venta. Inténtalo nuevamente.',
       );
+      if (err instanceof ApiError && err.status === 409) {
+        await refrescarStock().catch(() => undefined);
+      }
     } finally {
       setIsRegistrando(false);
     }
@@ -473,6 +516,15 @@ export function NuevaVentaForm() {
         <Card
           title="Productos"
           subtitle="Buscá por nombre o escaneá el código de barras."
+          subtitleClassName="hidden sm:block"
+          actions={
+            <IndicadorActualizacion
+              ultimaActualizacion={ultimaActualizacion}
+              actualizando={actualizando}
+              hayError={hayError}
+              refrescar={refrescarStockAuto}
+            />
+          }
           className="h-full border-zinc-200/80 shadow-sm"
         >
           <div className="flex flex-col gap-4">
@@ -748,6 +800,14 @@ export function NuevaVentaForm() {
                           Quitar
                         </button>
                       </div>
+                      {item.cantidad > item.stock && (
+                        <p
+                          role="status"
+                          className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800"
+                        >
+                          Quedan {item.stock} {item.stock === 1 ? 'unidad' : 'unidades'}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>

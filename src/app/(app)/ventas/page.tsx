@@ -18,15 +18,18 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { useStockAlert } from '@/context/StockAlertContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import {
   RecaudacionConsultaCard,
   RecaudacionTotalCard,
   useRecaudacion,
 } from '@/components/estadisticas';
 import { ApiError } from '@/lib/api/client';
+import { mismoContenido } from '@/lib/comparar';
 import { notifySuccess } from '@/lib/notifications/toast';
 import {
   anularVenta,
@@ -247,6 +250,7 @@ export default function VentasPage() {
   const [anularError, setAnularError] = useState<string | null>(null);
 
   const recaudacion = useRecaudacion();
+  const { refrescar: refrescarRecaudacion } = recaudacion;
 
   const hayFiltros =
     filtroVendedor !== '' ||
@@ -255,41 +259,97 @@ export default function VentasPage() {
     filtroEstado !== '' ||
     filtroMetodoPago !== '';
 
-  const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
-    setIsLoading(true);
-    setListError(null);
-    try {
-      const resultado = await listarVentas({
-        page: pagina,
-        limit: PAGE_SIZE,
-        ...(isAdmin && filtroVendedor ? { vendedorId: Number(filtroVendedor) } : {}),
-        ...(filtroDesde ? { desde: filtroDesde } : {}),
-        ...(filtroHasta ? { hasta: filtroHasta } : {}),
-        ...(filtroEstado ? { estado: filtroEstado as EstadoVentaBackend } : {}),
-        ...(filtroMetodoPago
-          ? { metodoPago: filtroMetodoPago as MetodoPagoBackend }
-          : {}),
-      });
-      setVentas(resultado.ventas);
-      setMeta(resultado.meta);
-    } catch (err) {
-      setVentas([]);
-      setListError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos cargar las ventas. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    isAdmin,
-    filtroVendedor,
-    filtroDesde,
-    filtroHasta,
-    filtroEstado,
-    filtroMetodoPago,
-  ]);
+  const cargarPagina = useCallback(
+    async (
+      pagina: number,
+      opciones?: { silencioso?: boolean },
+    ): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setListError(null);
+      }
+      try {
+        const resultado = await listarVentas({
+          page: pagina,
+          limit: PAGE_SIZE,
+          ...(isAdmin && filtroVendedor ? { vendedorId: Number(filtroVendedor) } : {}),
+          ...(filtroDesde ? { desde: filtroDesde } : {}),
+          ...(filtroHasta ? { hasta: filtroHasta } : {}),
+          ...(filtroEstado ? { estado: filtroEstado as EstadoVentaBackend } : {}),
+          ...(filtroMetodoPago
+            ? { metodoPago: filtroMetodoPago as MetodoPagoBackend }
+            : {}),
+        });
+        setVentas((anteriores) =>
+          mismoContenido(anteriores, resultado.ventas)
+            ? anteriores
+            : resultado.ventas,
+        );
+        setMeta((anterior) =>
+          mismoContenido(anterior, resultado.meta) ? anterior : resultado.meta,
+        );
+        setListError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setVentas([]);
+        setListError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar las ventas. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsLoading(false);
+      }
+    },
+    [
+      isAdmin,
+      filtroVendedor,
+      filtroDesde,
+      filtroHasta,
+      filtroEstado,
+      filtroMetodoPago,
+    ],
+  );
+
+  const cargarVentasParaRefresco = useCallback(async (): Promise<void> => {
+    await cargarPagina(page, { silencioso: true });
+  }, [cargarPagina, page]);
+
+  const {
+    ultimaActualizacion: ultimaActualizacionVentas,
+    actualizando: actualizandoVentas,
+    hayError: hayErrorVentas,
+    refrescar: refrescarVentas,
+  } = useAutoRefresh(cargarVentasParaRefresco, {
+    intervaloMs: 20000,
+    pausado: detalleId !== null || anularTarget !== null,
+  });
+
+  const cargarRecaudacionParaRefresco = useCallback(async (): Promise<void> => {
+    await refrescarRecaudacion();
+  }, [refrescarRecaudacion]);
+
+  const {
+    ultimaActualizacion: ultimaActualizacionRecaudacion,
+    actualizando: actualizandoRecaudacion,
+    hayError: hayErrorRecaudacion,
+    refrescar: refrescarRecaudacionAuto,
+  } = useAutoRefresh(cargarRecaudacionParaRefresco, {
+    intervaloMs: 20000,
+    pausado: detalleId !== null || anularTarget !== null,
+  });
+
+  const actualizandoRefresco = actualizandoVentas || actualizandoRecaudacion;
+  const hayErrorRefresco = hayErrorVentas || hayErrorRecaudacion;
+  const ultimaActualizacionRefresco =
+    [ultimaActualizacionVentas, ultimaActualizacionRecaudacion]
+      .filter((fecha): fecha is Date => fecha !== null)
+      .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+
+  const refrescarTodo = useCallback(async (): Promise<void> => {
+    await Promise.all([refrescarVentas(), refrescarRecaudacionAuto()]);
+  }, [refrescarVentas, refrescarRecaudacionAuto]);
 
   useEffect(() => {
     if (!user || filtrosInicializados) return;
@@ -435,16 +495,24 @@ export default function VentasPage() {
         title="Ventas"
         description="Consultá la recaudación y revisá el historial de ventas realizadas."
         actions={
-          <Button
-            type="button"
-            className="w-full sm:w-auto"
-            onClick={() => router.push('/ventas/nueva')}
-            disabled={soloLectura}
-            title={soloLectura ? motivoSoloLectura : undefined}
-          >
-            <LuBanknote aria-hidden="true" size={16} />
-            Nueva venta
-          </Button>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+            <IndicadorActualizacion
+              ultimaActualizacion={ultimaActualizacionRefresco}
+              actualizando={actualizandoRefresco}
+              hayError={hayErrorRefresco}
+              refrescar={refrescarTodo}
+            />
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={() => router.push('/ventas/nueva')}
+              disabled={soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
+              <LuBanknote aria-hidden="true" size={16} />
+              Nueva venta
+            </Button>
+          </div>
         }
       />
 
@@ -453,7 +521,7 @@ export default function VentasPage() {
           aria-label="Resumen de ventas"
           className="grid grid-cols-2 items-stretch gap-2 sm:gap-3"
         >
-          <Reveal delay={0}>
+          <Reveal delay={0} className="order-2 col-span-2 sm:order-1 sm:col-span-1">
             <Card className="h-full border-zinc-200/80 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -472,7 +540,7 @@ export default function VentasPage() {
               </div>
             </Card>
           </Reveal>
-          <Reveal delay={0.05}>
+          <Reveal delay={0.05} className="order-1 col-span-2 sm:order-2 sm:col-span-1">
             <RecaudacionTotalCard
               datos={recaudacion.datos}
               isLoading={recaudacion.isLoading}
@@ -500,7 +568,7 @@ export default function VentasPage() {
             actions={<LuFilter aria-hidden="true" size={16} className="text-zinc-400" />}
             className="border-zinc-200/80 shadow-sm"
           >
-            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-2 items-end gap-2 md:gap-3 xl:grid-cols-5">
               {isAdmin && (
                 <Select
                   label="Vendedor"
@@ -555,7 +623,7 @@ export default function VentasPage() {
               />
             </div>
             {hayFiltros && (
-              <div className="mt-4 flex justify-end border-t border-zinc-100 pt-3">
+              <div className="mt-2 flex justify-end border-t border-zinc-100 pt-2 sm:mt-4 sm:pt-3">
                 <Button type="button" variant="ghost" size="sm" onClick={limpiarFiltros}>
                   <LuX aria-hidden="true" size={14} />
                   Limpiar

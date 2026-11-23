@@ -29,9 +29,12 @@ import {
   type TableColumn,
 } from '@/components';
 import { Reveal } from '@/components/motion';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useStockAlert } from '@/context/StockAlertContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { ApiError } from '@/lib/api/client';
+import { mismoContenido } from '@/lib/comparar';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
 import { notifySuccess } from '@/lib/notifications/toast';
 import {
@@ -252,24 +255,41 @@ export default function MovimientosPage() {
   const hayFiltros =
     busqueda.trim() !== '' || filtroTipo !== 'todos' || filtroPeriodo !== 'todos';
 
-  const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
-    setIsLoading(true);
-    setListError(null);
-    try {
-      const resultado = await listarMovimientos(pagina, PAGE_SIZE);
-      setMovimientos(resultado.movimientos);
-      setMeta(resultado.meta);
-    } catch (err) {
-      setMovimientos([]);
-      setListError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos cargar los movimientos. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const cargarPagina = useCallback(
+    async (
+      pagina: number,
+      opciones?: { silencioso?: boolean },
+    ): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setListError(null);
+      }
+      try {
+        const resultado = await listarMovimientos(pagina, PAGE_SIZE);
+        setMovimientos((anteriores) =>
+          mismoContenido(anteriores, resultado.movimientos)
+            ? anteriores
+            : resultado.movimientos,
+        );
+        setMeta((anterior) =>
+          mismoContenido(anterior, resultado.meta) ? anterior : resultado.meta,
+        );
+        setListError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setMovimientos([]);
+        setListError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar los movimientos. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   const cargarProductos = useCallback(async (): Promise<void> => {
     setIsLoadingProducts(true);
@@ -301,23 +321,49 @@ export default function MovimientosPage() {
     }
   }, []);
 
-  const cargarTodoParaFiltrar = useCallback(async (): Promise<void> => {
-    setIsFiltering(true);
-    setFilterError(null);
-    try {
-      const movimientos = await cargarTodasLasPaginas<BackendMovimiento>('/movimientos');
-      setTodosMovimientos(movimientos);
-    } catch (err) {
-      setTodosMovimientos([]);
-      setFilterError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsFiltering(false);
+  const cargarTodoParaFiltrar = useCallback(
+    async (opciones?: { silencioso?: boolean }): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsFiltering(true);
+        setFilterError(null);
+      }
+      try {
+        const movimientos = await cargarTodasLasPaginas<BackendMovimiento>('/movimientos');
+        setTodosMovimientos((anteriores) =>
+          mismoContenido(anteriores, movimientos) ? anteriores : movimientos,
+        );
+        setFilterError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setTodosMovimientos([]);
+        setFilterError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsFiltering(false);
+      }
+    },
+    [],
+  );
+
+  const cargarParaRefresco = useCallback(async (): Promise<void> => {
+    if (hayFiltros) {
+      await cargarTodoParaFiltrar({ silencioso: true });
+    } else {
+      await cargarPagina(page, { silencioso: true });
     }
-  }, []);
+  }, [hayFiltros, cargarTodoParaFiltrar, cargarPagina, page]);
+
+  const { ultimaActualizacion, actualizando, hayError, refrescar } = useAutoRefresh(
+    cargarParaRefresco,
+    {
+      intervaloMs: hayFiltros ? 60000 : 30000,
+      pausado: isFormOpen,
+    },
+  );
 
   useEffect(() => {
     if (hayFiltros) return;
@@ -491,16 +537,24 @@ export default function MovimientosPage() {
         title="Control de stock"
         description="Reponé stock, registrá salidas por ventas u otros motivos y ajustá existencias. Consultá el historial de cambios del inventario."
         actions={
-          <Button
-            type="button"
-            className="w-full sm:w-auto"
-            onClick={abrirFormulario}
-            disabled={soloLectura}
-            title={soloLectura ? motivoSoloLectura : undefined}
-          >
-            <LuPlus aria-hidden="true" size={16} />
-            Reponer stock
-          </Button>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+            <IndicadorActualizacion
+              ultimaActualizacion={ultimaActualizacion}
+              actualizando={actualizando}
+              hayError={hayError}
+              refrescar={refrescar}
+            />
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={abrirFormulario}
+              disabled={soloLectura}
+              title={soloLectura ? motivoSoloLectura : undefined}
+            >
+              <LuPlus aria-hidden="true" size={16} />
+              Reponer stock
+            </Button>
+          </div>
         }
       />
 

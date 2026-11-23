@@ -13,7 +13,6 @@ import {
   LuFolder,
   LuPackage,
   LuPlus,
-  LuRefreshCw,
   LuShoppingCart,
   LuTriangleAlert,
   LuUsers,
@@ -27,10 +26,13 @@ import {
   Table,
   type TableColumn,
 } from '@/components';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useRecaudacion } from '@/components/estadisticas';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { ApiError } from '@/lib/api/client';
+import { mismoContenido } from '@/lib/comparar';
 import { MODULO_CLIENTES } from '@/lib/config';
 import { getDatosDashboard } from '@/services/dashboard.service';
 import type {
@@ -197,36 +199,51 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { soloLectura, motivoSoloLectura } = useSuscripcion();
   const recaudacion = useRecaudacion();
+  const { refrescar: refrescarRecaudacion } = recaudacion;
   const [datos, setDatos] = useState<DatosDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const cargar = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const resultado = await getDatosDashboard();
-      setDatos(resultado);
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos cargar los datos del dashboard. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const cargar = useCallback(
+    async (opciones?: { silencioso?: boolean }): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setError(null);
+      }
+      try {
+        const resultado = await getDatosDashboard();
+        setDatos((anterior) =>
+          mismoContenido(anterior, resultado) ? anterior : resultado,
+        );
+        setError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar los datos del dashboard. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsLoading(false);
+      }
+    },
+    [],
+  );
 
-  async function actualizarDashboard(): Promise<void> {
-    setIsRefreshing(true);
+  const cargarParaRefresco = useCallback(async (): Promise<void> => {
     await Promise.all([
-      cargar(),
-      recaudacion.consultar(recaudacion.desde, recaudacion.hasta),
+      cargar({ silencioso: true }),
+      refrescarRecaudacion(),
     ]);
-    setIsRefreshing(false);
-  }
+  }, [cargar, refrescarRecaudacion]);
+
+  const {
+    ultimaActualizacion,
+    actualizando,
+    hayError,
+    refrescar,
+  } = useAutoRefresh(cargarParaRefresco, { intervaloMs: 30000 });
 
   useEffect(() => {
     async function cargarInicial(): Promise<void> {
@@ -260,20 +277,13 @@ export default function DashboardPage() {
         title={`Hola, ${user?.nombre.trim().split(/\s+/)[0] || 'bienvenido'}`}
         description={formatDashboardDate(new Date())}
         actions={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void actualizarDashboard()}
-              disabled={isRefreshing}
-            >
-              <LuRefreshCw
-                aria-hidden="true"
-                size={15}
-                className={isRefreshing ? 'animate-spin' : ''}
-              />
-              Actualizar
-            </Button>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+            <IndicadorActualizacion
+              ultimaActualizacion={ultimaActualizacion}
+              actualizando={actualizando}
+              hayError={hayError}
+              refrescar={refrescar}
+            />
             <Button
               type="button"
               onClick={() => router.push('/ventas/nueva')}
@@ -283,7 +293,7 @@ export default function DashboardPage() {
               <LuBanknote aria-hidden="true" size={16} />
               Nueva venta
             </Button>
-          </>
+          </div>
         }
       />
 
@@ -301,7 +311,7 @@ export default function DashboardPage() {
             <p className="pt-1.5 text-sm text-zinc-600">{error}</p>
           </div>
           <div className="mt-4">
-            <Button type="button" onClick={cargar}>
+            <Button type="button" onClick={() => void cargar()}>
               Reintentar
             </Button>
           </div>

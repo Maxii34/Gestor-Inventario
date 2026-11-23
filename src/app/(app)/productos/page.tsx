@@ -31,9 +31,11 @@ import {
 } from '@/components';
 import { Reveal } from '@/components/motion';
 import EscanerCamara from '@/components/EscanerCamara';
+import IndicadorActualizacion from '@/components/IndicadorActualizacion';
 import { useAuth } from '@/context/AuthContext';
 import { useSuscripcion } from '@/context/SuscripcionContext';
 import { useStockAlert } from '@/context/StockAlertContext';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { useSoporteCamara } from '@/hooks/useSoporteCamara';
 import { ApiError } from '@/lib/api/client';
 import { cargarTodasLasPaginas } from '@/lib/api/paginacion';
@@ -118,6 +120,10 @@ function estadoStock(producto: BackendProducto): {
   if (producto.stock <= producto.stockMinimo)
     return { etiqueta: 'Stock bajo', tono: 'warning' };
   return { etiqueta: 'Disponible', tono: 'success' };
+}
+
+function mismoContenido(actual: unknown, nuevo: unknown): boolean {
+  return JSON.stringify(actual) === JSON.stringify(nuevo);
 }
 
 interface FormularioProducto {
@@ -228,24 +234,41 @@ export default function ProductosPage() {
   const hayFiltros =
     busqueda.trim() !== '' || filtroCategoria !== 'todas' || filtroEstado !== 'todos';
 
-  const cargarPagina = useCallback(async (pagina: number): Promise<void> => {
-    setIsLoading(true);
-    setListError(null);
-    try {
-      const resultado = await listarProductos(pagina, PAGE_SIZE);
-      setProductos(resultado.productos);
-      setMeta(resultado.meta);
-    } catch (err) {
-      setProductos([]);
-      setListError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos cargar los productos. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const cargarPagina = useCallback(
+    async (
+      pagina: number,
+      opciones?: { silencioso?: boolean },
+    ): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsLoading(true);
+        setListError(null);
+      }
+      try {
+        const resultado = await listarProductos(pagina, PAGE_SIZE);
+        setProductos((anteriores) =>
+          mismoContenido(anteriores, resultado.productos)
+            ? anteriores
+            : resultado.productos,
+        );
+        setMeta((anterior) =>
+          mismoContenido(anterior, resultado.meta) ? anterior : resultado.meta,
+        );
+        setListError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setProductos([]);
+        setListError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos cargar los productos. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   const cargarCategorias = useCallback(async (): Promise<void> => {
     setCategoriasError(null);
@@ -261,23 +284,49 @@ export default function ProductosPage() {
     }
   }, []);
 
-  const cargarTodoParaFiltrar = useCallback(async (): Promise<void> => {
-    setIsFiltering(true);
-    setFilterError(null);
-    try {
-      const productos = await cargarTodasLasPaginas<BackendProducto>('/productos');
-      setTodosProductos(productos);
-    } catch (err) {
-      setTodosProductos([]);
-      setFilterError(
-        err instanceof ApiError
-          ? err.message
-          : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
-      );
-    } finally {
-      setIsFiltering(false);
+  const cargarTodoParaFiltrar = useCallback(
+    async (opciones?: { silencioso?: boolean }): Promise<void> => {
+      const silencioso = opciones?.silencioso ?? false;
+      if (!silencioso) {
+        setIsFiltering(true);
+        setFilterError(null);
+      }
+      try {
+        const productos = await cargarTodasLasPaginas<BackendProducto>('/productos');
+        setTodosProductos((anteriores) =>
+          mismoContenido(anteriores, productos) ? anteriores : productos,
+        );
+        setFilterError(null);
+      } catch (err) {
+        if (silencioso) throw err;
+        setTodosProductos([]);
+        setFilterError(
+          err instanceof ApiError
+            ? err.message
+            : 'No pudimos aplicar los filtros. Inténtalo nuevamente.',
+        );
+      } finally {
+        if (!silencioso) setIsFiltering(false);
+      }
+    },
+    [],
+  );
+
+  const cargarParaRefresco = useCallback(async (): Promise<void> => {
+    if (hayFiltros) {
+      await cargarTodoParaFiltrar({ silencioso: true });
+    } else {
+      await cargarPagina(page, { silencioso: true });
     }
-  }, []);
+  }, [hayFiltros, cargarTodoParaFiltrar, cargarPagina, page]);
+
+  const { ultimaActualizacion, actualizando, hayError, refrescar } = useAutoRefresh(
+    cargarParaRefresco,
+    {
+      intervaloMs: hayFiltros ? 60000 : undefined,
+      pausado: isFormOpen || deleteTarget !== null || escanerAbierto,
+    },
+  );
 
   useEffect(() => {
     if (hayFiltros) return;
@@ -704,18 +753,26 @@ export default function ProductosPage() {
         title="Productos"
         description="Encontrá productos, revisá existencias y mantené actualizado tu catálogo."
         actions={
-          isAdmin ? (
-            <Button
-              type="button"
-              className="w-full sm:w-auto"
-              onClick={nuevoProducto}
-              disabled={soloLectura}
-              title={soloLectura ? motivoSoloLectura : undefined}
-            >
-              <LuPlus aria-hidden="true" size={16} />
-              Nuevo producto
-            </Button>
-          ) : undefined
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+            <IndicadorActualizacion
+              ultimaActualizacion={ultimaActualizacion}
+              actualizando={actualizando}
+              hayError={hayError}
+              refrescar={refrescar}
+            />
+            {isAdmin && (
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={nuevoProducto}
+                disabled={soloLectura}
+                title={soloLectura ? motivoSoloLectura : undefined}
+              >
+                <LuPlus aria-hidden="true" size={16} />
+                Nuevo producto
+              </Button>
+            )}
+          </div>
         }
       />
 
